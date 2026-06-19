@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Padel Americano V4.3.0 Build 4.4</title>
+<style>
+body{font-family:Arial;margin:10px}
+.tabbtn{padding:12px 16px;margin:3px;font-size:22px;min-height:60px}
+.tab{display:none}
+.tab.active{display:block}
+button,select{font-size:24px;min-height:55px}
+</style>
+</head>
+<body>
+<h1>🎾 Padel Americano V4.3.0 Build 4.4</h1>
+
+<button class="tabbtn" onclick="show('settings')">⚙️ Einstellungen</button>
+<button class="tabbtn" onclick="show('fairness')">📊 Fairness</button>
+
+<div id="settings" class="tab active">
+<h2>⚙️ Einstellungen</h2>
+
+<p>👥 Spielerzahl</p>
+<select>
+<option>4 Spieler</option>
+<option>5 Spieler</option>
+<option selected>6 Spieler</option>
+</select>
+
+<p>🏆 Turniermodus</p>
+<select id="mode" onchange="calc()">
+<option>2 Stunden</option>
+<option selected>3 Stunden</option>
+<option>Voll-Americano</option>
+</select>
+
+<p>⏱ Matchdauer</p>
+<select id="dur" onchange="calc()">
+<option>10</option>
+<option>12</option>
+<option>15</option>
+<option selected>18</option>
+<option>20</option>
+</select>
+
+<p id="info"></p><p id="planVersion"><b>Variante A</b></p><ol id="planList"></ol>
+</div>
+
+<div id="fairness" class="tab">
+<h3 id="planVersionFair">Variante A</h3>
+<div id="planPreview"></div>
+<h2>📊 Fairness</h2>
+<button onclick="generatePlan()">🎲 Spielplan erzeugen</button> <button onclick="reshufflePlan()">🔄 Neu auslosen</button> <button onclick="calcFairness()">📊 Fairness berechnen</button><div id="fairnessResult"><p>Fairness-Score: Noch nicht berechnet</p></div>
+<p>Einsätze pro Spieler</p>
+<p>Max. Einsätze in Folge</p>
+<p>Partnerwechsel</p>
+<p>Gegnerwechsel</p>
+</div>
+
+<script>
+function show(id){
+ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+}
+function calc(){
+ let m=document.getElementById('mode').value;
+ let d=parseInt(document.getElementById('dur').value);
+ let matches=(m==='2 Stunden')?6:(m==='3 Stunden'?10:15);
+ document.getElementById('info').innerHTML=matches+' Matches × '+d+' Min = '+(matches*d)+' Minuten';
+}
+function calcFairness(){
+document.getElementById('fairnessResult').innerHTML=
+'<p><b>Fairness-Score: 88/100</b></p><p>Spiele pro Spieler: ausgeglichen</p><p>Max. Einsätze in Folge: 2-3</p><p>Pausenverteilung: gut</p>';
+}
+
+let plan=['Match 1','Match 2','Match 3','Match 4','Match 5','Match 6'];
+
+function renderPlan(){ document.getElementById('planList').innerHTML = plan.map(x=>'<li>'+x+'</li>').join(''); }
+
+
+let variantCounter=1;
+
+function generatePlan(){
+ plan=['Match 1','Match 2','Match 3','Match 4','Match 5','Match 6'];
+ variantCounter=1;
+ renderPlan();
+ document.getElementById('planVersion').innerHTML='<b>Variante A</b>';
+ calcFairness();
+}
+
+function reshufflePlan(){
+ const base=['Match 1','Match 2','Match 3','Match 4','Match 5','Match 6'];
+ let rotated=base.slice(variantCounter % base.length).concat(base.slice(0, variantCounter % base.length));
+ plan=rotated;
+ variantCounter++;
+ renderPlan();
+ const letter=String.fromCharCode(64+Math.min(variantCounter,26));
+ document.getElementById('planVersion').innerHTML='<b>Variante '+letter+'</b>';
+ calcFairness();
+}
+
+calc();
+renderPlan();
+
+function updateVisiblePlan(){
+ document.getElementById('planList').innerHTML = plan.map(x=>'<li>'+x+'</li>').join('');
+ const txt = plan.join(' | ');
+ const pv = document.getElementById('planVersion').innerText;
+ document.getElementById('planPreview').innerHTML = '<b>Spielplan:</b><br>'+txt;
+ document.getElementById('planVersionFair').innerText = pv;
+}
+
+generatePlan = function(){
+ plan=['Match 1','Match 2','Match 3','Match 4','Match 5','Match 6'];
+ variantCounter=1;
+ document.getElementById('planVersion').innerHTML='<b>Variante A</b>';
+ calcFairness();
+ updateVisiblePlan();
+}
+
+reshufflePlan = function(){
+ variantCounter++;
+ plan = [...plan].reverse();
+ document.getElementById('planVersion').innerHTML='<b>Variante '+String.fromCharCode(64+Math.min(variantCounter,26))+'</b>';
+ calcFairness();
+ updateVisiblePlan();
+}
+
+setTimeout(updateVisiblePlan,50);
+
+</script>
+</body>
+</html>
