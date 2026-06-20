@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V4.3.0 Build 6.2.1</title>
+<title>Padel Americano V4.3.0 Build 6.3</title>
 <style>
 body{font-family:Arial;margin:10px}
 .tabbtn{padding:12px 16px;margin:3px;font-size:22px;min-height:60px}
@@ -13,7 +13,7 @@ button,select{font-size:24px;min-height:55px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V4.3.0 Build 6.2.1</h1>
+<h1>🎾 Padel Americano V4.3.0 Build 6.3</h1>
 
 <button class="tabbtn" onclick="show('settings')">⚙️ Einstellungen</button>
 <button class="tabbtn" onclick="show('fairness')">📊 Fairness</button>
@@ -72,6 +72,15 @@ button,select{font-size:24px;min-height:55px}
 <p>Max. Einsätze in Folge</p>
 <p>Partnerwechsel</p>
 <p>Gegnerwechsel</p>
+<h3>🏆 Ergebniserfassung</h3>
+<div id="resultsArea">
+<p>Runde 1</p>
+<input id="scoreA" type="number" placeholder="Team A Punkte" style="font-size:22px;min-height:45px">
+<input id="scoreB" type="number" placeholder="Team B Punkte" style="font-size:22px;min-height:45px">
+<button onclick="saveResult()">💾 Ergebnis speichern</button>
+</div>
+<div id="ranking"><h3>📊 Rangliste</h3><p>Noch keine Ergebnisse</p></div>
+
 </div>
 
 <script>
@@ -185,6 +194,26 @@ reshufflePlan = function(){
 }
 
 setTimeout(updateVisiblePlan,50);
+
+
+let rankingPoints={};
+
+function saveResult(){
+ let p=getPlayers();
+ p.forEach(n=>{ if(!(n in rankingPoints)) rankingPoints[n]=0; });
+
+ let a=parseInt(document.getElementById('scoreA').value||0);
+ let b=parseInt(document.getElementById('scoreB').value||0);
+
+ rankingPoints[p[0]]+=a;
+ rankingPoints[p[1]]+=a;
+ rankingPoints[p[2]]+=b;
+ rankingPoints[p[3]]+=b;
+
+ let list=Object.entries(rankingPoints).sort((x,y)=>y[1]-x[1]);
+ document.getElementById('ranking').innerHTML='<h3>📊 Rangliste</h3>'+
+ list.map((x,i)=>'<p>'+(i+1)+'. '+x[0]+' - '+x[1]+' Punkte</p>').join('');
+}
 
 </script>
 </body>
