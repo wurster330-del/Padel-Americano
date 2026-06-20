@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V4.3.0 Build 6.2</title>
+<title>Padel Americano V4.3.0 Build 6.2.1</title>
 <style>
 body{font-family:Arial;margin:10px}
 .tabbtn{padding:12px 16px;margin:3px;font-size:22px;min-height:60px}
@@ -13,7 +13,7 @@ button,select{font-size:24px;min-height:55px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V4.3.0 Build 6.2</h1>
+<h1>🎾 Padel Americano V4.3.0 Build 6.2.1</h1>
 
 <button class="tabbtn" onclick="show('settings')">⚙️ Einstellungen</button>
 <button class="tabbtn" onclick="show('fairness')">📊 Fairness</button>
@@ -178,38 +178,9 @@ generatePlan = function(){
 
 
 reshufflePlan = function(){
-
- let p=getPlayers();
-
- if(teamMode.value==="Feste Teams"){
-   if(variantCounter%3===1){
-      plan=[
-       "Team A: "+p[0]+" / "+p[2],
-       "Team B: "+p[1]+" / "+p[4],
-       "Team C: "+p[3]+" / "+p[5],
-       "",
-       "Runde 1: Team A vs Team B",
-       "Runde 2: Team A vs Team C",
-       "Runde 3: Team B vs Team C"
-      ];
-   } else {
-      plan=[
-       "Team A: "+p[0]+" / "+p[3],
-       "Team B: "+p[1]+" / "+p[5],
-       "Team C: "+p[2]+" / "+p[4],
-       "",
-       "Runde 1: Team A vs Team B",
-       "Runde 2: Team A vs Team C",
-       "Runde 3: Team B vs Team C"
-      ];
-   }
- } else {
-   plan=[...plan].reverse();
- }
-
+ generatePlan();
  variantCounter++;
  document.getElementById('planVersion').innerHTML='<b>Variante '+String.fromCharCode(64+Math.min(variantCounter,26))+'</b>';
- calcFairness();
  updateVisiblePlan();
 }
 
