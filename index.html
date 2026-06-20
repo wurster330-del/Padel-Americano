@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V4.3.0 Build 6.1</title>
+<title>Padel Americano V4.3.0 Build 6.2</title>
 <style>
 body{font-family:Arial;margin:10px}
 .tabbtn{padding:12px 16px;margin:3px;font-size:22px;min-height:60px}
@@ -13,7 +13,7 @@ button,select{font-size:24px;min-height:55px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V4.3.0 Build 6.1</h1>
+<h1>🎾 Padel Americano V4.3.0 Build 6.2</h1>
 
 <button class="tabbtn" onclick="show('settings')">⚙️ Einstellungen</button>
 <button class="tabbtn" onclick="show('fairness')">📊 Fairness</button>
@@ -59,7 +59,7 @@ button,select{font-size:24px;min-height:55px}
 <option>Feste Teams</option>
 </select>
 
-<p id="info"></p><p id="planVersion"><b>Variante A</b></p><ol id="planList"></ol>
+<p id="info"></p><p id="planVersion"><b>Variante A</b></p><ol id="planList"></ol><div id="teamOverview"></div>
 
 </div>
 
@@ -96,6 +96,16 @@ let plan=['Match 1','Match 2','Match 3','Match 4','Match 5','Match 6'];
 function renderPlan(){ document.getElementById('planList').innerHTML = plan.map(x=>'<li>'+x+'</li>').join(''); }
 
 
+
+
+function getMatchCount(){
+ let m=document.getElementById('mode').value;
+ return (m==='2 Stunden')?6:(m==='3 Stunden'?10:15);
+}
+
+function updateTeamOverview(txt){
+ document.getElementById('teamOverview').innerHTML='<h3>🏆 Teamübersicht</h3>'+txt;
+}
 
 let variantCounter=1;
 
@@ -134,32 +144,38 @@ function updateVisiblePlan(){
  document.getElementById('planVersionFair').innerText = pv;
 }
 
+
 generatePlan = function(){
 
  let p=getPlayers();
+ let rounds=getMatchCount();
 
  if(teamMode.value==="Feste Teams"){
-   plan=[
-    "Team A: "+p[0]+" / "+p[1],
-    "Team B: "+p[2]+" / "+p[3],
-    "Team C: "+p[4]+" / "+p[5],
-    "",
-    "Runde 1: Team A vs Team B",
-    "Runde 2: Team A vs Team C",
-    "Runde 3: Team B vs Team C"
-   ];
- }else{
-   plan=[
-    p[0]+" / "+p[1]+" vs "+p[2]+" / "+p[3],
-    p[0]+" / "+p[2]+" vs "+p[4]+" / "+p[5],
-    p[1]+" / "+p[3]+" vs "+p[4]+" / "+p[5]
-   ];
+   updateTeamOverview(
+     'Team A: '+p[0]+' / '+p[1]+'<br>'+
+     'Team B: '+p[2]+' / '+p[3]+'<br>'+
+     'Team C: '+p[4]+' / '+p[5]
+   );
+
+   plan=[];
+   let base=['Team A vs Team B','Team A vs Team C','Team B vs Team C'];
+   for(let i=0;i<rounds;i++){
+      plan.push('Runde '+(i+1)+': '+base[i%3]);
+   }
+ } else {
+   updateTeamOverview('Americano-Modus aktiv');
+   plan=[];
+   for(let i=0;i<rounds;i++){
+      plan.push('Runde '+(i+1)+': '+p[i%6]+' / '+p[(i+1)%6]+' vs '+p[(i+2)%6]+' / '+p[(i+3)%6]);
+   }
  }
+
  variantCounter=1;
  document.getElementById('planVersion').innerHTML='<b>Variante A</b>';
  calcFairness();
  updateVisiblePlan();
 }
+
 
 reshufflePlan = function(){
 
