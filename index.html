@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V4.3.0 Build 6.4.2</title>
+<title>Padel Americano V4.3.0 Build 6.4.3</title>
 <style>
 body{font-family:Arial;margin:10px}
 .tabbtn{padding:12px 16px;margin:3px;font-size:22px;min-height:60px}
@@ -13,7 +13,7 @@ button,select{font-size:24px;min-height:55px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V4.3.0 Build 6.4.2</h1>
+<h1>🎾 Padel Americano V4.3.0 Build 6.4.3</h1>
 
 <div id="timerFixed" style="text-align:center;margin:10px 0;">
 <div id="timerDisplay" style="font-size:140px;font-weight:bold;">18:00</div>
@@ -203,6 +203,7 @@ generatePlan = function(){
  document.getElementById('planVersion').innerHTML='<b>Variante A</b>';
  calcFairness();
  updateVisiblePlan();
+ updateRoundProgress();
 }
 
 
@@ -216,6 +217,16 @@ reshufflePlan = function(){
 setTimeout(updateVisiblePlan,50);
 
 
+
+
+function updateRoundProgress(){
+  let total=getMatchCount();
+  let current=Math.min(currentRound,total);
+  let el=document.getElementById('roundProgress');
+  if(el){
+    el.innerText='Runde '+current+' von '+total;
+  }
+}
 
 let rankingPoints={};
 let currentRound=1;
@@ -242,6 +253,7 @@ function saveResult(){
  document.querySelector('#resultsArea p').innerText='Runde '+currentRound;
  document.getElementById('scoreA').value='';
  document.getElementById('scoreB').value='';
+ updateRoundProgress();
 }
 
 
@@ -265,6 +277,6 @@ function resetTimer(){
  remaining=mins*60;
  updateTimer();
 }
-setTimeout(resetTimer,100);
+setTimeout(function(){resetTimer();updateRoundProgress();},100);
 
 </script></body></html>
