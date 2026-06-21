@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V4.3.0 Build 6.4.3</title>
+<title>Padel Americano V4.3.0 Build 6.4.4</title>
 <style>
 body{font-family:Arial;margin:10px}
 .tabbtn{padding:12px 16px;margin:3px;font-size:22px;min-height:60px}
@@ -13,7 +13,7 @@ button,select{font-size:24px;min-height:55px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V4.3.0 Build 6.4.3</h1>
+<h1>🎾 Padel Americano V4.3.0 Build 6.4.4</h1>
 
 <div id="timerFixed" style="text-align:center;margin:10px 0;">
 <div id="timerDisplay" style="font-size:140px;font-weight:bold;">18:00</div>
@@ -21,6 +21,13 @@ button,select{font-size:24px;min-height:55px}
 <button onclick="startTimer()">▶️ Start</button>
 <button onclick="pauseTimer()">⏸️ Pause</button>
 <button onclick="resetTimer()">🔄 Reset</button>
+</div>
+<h3>🏆 Ergebniserfassung</h3>
+<div id="resultsArea">
+<p>Runde 1</p>
+<input id="scoreA" type="number" placeholder="Team A Punkte" style="font-size:22px;min-height:45px">
+<input id="scoreB" type="number" placeholder="Team B Punkte" style="font-size:22px;min-height:45px">
+<button onclick="saveResult()">💾 Ergebnis speichern</button>
 </div>
 
 
@@ -59,8 +66,8 @@ button,select{font-size:24px;min-height:55px}
 <input id="p2" value="Tobias" style="font-size:22px;min-height:50px;width:95%;margin:4px"><br>
 <input id="p3" value="Marco" style="font-size:22px;min-height:50px;width:95%;margin:4px"><br>
 <input id="p4" value="Stefan" style="font-size:22px;min-height:50px;width:95%;margin:4px"><br>
-<input id="p5" value="Andreas" style="font-size:22px;min-height:50px;width:95%;margin:4px"><br>
-<input id="p6" value="Michael" style="font-size:22px;min-height:50px;width:95%;margin:4px"><br>
+<input id="p5" value="Christian" style="font-size:22px;min-height:50px;width:95%;margin:4px"><br>
+<input id="p6" value="David" style="font-size:22px;min-height:50px;width:95%;margin:4px"><br>
 
 <p>🏆 Spielmodus</p>
 <select id="teamMode">
@@ -81,13 +88,6 @@ button,select{font-size:24px;min-height:55px}
 <p>Max. Einsätze in Folge</p>
 <p>Partnerwechsel</p>
 <p>Gegnerwechsel</p>
-<h3>🏆 Ergebniserfassung</h3>
-<div id="resultsArea">
-<p>Runde 1</p>
-<input id="scoreA" type="number" placeholder="Team A Punkte" style="font-size:22px;min-height:45px">
-<input id="scoreB" type="number" placeholder="Team B Punkte" style="font-size:22px;min-height:45px">
-<button onclick="saveResult()">💾 Ergebnis speichern</button>
-</div>
 <div id="ranking"><h3>📊 Rangliste</h3><p>Noch keine Ergebnisse</p>
 
 
