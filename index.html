@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V4.3.0 Build 6.4.4</title>
+<title>Padel Americano V4.3.0 Build 6.4.5</title>
 <style>
 body{font-family:Arial;margin:10px}
 .tabbtn{padding:12px 16px;margin:3px;font-size:22px;min-height:60px}
@@ -13,7 +13,7 @@ button,select{font-size:24px;min-height:55px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V4.3.0 Build 6.4.4</h1>
+<h1>🎾 Padel Americano V4.3.0 Build 6.4.5</h1>
 
 <div id="timerFixed" style="text-align:center;margin:10px 0;">
 <div id="timerDisplay" style="font-size:140px;font-weight:bold;">18:00</div>
@@ -238,10 +238,15 @@ function saveResult(){
  let a=parseInt(document.getElementById('scoreA').value||0);
  let b=parseInt(document.getElementById('scoreB').value||0);
 
- rankingPoints[p[0]]+=a;
- rankingPoints[p[1]]+=a;
- rankingPoints[p[2]]+=b;
- rankingPoints[p[3]]+=b;
+ for(let i=0;i<p.length;i++){
+ if(!(p[i] in rankingPoints)) rankingPoints[p[i]]=0;
+}
+rankingPoints[p[0]]+=a;
+rankingPoints[p[1]]+=a;
+rankingPoints[p[2]]+=b;
+rankingPoints[p[3]]+=b;
+rankingPoints[p[4]]+=0;
+rankingPoints[p[5]]+=0;
 
  let list=Object.entries(rankingPoints).sort((x,y)=>y[1]-x[1]);
 
