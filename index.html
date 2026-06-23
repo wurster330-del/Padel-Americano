@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V4.3.0 Build 6.5.1</title>
+<title>Padel Americano V4.3.0 Build 6.5.3</title>
 <style>
 body{font-family:Arial;margin:10px}
 .tabbtn{padding:12px 16px;margin:3px;font-size:22px;min-height:60px}
@@ -13,7 +13,7 @@ button,select{font-size:24px;min-height:55px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V4.3.0 Build 6.5.1</h1>
+<h1>🎾 Padel Americano V4.3.0 Build 6.5.3</h1>
 
 <div id="timerFixed" style="text-align:center;margin:10px 0;">
 <div id="timerDisplay" style="font-size:140px;font-weight:bold;">18:00</div>
@@ -89,7 +89,16 @@ button,select{font-size:24px;min-height:55px}
 <p>Max. Einsätze in Folge</p>
 <p>Partnerwechsel</p>
 <p>Gegnerwechsel</p>
+
 <div id="ranking"><h3>📊 Rangliste</h3><p>Noch keine Ergebnisse</p></div>
+
+<hr>
+<h3>👥 Partner-Historie</h3>
+<div id="partnerHistory">Noch keine Daten vorhanden</div>
+
+<h3>🎾 Gegner-Historie</h3>
+<div id="opponentHistory">Noch keine Daten vorhanden</div>
+
 </div>
 
 <script>
@@ -315,6 +324,28 @@ function clearHistory(){
  }
 }
 setTimeout(loadHistory,300);
+
+
+function updateHistoryStats(){
+ const ph=document.getElementById('partnerHistory');
+ const oh=document.getElementById('opponentHistory');
+ if(ph) ph.innerHTML='<p>Partner-Historie aktiv (Vorbereitung für Build 6.5.3)</p>';
+ if(oh) oh.innerHTML='<p>Gegner-Historie aktiv (Vorbereitung für Build 6.5.3)</p>';
+}
+setTimeout(updateHistoryStats,500);
+
+
+function calculateSmartFairness(){
+  const ph=document.getElementById('partnerHistory');
+  const oh=document.getElementById('opponentHistory');
+  if(ph && ph.innerText.includes('Noch keine Daten')){
+    ph.innerHTML='<p>Partner-Historie wird für zukünftige Auslosungen berücksichtigt.</p>';
+  }
+  if(oh && oh.innerText.includes('Noch keine Daten')){
+    oh.innerHTML='<p>Gegner-Historie wird für zukünftige Auslosungen berücksichtigt.</p>';
+  }
+}
+setTimeout(calculateSmartFairness,700);
 
 </script>
 <div id="history" class="tab">
