@@ -3,25 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano Build 6.7.0</title>
+<title>Padel Americano V5.0.0 Build 7.0.0 Alpha</title>
 <style>
-body{font-family:Arial;margin:12px}
-textarea,button{font-size:18px}
-.card{border:1px solid #ccc;padding:10px;margin:10px 0;border-radius:8px}
+body{font-family:Arial,sans-serif;margin:10px}
+textarea,input,button,select{font-size:18px;margin:4px}
+.card{border:1px solid #ccc;border-radius:8px;padding:10px;margin:10px 0}
+#timer{font-size:72px;font-weight:bold;text-align:center}
+table{border-collapse:collapse;width:100%}
+td,th{border:1px solid #ccc;padding:6px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano Build 6.7.0</h1>
+<h1>🎾 Padel Americano V5.0.0 Build 7.0.0 Alpha</h1>
 
 <div class="card">
 <h3>Spieler (4–12)</h3>
-<textarea id="players" rows="10" style="width:100%;">Werner
+<textarea id="players" rows="8" style="width:100%">Werner
 Tobias
 Marco
 Stefan
 Christian
 David</textarea><br>
 <button onclick="generateTournament()">🎲 Turnier erzeugen</button>
+</div>
+
+<div class="card">
+<div id="timer">18:00</div>
+<button onclick="startTimer()">▶ Start</button>
+<button onclick="pauseTimer()">⏸ Pause</button>
+<button onclick="resetTimer()">🔄 Reset</button>
 </div>
 
 <div class="card">
@@ -34,43 +44,91 @@ David</textarea><br>
 <div id="fairness">Noch nicht berechnet</div>
 </div>
 
+<div class="card">
+<h3>🏆 Rangliste</h3>
+<div id="ranking"></div>
+</div>
+
 <script>
-function getPlayers(){
+let ranking={},matches=[];
+
+function players(){
  return document.getElementById('players').value.split('\n').map(x=>x.trim()).filter(Boolean);
 }
 
 function generateTournament(){
- const p=getPlayers();
- if(p.length<4 || p.length>12){
-   alert('4 bis 12 Spieler erforderlich');
-   return;
+ const p=players();
+ if(p.length<4 || p.length>12){alert('4–12 Spieler erforderlich');return;}
+
+ ranking={};
+ p.forEach(x=>ranking[x]=0);
+ matches=[];
+
+ let partnerSet=new Set(), opponentSet=new Set();
+
+ for(let r=0;r<Math.max(8,p.length*2);r++){
+   const a=p[r%p.length];
+   const b=p[(r+1)%p.length];
+   const c=p[(r+2)%p.length];
+   const d=p[(r+3)%p.length];
+
+   partnerSet.add([a,b].sort().join('|'));
+   partnerSet.add([c,d].sort().join('|'));
+
+   opponentSet.add([a,c].sort().join('|'));
+   opponentSet.add([a,d].sort().join('|'));
+   opponentSet.add([b,c].sort().join('|'));
+   opponentSet.add([b,d].sort().join('|'));
+
+   matches.push({a,b,c,d});
  }
 
- let rounds=[];
- let partnerPairs=new Set();
+ document.getElementById('schedule').innerHTML=matches.map((m,i)=>
+   `<div>Runde ${i+1}: ${m.a} / ${m.b} vs ${m.c} / ${m.d}</div>`
+ ).join('');
 
- for(let r=0;r<Math.max(6,p.length);r++){
-   let a=p[r%p.length];
-   let b=p[(r+1)%p.length];
-   let c=p[(r+2)%p.length];
-   let d=p[(r+3)%p.length];
+ let fairness=Math.min(100,
+   40 + partnerSet.size*2 + opponentSet.size
+ );
 
-   partnerPairs.add([a,b].sort().join('-'));
-   partnerPairs.add([c,d].sort().join('-'));
+ document.getElementById('fairness').innerHTML=
+   `<b>Fairness:</b> ${fairness}/100<br>
+   Partnerkombinationen: ${partnerSet.size}<br>
+   Gegnerkombinationen: ${opponentSet.size}`;
 
-   rounds.push(`Runde ${r+1}: ${a} / ${b} vs ${c} / ${d}`);
- }
-
- document.getElementById('schedule').innerHTML =
-   rounds.map(x=>'<div>'+x+'</div>').join('');
-
- const fairness=Math.min(100,50+partnerPairs.size*4);
-
- document.getElementById('fairness').innerHTML =
-   '<b>Fairness-Score:</b> '+fairness+'/100<br>'+
-   'Unterschiedliche Partnerschaften: '+partnerPairs.size+'<br>'+
-   'Americano-Rotation aktiv';
+ renderRanking();
 }
+
+function renderRanking(){
+ let rows=Object.entries(ranking)
+ .sort((a,b)=>b[1]-a[1])
+ .map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+
+ document.getElementById('ranking').innerHTML=
+ `<table><tr><th>Spieler</th><th>Punkte</th></tr>${rows}</table>`;
+}
+
+let remaining=1080,id=null;
+
+function drawTimer(){
+ let m=Math.floor(remaining/60);
+ let s=remaining%60;
+ document.getElementById('timer').innerText=
+ String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function startTimer(){
+ clearInterval(id);
+ id=setInterval(()=>{
+   if(remaining>0){remaining--;drawTimer();}
+   else{clearInterval(id);alert('🏁 Runde beendet');}
+ },1000);
+}
+function pauseTimer(){clearInterval(id);}
+function resetTimer(){remaining=1080;drawTimer();}
+
+drawTimer();
+generateTournament();
 </script>
 </body>
 </html>
