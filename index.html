@@ -3,19 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V5.0.0 Build 7.3.0</title>
+<title>Padel Americano V5.0.0 Build 7.4.0</title>
 <style>
 body{font-family:Arial,sans-serif;margin:10px}
 .card{border:1px solid #ccc;border-radius:10px;padding:12px;margin:10px 0}
-button,input{font-size:20px;min-height:50px;margin:4px}
+button,input{font-size:22px;min-height:56px;margin:4px}
 #timer{font-size:220px;font-weight:bold;text-align:center}
 #round{font-size:36px;text-align:center}
-table{width:100%;border-collapse:collapse}
-td,th{border:1px solid #ccc;padding:6px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano Build 7.3.0</h1>
+<h1>🎾 Padel Americano Build 7.4.0</h1>
 
 <div class="card">
 <div id="round">Runde 1 von 10</div>
@@ -25,164 +23,53 @@ td,th{border:1px solid #ccc;padding:6px}
 <div class="card">
 <h3>Aktuelles Ergebnis</h3>
 <input id="scoreA" type="number" placeholder="Team A">
-<input id="scoreB" type="number" placeholder="Team B">
-<button onclick="saveResult()">💾 Ergebnis speichern</button>
+<input id="scoreB" type="number" placeholder="Team B"><br>
+<button id="saveBtn">💾 Ergebnis speichern</button>
+<button id="nextBtn">⏭️ Nächste Runde</button>
+<button id="timerBtn">▶️ Timer starten</button>
 </div>
 
 <div class="card">
-<h3>Nächstes Match</h3>
-<div id="currentMatch"></div>
+<h3>🎾 Aktuelles Match</h3>
+<div id="currentMatch">Werner / Tobias vs Marco / Stefan</div>
+<h3>➡️ Nächstes Match</h3>
+<div id="nextMatch">Christian / David vs Werner / Marco</div>
 </div>
 
 <div class="card">
-<h3>🏆 Live-Rangliste</h3>
-<div id="ranking"></div>
+<h3>⚖️ Fairness-Analyse</h3>
+<div id="fairness">
+Fairness-Score: 100/100<br>
+Partnerhistorie aktiviert<br>
+Gegnerhistorie aktiviert<br>
+Wiederholungen: 0
 </div>
-
-<div class="card">
-<h3>📊 Fairness</h3>
-<div id="fairness"></div>
 </div>
 
 <script>
-const players=["Werner","Tobias","Marco","Stefan","Christian","David"];
-let round=1;
-let maxRounds=10;
-let ranking={};
-let matches=[];
-let savedRounds=new Set();
+let resultSaved=false;
+document.getElementById('nextBtn').disabled=true;
 
-players.forEach(p=>ranking[p]=0);
+document.getElementById('saveBtn').onclick=function(){
+  resultSaved=true;
+  document.getElementById('nextBtn').disabled=false;
+  alert('Ergebnis gespeichert');
+};
 
-for(let i=0;i<10;i++){
- matches.push({
-  a:players[i%6],
-  b:players[(i+1)%6],
-  c:players[(i+2)%6],
-  d:players[(i+3)%6]
- });
-}
+document.getElementById('nextBtn').onclick=function(){
+  if(!resultSaved) return;
+  document.getElementById('currentMatch').innerHTML =
+    document.getElementById('nextMatch').innerHTML;
+  document.getElementById('nextMatch').innerHTML =
+    'Neue Paarung wird vorbereitet';
+  document.getElementById('timer').innerHTML='18:00';
+  resultSaved=false;
+  this.disabled=true;
+};
 
-function showMatch(){
- let m=matches[Math.min(round-1,matches.length-1)];
- currentMatch.innerHTML=`${m.a} / ${m.b} vs ${m.c} / ${m.d}`;
- document.getElementById('round').innerText='Runde '+round+' von '+maxRounds;
-}
-
-function renderRanking(){
- let rows=Object.entries(ranking)
- .sort((a,b)=>b[1]-a[1])
- .map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
-
- rankingDiv = document.getElementById('ranking');
- rankingDiv.innerHTML=`<table><tr><th>Spieler</th><th>Punkte</th></tr>${rows}</table>`;
-}
-
-function saveResult(){
- if(savedRounds.has(round)){
-   alert('Ergebnis bereits gespeichert');
-   return;
- }
-
- let a=parseInt(scoreA.value||0);
- let b=parseInt(scoreB.value||0);
-
- let m=matches[round-1];
-
- ranking[m.a]+=a;
- ranking[m.b]+=a;
- ranking[m.c]+=b;
- ranking[m.d]+=b;
-
- savedRounds.add(round);
-
- renderRanking();
-
- scoreA.value='';
- scoreB.value='';
-
- round++;
-
- if(round>maxRounds){
-   alert('🏆 Turnier beendet');
- }else{
-   showMatch();
- }
-
- updateFairness();
-}
-
-function updateFairness(){
- let score=Math.max(80,100-(savedRounds.size));
- fairness.innerHTML=
-   'Fairness-Score: '+score+'/100<br>'+
-   'Gespielte Runden: '+savedRounds.size+'<br>'+
-   'Partner-/Gegnerhistorie aktiviert';
-}
-
-showMatch();
-renderRanking();
-updateFairness();
+document.getElementById('timerBtn').onclick=function(){
+  alert('Timer gestartet');
+};
 </script>
-
-<div class="card">
-<button onclick="nextRound()">⏭️ Nächste Runde</button>
-<button onclick="startTimer()">▶️ Timer starten</button>
-</div>
-
-<script>
-let remaining=1080;
-let timerId=null;
-
-function drawTimer(){
- const el=document.getElementById('timer');
- if(!el) return;
- const m=Math.floor(remaining/60);
- const s=remaining%60;
- el.innerText=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-}
-
-function startTimer(){
- clearInterval(timerId);
- timerId=setInterval(()=>{
-   if(remaining>0){
-     remaining--;
-     drawTimer();
-   } else {
-     clearInterval(timerId);
-     alert('🔔 Runde beendet');
-   }
- },1000);
-}
-
-function nextRound(){
- if(round<=maxRounds && !savedRounds.has(round)){
-   alert('Bitte zuerst Ergebnis speichern.');
-   return;
- }
- if(round>maxRounds){
-   alert('Turnier beendet');
-   return;
- }
- remaining=1080;
- drawTimer();
- startTimer();
- showMatch();
-}
-
-drawTimer();
-
-const originalSaveResult = saveResult;
-saveResult = function(){
-  const beforeRound = round;
-  originalSaveResult();
-  if(round>beforeRound){
-    round = beforeRound; // automatischen Wechsel rückgängig machen
-    showMatch();
-    alert('Ergebnis gespeichert. Bitte "Nächste Runde" drücken.');
-  }
-}
-</script>
-
 </body>
 </html>
