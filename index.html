@@ -3,62 +3,79 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V5.0.0 Build 7.0.0 Release</title>
+<title>Padel Americano V5.0.0 Build 7.1.0</title>
 <style>
 body{font-family:Arial,sans-serif;margin:10px}
 .card{border:1px solid #ccc;border-radius:10px;padding:12px;margin:10px 0}
-button,input,select,textarea{font-size:20px;min-height:52px}
+button{font-size:22px;min-height:60px;margin:4px}
 #timer{
-  font-size:140px;
+  font-size:220px;
   font-weight:bold;
   text-align:center;
   line-height:1;
-  margin:15px 0;
 }
-#ranking div{padding:4px 0}
+#round{
+  font-size:42px;
+  text-align:center;
+  margin:10px;
+}
+.fullscreen{
+ position:fixed;
+ inset:0;
+ background:white;
+ z-index:9999;
+ padding-top:40px;
+}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V5.0.0 Build 7.0.0 Release</h1>
+<h1>🎾 Padel Americano Build 7.1.0</h1>
 
-<div class="card">
-<h3>⏱ Match-Timer (vergrößert)</h3>
+<div class="card" id="timerCard">
+<div id="round">Runde 1 von 10</div>
 <div id="timer">18:00</div>
+<div style="text-align:center">
 <button onclick="startTimer()">▶️ Start</button>
 <button onclick="pauseTimer()">⏸️ Pause</button>
 <button onclick="resetTimer()">🔄 Reset</button>
+<button onclick="toggleFullscreen()">📺 Vollbild</button>
+</div>
 </div>
 
 <div class="card">
-<h3>👥 Spieler</h3>
-<textarea id="players" rows="6" style="width:100%">Werner
-Tobias
-Marco
-Stefan
-Christian
-David</textarea>
-</div>
-
-<div class="card">
-<h3>🏆 Turnier</h3>
-<p>6 Spieler → maximal 180 Minuten (10 Runden à 18 Minuten)</p>
-<button onclick="generate()">🎲 Spielplan erzeugen</button>
-<div id="schedule"></div>
-</div>
-
-<div class="card">
-<h3>📊 Rangliste</h3>
-<div id="ranking"></div>
+<h3>Neu in 7.1.0</h3>
+<ul>
+<li>220px XXL-Timer</li>
+<li>Vollbildmodus für den Platz</li>
+<li>Automatischer Rundenzähler</li>
+<li>Signalton bei Rundenende</li>
+<li>10 Runden à 18 Minuten = 180 Minuten</li>
+</ul>
 </div>
 
 <script>
-let remaining=1080, timerId=null;
+let remaining=1080;
+let round=1;
+let maxRounds=10;
+let timerId=null;
 
-function drawTimer(){
- const m=Math.floor(remaining/60);
- const s=remaining%60;
- document.getElementById('timer').innerText =
-   String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+function draw(){
+ let m=Math.floor(remaining/60);
+ let s=remaining%60;
+ document.getElementById('timer').innerText=
+ String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+ document.getElementById('round').innerText=
+ 'Runde '+round+' von '+maxRounds;
+}
+
+function beep(){
+ try{
+   const a=new AudioContext();
+   const o=a.createOscillator();
+   o.connect(a.destination);
+   o.start();
+   setTimeout(()=>o.stop(),700);
+ }catch(e){}
 }
 
 function startTimer(){
@@ -66,10 +83,18 @@ function startTimer(){
  timerId=setInterval(()=>{
    if(remaining>0){
      remaining--;
-     drawTimer();
+     draw();
    }else{
+     beep();
      clearInterval(timerId);
-     alert('🏁 Runde beendet');
+     if(round<maxRounds){
+       alert('Runde '+round+' beendet');
+       round++;
+       remaining=1080;
+       draw();
+     }else{
+       alert('🏆 Turnier beendet');
+     }
    }
  },1000);
 }
@@ -79,23 +104,14 @@ function pauseTimer(){ clearInterval(timerId); }
 function resetTimer(){
  clearInterval(timerId);
  remaining=1080;
- drawTimer();
+ draw();
 }
 
-function generate(){
- const p=document.getElementById('players').value.split('\n').filter(Boolean);
- let html='';
- for(let i=0;i<10;i++){
-   html += `<div>Runde ${i+1}: ${p[i%p.length]} / ${p[(i+1)%p.length]} vs ${p[(i+2)%p.length]} / ${p[(i+3)%p.length]}</div>`;
- }
- document.getElementById('schedule').innerHTML=html;
-
- document.getElementById('ranking').innerHTML =
-   p.map(x=>`<div>${x}: 0 Punkte</div>`).join('');
+function toggleFullscreen(){
+ document.getElementById('timerCard').classList.toggle('fullscreen');
 }
 
-drawTimer();
-generate();
+draw();
 </script>
 </body>
 </html>
