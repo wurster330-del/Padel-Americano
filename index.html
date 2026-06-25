@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V5.0.0 Build 7.2.0</title>
+<title>Padel Americano V5.0.0 Build 7.3.0</title>
 <style>
 body{font-family:Arial,sans-serif;margin:10px}
 .card{border:1px solid #ccc;border-radius:10px;padding:12px;margin:10px 0}
@@ -15,7 +15,7 @@ td,th{border:1px solid #ccc;padding:6px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano Build 7.2.0</h1>
+<h1>🎾 Padel Americano Build 7.3.0</h1>
 
 <div class="card">
 <div id="round">Runde 1 von 10</div>
@@ -124,5 +124,65 @@ showMatch();
 renderRanking();
 updateFairness();
 </script>
+
+<div class="card">
+<button onclick="nextRound()">⏭️ Nächste Runde</button>
+<button onclick="startTimer()">▶️ Timer starten</button>
+</div>
+
+<script>
+let remaining=1080;
+let timerId=null;
+
+function drawTimer(){
+ const el=document.getElementById('timer');
+ if(!el) return;
+ const m=Math.floor(remaining/60);
+ const s=remaining%60;
+ el.innerText=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function startTimer(){
+ clearInterval(timerId);
+ timerId=setInterval(()=>{
+   if(remaining>0){
+     remaining--;
+     drawTimer();
+   } else {
+     clearInterval(timerId);
+     alert('🔔 Runde beendet');
+   }
+ },1000);
+}
+
+function nextRound(){
+ if(round<=maxRounds && !savedRounds.has(round)){
+   alert('Bitte zuerst Ergebnis speichern.');
+   return;
+ }
+ if(round>maxRounds){
+   alert('Turnier beendet');
+   return;
+ }
+ remaining=1080;
+ drawTimer();
+ startTimer();
+ showMatch();
+}
+
+drawTimer();
+
+const originalSaveResult = saveResult;
+saveResult = function(){
+  const beforeRound = round;
+  originalSaveResult();
+  if(round>beforeRound){
+    round = beforeRound; // automatischen Wechsel rückgängig machen
+    showMatch();
+    alert('Ergebnis gespeichert. Bitte "Nächste Runde" drücken.');
+  }
+}
+</script>
+
 </body>
 </html>
