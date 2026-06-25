@@ -3,123 +3,99 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V5.0.0 Build 7.0.0 Beta</title>
+<title>Padel Americano V5.0.0 Build 7.0.0 Release</title>
 <style>
-body{font-family:Arial;margin:10px}
-.card{border:1px solid #ccc;border-radius:8px;padding:10px;margin:10px 0}
-button,input,textarea,select{font-size:18px;margin:4px}
-#timer{font-size:64px;font-weight:bold;text-align:center}
+body{font-family:Arial,sans-serif;margin:10px}
+.card{border:1px solid #ccc;border-radius:10px;padding:12px;margin:10px 0}
+button,input,select,textarea{font-size:20px;min-height:52px}
+#timer{
+  font-size:140px;
+  font-weight:bold;
+  text-align:center;
+  line-height:1;
+  margin:15px 0;
+}
+#ranking div{padding:4px 0}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V5.0.0 Build 7.0.0 Beta</h1>
+<h1>🎾 Padel Americano V5.0.0 Build 7.0.0 Release</h1>
 
 <div class="card">
-<h3>Spieler (4–12)</h3>
-<textarea id="players" rows="8" style="width:100%">Werner
+<h3>⏱ Match-Timer (vergrößert)</h3>
+<div id="timer">18:00</div>
+<button onclick="startTimer()">▶️ Start</button>
+<button onclick="pauseTimer()">⏸️ Pause</button>
+<button onclick="resetTimer()">🔄 Reset</button>
+</div>
+
+<div class="card">
+<h3>👥 Spieler</h3>
+<textarea id="players" rows="6" style="width:100%">Werner
 Tobias
 Marco
 Stefan
 Christian
-David</textarea><br>
-
-<h3>Maximale Turnierdauer</h3>
-<select id="duration">
-<option value="120">120 Minuten</option>
-<option value="150">150 Minuten</option>
-<option value="180" selected>180 Minuten</option>
-</select>
-
-<button onclick="generateTournament()">🎲 Turnier erzeugen</button>
+David</textarea>
 </div>
 
 <div class="card">
-<h3>⏱ Match-Timer</h3>
-<div id="timer">18:00</div>
-</div>
-
-<div class="card">
-<h3>📋 Spielplan</h3>
+<h3>🏆 Turnier</h3>
+<p>6 Spieler → maximal 180 Minuten (10 Runden à 18 Minuten)</p>
+<button onclick="generate()">🎲 Spielplan erzeugen</button>
 <div id="schedule"></div>
 </div>
 
 <div class="card">
-<h3>📊 Fairness</h3>
-<div id="fairness"></div>
-</div>
-
-<div class="card">
-<h3>🏆 Rangliste</h3>
+<h3>📊 Rangliste</h3>
 <div id="ranking"></div>
 </div>
 
 <script>
-let ranking={};
+let remaining=1080, timerId=null;
 
-function getPlayers(){
- return players.value.split('\n').map(x=>x.trim()).filter(Boolean);
+function drawTimer(){
+ const m=Math.floor(remaining/60);
+ const s=remaining%60;
+ document.getElementById('timer').innerText =
+   String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
 
-function generateTournament(){
- const p=getPlayers();
- if(p.length<4 || p.length>12){
-   alert('4 bis 12 Spieler erforderlich');
-   return;
- }
+function startTimer(){
+ clearInterval(timerId);
+ timerId=setInterval(()=>{
+   if(remaining>0){
+     remaining--;
+     drawTimer();
+   }else{
+     clearInterval(timerId);
+     alert('🏁 Runde beendet');
+   }
+ },1000);
+}
 
- ranking={};
- p.forEach(x=>ranking[x]=0);
+function pauseTimer(){ clearInterval(timerId); }
 
- const totalMinutes=parseInt(duration.value);
- const matchMinutes=18;
+function resetTimer(){
+ clearInterval(timerId);
+ remaining=1080;
+ drawTimer();
+}
 
- let rounds=Math.floor(totalMinutes/matchMinutes);
-
- // Spezielle Anforderung: 6 Spieler max 180 Minuten
- if(p.length===6){
-   rounds=Math.min(rounds,10); // 10 x 18 = 180
- }
-
+function generate(){
+ const p=document.getElementById('players').value.split('\n').filter(Boolean);
  let html='';
- let partnerSet=new Set();
- let opponentSet=new Set();
-
- for(let r=0;r<rounds;r++){
-   const a=p[r%p.length];
-   const b=p[(r+1)%p.length];
-   const c=p[(r+2)%p.length];
-   const d=p[(r+3)%p.length];
-
-   partnerSet.add([a,b].sort().join('|'));
-   partnerSet.add([c,d].sort().join('|'));
-   opponentSet.add([a,c].sort().join('|'));
-
-   html += `<div>Runde ${r+1}: ${a} / ${b} vs ${c} / ${d}</div>`;
+ for(let i=0;i<10;i++){
+   html += `<div>Runde ${i+1}: ${p[i%p.length]} / ${p[(i+1)%p.length]} vs ${p[(i+2)%p.length]} / ${p[(i+3)%p.length]}</div>`;
  }
+ document.getElementById('schedule').innerHTML=html;
 
- schedule.innerHTML=html;
-
- let fairness=Math.min(100,50+partnerSet.size*3+opponentSet.size);
-
- fairness.innerHTML=`Fairness: ${fairness}/100`;
-
- document.getElementById('fairness').innerHTML =
-   `<b>Fairness:</b> ${fairness}/100<br>
-    Partnerkombinationen: ${partnerSet.size}<br>
-    Gegnerkombinationen: ${opponentSet.size}<br>
-    Geplante Runden: ${rounds}<br>
-    Turnierdauer: ${rounds*matchMinutes} Minuten`;
-
- renderRanking();
+ document.getElementById('ranking').innerHTML =
+   p.map(x=>`<div>${x}: 0 Punkte</div>`).join('');
 }
 
-function renderRanking(){
- let rows=Object.keys(ranking)
- .map(p=>`<div>${p}: 0 Punkte</div>`).join('');
- ranking.innerHTML=rows;
-}
-
-generateTournament();
+drawTimer();
+generate();
 </script>
 </body>
 </html>
