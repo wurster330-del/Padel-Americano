@@ -1,21 +1,27 @@
 <!DOCTYPE html>
-<html lang="de"><head>
+<html lang="de">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V5.0.0 Build 7.3.1 Rebuild</title>
+<title>Padel Americano V5.0.0 Build 7.5.0</title>
 <style>
 body{font-family:Arial;margin:10px}
 .card{border:1px solid #ccc;border-radius:10px;padding:12px;margin:10px 0}
 button,input{font-size:20px;min-height:50px;margin:4px}
-#timer{font-size:220px;font-weight:bold;text-align:center}
+#timer{font-size:240px;font-weight:bold;text-align:center;line-height:1}
 #round{text-align:center;font-size:36px}
 table{width:100%;border-collapse:collapse} td,th{border:1px solid #ccc;padding:6px}
-</style></head><body>
-<h1>🎾 Build 7.3.1 Rebuild</h1>
+.fullscreen{position:fixed;inset:0;background:#fff;z-index:9999;padding:10px;overflow:auto}
+.podium{font-size:24px}
+</style>
+</head>
+<body>
+<h1>🎾 Build 7.5.0</h1>
 
-<div class="card">
-<div id="round">Runde 1 von 10</div>
+<div class="card" id="displayCard">
+<div id="round"></div>
 <div id="timer">18:00</div>
+<button onclick="toggleFullscreen()">📺 Vollbild</button>
 </div>
 
 <div class="card">
@@ -28,93 +34,83 @@ table{width:100%;border-collapse:collapse} td,th{border:1px solid #ccc;padding:6
 </div>
 
 <div class="card">
-<h3>🎾 Aktuelles Match</h3>
-<div id="currentMatch"></div>
-<h3>➡️ Nächstes Match</h3>
-<div id="nextMatch"></div>
+<h3>🎾 Aktuelles Match</h3><div id="currentMatch"></div>
+<h3>➡️ Nächstes Match</h3><div id="nextMatch"></div>
 </div>
 
 <div class="card"><h3>🏆 Rangliste</h3><div id="ranking"></div></div>
+<div class="card"><h3>🥇🥈🥉 Podium</h3><div id="podium" class="podium">Noch nicht beendet</div></div>
 
 <script>
 const players=["Werner","Tobias","Marco","Stefan","Christian","David"];
 const maxRounds=10;
-let round=1;
-let ranking={};
-let saved=false;
-let remaining=1080,timerId=null;
-
-players.forEach(p=>ranking[p]=0);
+let round=1, saved=false, remaining=1080, timerId=null;
+let ranking={}; players.forEach(p=>ranking[p]=0);
 
 const matches=[];
 for(let i=0;i<10;i++){
- matches.push({
-  a:players[i%6], b:players[(i+1)%6],
-  c:players[(i+2)%6], d:players[(i+3)%6]
- });
+ matches.push({a:players[i%6],b:players[(i+1)%6],c:players[(i+2)%6],d:players[(i+3)%6]});
+}
+
+function saveState(){
+ localStorage.setItem("padel75", JSON.stringify({round,ranking,remaining,saved}));
+}
+function loadState(){
+ const s=localStorage.getItem("padel75");
+ if(!s) return;
+ try{
+   const d=JSON.parse(s);
+   round=d.round||1; ranking=d.ranking||ranking;
+   remaining=d.remaining||1080; saved=d.saved||false;
+ }catch(e){}
 }
 
 function renderRanking(){
- let rows=Object.entries(ranking).sort((a,b)=>b[1]-a[1])
- .map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ let arr=Object.entries(ranking).sort((a,b)=>b[1]-a[1]);
  document.getElementById('ranking').innerHTML =
- `<table><tr><th>Spieler</th><th>Punkte</th></tr>${rows}</table>`;
+ '<table><tr><th>Spieler</th><th>Punkte</th></tr>'+
+ arr.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('')+'</table>';
+ if(round>=maxRounds){
+   document.getElementById('podium').innerHTML =
+   `🥇 ${arr[0]?.[0]||'-'}<br>🥈 ${arr[1]?.[0]||'-'}<br>🥉 ${arr[2]?.[0]||'-'}`;
+ }
 }
 
 function showMatches(){
  let cur=matches[Math.min(round-1,matches.length-1)];
- document.getElementById('currentMatch').innerHTML =
- `${cur.a} / ${cur.b} vs ${cur.c} / ${cur.d}`;
- if(round < maxRounds){
-   let nxt=matches[round];
-   document.getElementById('nextMatch').innerHTML =
-   `${nxt.a} / ${nxt.b} vs ${nxt.c} / ${nxt.d}`;
- } else {
-   document.getElementById('nextMatch').innerHTML = "Turnierende";
- }
- document.getElementById('round').innerText=`Runde ${round} von ${maxRounds}`;
+ currentMatch.innerHTML=`${cur.a} / ${cur.b} vs ${cur.c} / ${cur.d}`;
+ nextMatch.innerHTML=(round<maxRounds)?
+ `${matches[round].a} / ${matches[round].b} vs ${matches[round].c} / ${matches[round].d}`:
+ 'Turnierende';
+ roundEl.innerText=`Runde ${round} von ${maxRounds}`;
 }
 
 function saveResult(){
- if(saved){ alert("Ergebnis bereits gespeichert"); return; }
- let a=parseInt(document.getElementById('scoreA').value||0);
- let b=parseInt(document.getElementById('scoreB').value||0);
- let m=matches[round-1];
- ranking[m.a]+=a; ranking[m.b]+=a;
- ranking[m.c]+=b; ranking[m.d]+=b;
- saved=true;
- renderRanking();
- alert("Ergebnis gespeichert");
+ if(saved) return alert('Ergebnis bereits gespeichert');
+ let a=+scoreA.value||0,b=+scoreB.value||0,m=matches[round-1];
+ ranking[m.a]+=a; ranking[m.b]+=a; ranking[m.c]+=b; ranking[m.d]+=b;
+ saved=true; renderRanking(); saveState();
 }
 
 function nextRound(){
- if(!saved){ alert("Bitte zuerst Ergebnis speichern"); return; }
- if(round>=maxRounds){ alert("Turnier beendet"); return; }
- round++;
- saved=false;
- document.getElementById('scoreA').value='';
- document.getElementById('scoreB').value='';
- remaining=1080;
- drawTimer();
- showMatches();
+ if(!saved) return alert('Bitte zuerst Ergebnis speichern');
+ if(round>=maxRounds){ renderRanking(); return alert('Turnier beendet');}
+ round++; saved=false; scoreA.value=''; scoreB.value='';
+ remaining=1080; drawTimer(); showMatches(); saveState();
 }
 
 function drawTimer(){
- let m=Math.floor(remaining/60), s=remaining%60;
- document.getElementById('timer').innerText =
- String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+ timer.innerText=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');
 }
-
 function startTimer(){
  clearInterval(timerId);
  timerId=setInterval(()=>{
-  if(remaining>0){remaining--; drawTimer();}
+  if(remaining>0){remaining--; drawTimer(); saveState();}
   else {clearInterval(timerId); alert('🔔 Runde beendet');}
  },1000);
 }
+function toggleFullscreen(){displayCard.classList.toggle('fullscreen');}
 
-renderRanking();
-showMatches();
-drawTimer();
+loadState(); renderRanking(); showMatches(); drawTimer();
 </script>
 </body></html>
