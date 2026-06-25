@@ -1,19 +1,17 @@
 <!DOCTYPE html>
-<html lang="de">
-<head>
+<html lang="de"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V5.0.0 Build 7.4.0</title>
+<title>Padel Americano V5.0.0 Build 7.3.1 Rebuild</title>
 <style>
-body{font-family:Arial,sans-serif;margin:10px}
+body{font-family:Arial;margin:10px}
 .card{border:1px solid #ccc;border-radius:10px;padding:12px;margin:10px 0}
-button,input{font-size:22px;min-height:56px;margin:4px}
+button,input{font-size:20px;min-height:50px;margin:4px}
 #timer{font-size:220px;font-weight:bold;text-align:center}
-#round{font-size:36px;text-align:center}
-</style>
-</head>
-<body>
-<h1>🎾 Padel Americano Build 7.4.0</h1>
+#round{text-align:center;font-size:36px}
+table{width:100%;border-collapse:collapse} td,th{border:1px solid #ccc;padding:6px}
+</style></head><body>
+<h1>🎾 Build 7.3.1 Rebuild</h1>
 
 <div class="card">
 <div id="round">Runde 1 von 10</div>
@@ -24,52 +22,99 @@ button,input{font-size:22px;min-height:56px;margin:4px}
 <h3>Aktuelles Ergebnis</h3>
 <input id="scoreA" type="number" placeholder="Team A">
 <input id="scoreB" type="number" placeholder="Team B"><br>
-<button id="saveBtn">💾 Ergebnis speichern</button>
-<button id="nextBtn">⏭️ Nächste Runde</button>
-<button id="timerBtn">▶️ Timer starten</button>
+<button onclick="saveResult()">💾 Ergebnis speichern</button>
+<button onclick="nextRound()">⏭️ Nächste Runde</button>
+<button onclick="startTimer()">▶️ Timer starten</button>
 </div>
 
 <div class="card">
 <h3>🎾 Aktuelles Match</h3>
-<div id="currentMatch">Werner / Tobias vs Marco / Stefan</div>
+<div id="currentMatch"></div>
 <h3>➡️ Nächstes Match</h3>
-<div id="nextMatch">Christian / David vs Werner / Marco</div>
+<div id="nextMatch"></div>
 </div>
 
-<div class="card">
-<h3>⚖️ Fairness-Analyse</h3>
-<div id="fairness">
-Fairness-Score: 100/100<br>
-Partnerhistorie aktiviert<br>
-Gegnerhistorie aktiviert<br>
-Wiederholungen: 0
-</div>
-</div>
+<div class="card"><h3>🏆 Rangliste</h3><div id="ranking"></div></div>
 
 <script>
-let resultSaved=false;
-document.getElementById('nextBtn').disabled=true;
+const players=["Werner","Tobias","Marco","Stefan","Christian","David"];
+const maxRounds=10;
+let round=1;
+let ranking={};
+let saved=false;
+let remaining=1080,timerId=null;
 
-document.getElementById('saveBtn').onclick=function(){
-  resultSaved=true;
-  document.getElementById('nextBtn').disabled=false;
-  alert('Ergebnis gespeichert');
-};
+players.forEach(p=>ranking[p]=0);
 
-document.getElementById('nextBtn').onclick=function(){
-  if(!resultSaved) return;
-  document.getElementById('currentMatch').innerHTML =
-    document.getElementById('nextMatch').innerHTML;
-  document.getElementById('nextMatch').innerHTML =
-    'Neue Paarung wird vorbereitet';
-  document.getElementById('timer').innerHTML='18:00';
-  resultSaved=false;
-  this.disabled=true;
-};
+const matches=[];
+for(let i=0;i<10;i++){
+ matches.push({
+  a:players[i%6], b:players[(i+1)%6],
+  c:players[(i+2)%6], d:players[(i+3)%6]
+ });
+}
 
-document.getElementById('timerBtn').onclick=function(){
-  alert('Timer gestartet');
-};
+function renderRanking(){
+ let rows=Object.entries(ranking).sort((a,b)=>b[1]-a[1])
+ .map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ document.getElementById('ranking').innerHTML =
+ `<table><tr><th>Spieler</th><th>Punkte</th></tr>${rows}</table>`;
+}
+
+function showMatches(){
+ let cur=matches[Math.min(round-1,matches.length-1)];
+ document.getElementById('currentMatch').innerHTML =
+ `${cur.a} / ${cur.b} vs ${cur.c} / ${cur.d}`;
+ if(round < maxRounds){
+   let nxt=matches[round];
+   document.getElementById('nextMatch').innerHTML =
+   `${nxt.a} / ${nxt.b} vs ${nxt.c} / ${nxt.d}`;
+ } else {
+   document.getElementById('nextMatch').innerHTML = "Turnierende";
+ }
+ document.getElementById('round').innerText=`Runde ${round} von ${maxRounds}`;
+}
+
+function saveResult(){
+ if(saved){ alert("Ergebnis bereits gespeichert"); return; }
+ let a=parseInt(document.getElementById('scoreA').value||0);
+ let b=parseInt(document.getElementById('scoreB').value||0);
+ let m=matches[round-1];
+ ranking[m.a]+=a; ranking[m.b]+=a;
+ ranking[m.c]+=b; ranking[m.d]+=b;
+ saved=true;
+ renderRanking();
+ alert("Ergebnis gespeichert");
+}
+
+function nextRound(){
+ if(!saved){ alert("Bitte zuerst Ergebnis speichern"); return; }
+ if(round>=maxRounds){ alert("Turnier beendet"); return; }
+ round++;
+ saved=false;
+ document.getElementById('scoreA').value='';
+ document.getElementById('scoreB').value='';
+ remaining=1080;
+ drawTimer();
+ showMatches();
+}
+
+function drawTimer(){
+ let m=Math.floor(remaining/60), s=remaining%60;
+ document.getElementById('timer').innerText =
+ String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function startTimer(){
+ clearInterval(timerId);
+ timerId=setInterval(()=>{
+  if(remaining>0){remaining--; drawTimer();}
+  else {clearInterval(timerId); alert('🔔 Runde beendet');}
+ },1000);
+}
+
+renderRanking();
+showMatches();
+drawTimer();
 </script>
-</body>
-</html>
+</body></html>
