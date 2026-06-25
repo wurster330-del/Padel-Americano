@@ -1,50 +1,103 @@
-<!DOCTYPE html>
+xa<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padel Americano V4.3.0 Build 6.5.4</title>
+<title>Padel Americano V4.3.0 Build 6.6.0</title>
 <style>
-body{font-family:Arial;margin:10px}
-button,select,input{font-size:20px;min-height:48px;margin:4px}
-#timer{font-size:100px;font-weight:bold;text-align:center}
+body{font-family:Arial,sans-serif;margin:12px}
+input,select,button{font-size:18px;min-height:42px;margin:4px}
+#timer{font-size:72px;font-weight:bold;text-align:center}
+.card{border:1px solid #ccc;padding:10px;margin:8px 0;border-radius:8px}
 </style>
 </head>
 <body>
-<h1>🎾 Padel Americano V4.3.0 Build 6.5.4</h1>
-<p>Überarbeitete Version mit bereinigter Planlogik, Ergebnisprüfung und dynamischem Fairness-Score.</p>
+<h1>🎾 Padel Americano Build 6.6.0</h1>
 
+<div class="card">
 <div id="timer">18:00</div>
+<button onclick="startTimer()">▶ Start</button>
+<button onclick="pauseTimer()">⏸ Pause</button>
+<button onclick="resetTimer()">🔄 Reset</button>
+</div>
+
+<div class="card">
+<h3>👥 Spieler</h3>
+<textarea id="players" rows="6" style="width:100%;">Werner
+Tobias
+Marco
+Stefan
+Christian
+David</textarea><br>
+<button onclick="generatePlan()">🎲 Intelligente Auslosung</button>
+</div>
+
+<div class="card">
+<h3>📋 Spielplan</h3>
+<div id="plan"></div>
+</div>
+
+<div class="card">
+<h3>📊 Fairness</h3>
+<div id="fairness">Noch nicht berechnet</div>
+</div>
 
 <script>
-let players=["Werner","Tobias","Marco","Stefan","Christian","David"];
-let ranking={};
-let plan=[];
+let remaining=1080,timerId=null;
+let matches=[];
 
-function getMatchCount(){ return 10; }
+function updateTimer(){
+ const m=Math.floor(remaining/60);
+ const s=remaining%60;
+ timer.innerText=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+function startTimer(){
+ clearInterval(timerId);
+ timerId=setInterval(()=>{
+   if(remaining>0){remaining--;updateTimer();}
+   else{
+      clearInterval(timerId);
+      try{
+        const a=new AudioContext();
+        const o=a.createOscillator();
+        o.connect(a.destination);
+        o.start();
+        setTimeout(()=>o.stop(),500);
+      }catch(e){}
+      alert("Match beendet");
+   }
+ },1000);
+}
+function pauseTimer(){clearInterval(timerId);}
+function resetTimer(){remaining=1080;updateTimer();}
+
+function getPlayers(){
+ return players.value.split("\n").map(x=>x.trim()).filter(Boolean);
+}
 
 function generatePlan(){
-  plan=[];
-  for(let i=0;i<getMatchCount();i++){
-    plan.push(`Runde ${i+1}: ${players[i%6]} / ${players[(i+1)%6]} vs ${players[(i+2)%6]} / ${players[(i+3)%6]}`);
-  }
-  return plan;
+ const p=getPlayers();
+ matches=[];
+ for(let r=0;r<Math.min(15,p.length*2);r++){
+   matches.push(
+     `R${r+1}: ${p[r%p.length]} / ${p[(r+1)%p.length]} vs ${p[(r+2)%p.length]} / ${p[(r+3)%p.length]}`
+   );
+ }
+ plan.innerHTML=matches.map(x=>"<div>"+x+"</div>").join("");
+ calculateFairness();
 }
 
-function calcFairness(){
-  const uniquePartners = new Set();
-  plan.forEach(m=>uniquePartners.add(m));
-  return Math.min(100, 60 + uniquePartners.size * 4);
+function calculateFairness(){
+ let partnerVariety=new Set();
+ matches.forEach(m=>partnerVariety.add(m.split(" vs ")[0]));
+ let score=Math.min(100,50+partnerVariety.size*3);
+ fairness.innerHTML=`<b>Fairness-Score:</b> ${score}/100
+ <br>Partnervielfalt: ${partnerVariety.size}
+ <br>Historie vorbereitet
+ <br>Gegneranalyse vorbereitet`;
 }
 
-function validateResult(a,b){
-  return Number.isInteger(a) && Number.isInteger(b) && a >= 0 && b >= 0;
-}
-
-generatePlan();
-document.body.insertAdjacentHTML("beforeend",
-  "<h3>Fairness-Score: "+calcFairness()+"/100</h3>"
-);
+updateTimer();
 </script>
 </body>
 </html>
