@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V4.1 FIX</title>
+<title>Padel Manager V4.2</title>
 
 <style>
 body {
@@ -44,7 +44,7 @@ button {
 
 <body>
 
-<h2>Padel Manager V4.1 FIX</h2>
+<h2>Padel Manager V4.2</h2>
 
 <div id="setup">
 
@@ -67,9 +67,16 @@ button {
 </select>
 
 <select id="matchTime">
-<option value="15">15 Minuten Matchzeit</option>
-<option value="20" selected>20 Minuten Matchzeit</option>
-<option value="25">25 Minuten Matchzeit</option>
+<option value="15">15 Minuten</option>
+<option value="18" selected>18 Minuten ⭐</option>
+<option value="20">20 Minuten</option>
+<option value="25">25 Minuten</option>
+</select>
+
+<select id="warning">
+<option value="0">kein Signal</option>
+<option value="60">60 Sekunden vorher</option>
+<option value="30" selected>30 Sekunden vorher</option>
 </select>
 
 <button onclick="start()">Spiel starten</button>
@@ -104,17 +111,18 @@ let schedule=[];
 let current=0;
 let round=1;
 
-// TIMER
+// timers
 let sessionLeft=0;
 let matchLeft=0;
 
 let sessionRunning=false;
-let sessionInterval=null;
-let matchInterval=null;
+let sessionInterval;
+let matchInterval;
 
-// SETTINGS
+// settings
 let sessionDuration=0;
 let matchDuration=0;
+let warningTime=0;
 
 function start(){
 
@@ -124,12 +132,9 @@ p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
 
 players=players.slice(0,parseInt(count.value));
 
-// reset
-current=0;
-round=1;
-
 sessionDuration=parseInt(sessionTime.value)*60;
 matchDuration=parseInt(matchTime.value)*60;
+warningTime=parseInt(warning.value);
 
 sessionLeft=sessionDuration;
 matchLeft=matchDuration;
@@ -177,9 +182,6 @@ sessionInterval=setInterval(()=>{
 if(sessionLeft>0){
 sessionLeft--;
 document.getElementById("sessionTimer").innerText=format(sessionLeft);
-}else{
-clearInterval(sessionInterval);
-clearInterval(matchInterval);
 }
 },1000);
 
@@ -196,10 +198,22 @@ matchLeft=matchDuration;
 
 document.getElementById("matchTimer").innerText=format(matchLeft);
 
+let warned=false;
+
 matchInterval=setInterval(()=>{
+
 if(matchLeft>0){
+
 matchLeft--;
+
 document.getElementById("matchTimer").innerText=format(matchLeft);
+
+// WARNING LOGIC
+if(warningTime>0 && !warned && matchLeft<=warningTime){
+beep();
+warned=true;
+}
+
 }else{
 clearInterval(matchInterval);
 }
@@ -211,7 +225,6 @@ function nextRound(){
 if(current < schedule.length-1){
 current++;
 round++;
-
 startMatchTimer();
 render();
 }
@@ -251,6 +264,15 @@ let h=String(Math.floor(s/3600)).padStart(2,"0");
 let m=String(Math.floor((s%3600)/60)).padStart(2,"0");
 let sec=String(s%60).padStart(2,"0");
 return h+":"+m+":"+sec;
+}
+
+function beep(){
+let ctx=new (window.AudioContext||window.webkitAudioContext)();
+let osc=ctx.createOscillator();
+osc.frequency.value=800;
+osc.connect(ctx.destination);
+osc.start();
+osc.stop(ctx.currentTime+0.2);
 }
 
 </script>
