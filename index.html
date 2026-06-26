@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V4.5 FIX</title>
+<title>Padel Manager V4.6 FIX</title>
 
 <style>
 body {
@@ -38,10 +38,7 @@ button:disabled {
     margin:10px;
 }
 
-.warn {
-    color:orange;
-}
-
+.warn { color:orange; }
 .danger {
     color:red;
     animation:blink 0.8s infinite;
@@ -62,7 +59,7 @@ button:disabled {
 
 <body>
 
-<h2>Padel Manager V4.5</h2>
+<h2>Padel Manager V4.6</h2>
 
 <div id="setup">
 
@@ -97,7 +94,7 @@ button:disabled {
 <option value="30" selected>30 Sekunden vorher</option>
 </select>
 
-<button onclick="start()">Spiel starten</button>
+<button onclick="start()">Spiel vorbereiten</button>
 
 </div>
 
@@ -118,6 +115,7 @@ button:disabled {
 <div class="box" id="current"></div>
 <div class="box" id="next"></div>
 
+<button onclick="toggle()">▶ Start / ⏸ Pause</button>
 <button id="nextBtn" onclick="nextRound()" disabled>Nächste Runde</button>
 
 </div>
@@ -129,6 +127,7 @@ let schedule=[];
 let current=0;
 let round=1;
 
+// timers
 let sessionLeft=0;
 let matchLeft=0;
 
@@ -139,7 +138,7 @@ let matchDuration=0;
 let sessionDuration=0;
 let warningTime=0;
 
-let sessionRunning=false;
+let running=false;
 
 function start(){
 
@@ -163,7 +162,8 @@ document.getElementById("game").style.display="block";
 
 render();
 updateUI();
-startTimers();
+
+// IMPORTANT: NO AUTO START
 }
 
 function buildSchedule(){
@@ -185,18 +185,24 @@ bench:rot.slice(4)
 }
 }
 
-function startTimers(){
+function toggle(){
+
+if(running){
+clearInterval(sessionInterval);
+clearInterval(matchInterval);
+running=false;
+}else{
+running=true;
 
 sessionInterval=setInterval(()=>{
-
 if(sessionLeft>0){
 sessionLeft--;
 document.getElementById("sessionTimer").innerText=format(sessionLeft);
 }
-
 },1000);
 
 startMatchTimer();
+}
 }
 
 function startMatchTimer(){
@@ -216,25 +222,18 @@ matchLeft--;
 let el=document.getElementById("matchTimer");
 el.innerText=format(matchLeft);
 
-// WARN LOGIC STABLE
 el.className="";
 
-if(matchLeft<=60 && matchLeft>30){
-el.classList.add("warn");
-}
+if(matchLeft<=60 && matchLeft>30) el.classList.add("warn");
+if(matchLeft<=30 && matchLeft>0) el.classList.add("danger");
 
-if(matchLeft<=30 && matchLeft>0){
-el.classList.add("danger");
-}
-
-// enable button ONLY when 0
 if(matchLeft===0){
 document.getElementById("nextBtn").disabled=false;
 }
 
 }else{
-clearInterval(matchInterval);
 document.getElementById("nextBtn").disabled=false;
+clearInterval(matchInterval);
 }
 
 },1000);
@@ -242,7 +241,6 @@ document.getElementById("nextBtn").disabled=false;
 
 function nextRound(){
 
-// HARD BLOCK if match not finished
 if(matchLeft>0) return;
 
 if(current < schedule.length-1){
