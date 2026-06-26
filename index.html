@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V4.4</title>
+<title>Padel Manager V4.5 FIX</title>
 
 <style>
 body {
@@ -14,7 +14,6 @@ body {
     text-align:center;
 }
 
-/* INPUTS */
 input, select, button {
     width:90%;
     padding:10px;
@@ -29,39 +28,29 @@ button {
     border-radius:8px;
 }
 
-/* SESSION TIMER (klein) */
-#sessionTimer {
-    font-size:28px;
-    opacity:0.6;
+button:disabled {
+    opacity:0.4;
 }
 
-/* MATCH TIMER (groß) */
 #matchTimer {
     font-size:95px;
     font-weight:bold;
-    color:#00ffcc;
     margin:10px;
 }
 
-/* WARN COLORS */
 .warn {
-    color: orange !important;
+    color:orange;
 }
 
 .danger {
-    color: red !important;
-    animation: blink 0.8s infinite;
-}
-
-.fastblink {
-    animation: blink 0.3s infinite;
+    color:red;
+    animation:blink 0.8s infinite;
 }
 
 @keyframes blink {
-    50% { opacity: 0.2; }
+    50% {opacity:0.2;}
 }
 
-/* BOX */
 .box {
     margin:10px;
     padding:10px;
@@ -73,7 +62,7 @@ button {
 
 <body>
 
-<h2>Padel Manager V4.4 🔥</h2>
+<h2>Padel Manager V4.5</h2>
 
 <div id="setup">
 
@@ -115,12 +104,11 @@ button {
 <div id="game" style="display:none">
 
 <div class="box">
-    <div id="matchTimer">00:00</div>
+<div id="matchTimer">00:00</div>
 </div>
 
 <div class="box">
-    <b>Gesamtzeit</b><br>
-    <div id="sessionTimer">00:00:00</div>
+<b>Gesamtzeit:</b> <span id="sessionTimer">00:00:00</span>
 </div>
 
 <div class="box">
@@ -130,8 +118,7 @@ button {
 <div class="box" id="current"></div>
 <div class="box" id="next"></div>
 
-<button onclick="toggle()">Start / Pause</button>
-<button onclick="nextRound()">Nächste Runde</button>
+<button id="nextBtn" onclick="nextRound()" disabled>Nächste Runde</button>
 
 </div>
 
@@ -142,18 +129,17 @@ let schedule=[];
 let current=0;
 let round=1;
 
-// timers
 let sessionLeft=0;
 let matchLeft=0;
 
-let sessionRunning=false;
 let sessionInterval;
 let matchInterval;
 
-// settings
-let sessionDuration=0;
 let matchDuration=0;
+let sessionDuration=0;
 let warningTime=0;
+
+let sessionRunning=false;
 
 function start(){
 
@@ -177,6 +163,7 @@ document.getElementById("game").style.display="block";
 
 render();
 updateUI();
+startTimers();
 }
 
 function buildSchedule(){
@@ -198,27 +185,18 @@ bench:rot.slice(4)
 }
 }
 
-function toggle(){
+function startTimers(){
 
-if(sessionRunning){
-clearInterval(sessionInterval);
-clearInterval(matchInterval);
-sessionRunning=false;
-}else{
-
-sessionRunning=true;
-
-// SESSION TIMER
 sessionInterval=setInterval(()=>{
+
 if(sessionLeft>0){
 sessionLeft--;
 document.getElementById("sessionTimer").innerText=format(sessionLeft);
 }
+
 },1000);
 
-// MATCH TIMER
 startMatchTimer();
-}
 }
 
 function startMatchTimer(){
@@ -227,18 +205,18 @@ clearInterval(matchInterval);
 
 matchLeft=matchDuration;
 
-let warned=false;
+document.getElementById("nextBtn").disabled=true;
 
 matchInterval=setInterval(()=>{
 
 if(matchLeft>0){
+
 matchLeft--;
 
-// UI
 let el=document.getElementById("matchTimer");
 el.innerText=format(matchLeft);
 
-// RESET
+// WARN LOGIC STABLE
 el.className="";
 
 if(matchLeft<=60 && matchLeft>30){
@@ -249,24 +227,29 @@ if(matchLeft<=30 && matchLeft>0){
 el.classList.add("danger");
 }
 
-if(matchLeft<=warningTime && !warned){
-beep();
-warned=true;
+// enable button ONLY when 0
+if(matchLeft===0){
+document.getElementById("nextBtn").disabled=false;
 }
 
 }else{
 clearInterval(matchInterval);
+document.getElementById("nextBtn").disabled=false;
 }
+
 },1000);
 }
 
 function nextRound(){
 
+// HARD BLOCK if match not finished
+if(matchLeft>0) return;
+
 if(current < schedule.length-1){
 current++;
 round++;
-startMatchTimer();
 render();
+startMatchTimer();
 }
 }
 
@@ -304,15 +287,6 @@ let h=String(Math.floor(s/3600)).padStart(2,"0");
 let m=String(Math.floor((s%3600)/60)).padStart(2,"0");
 let sec=String(s%60).padStart(2,"0");
 return h+":"+m+":"+sec;
-}
-
-function beep(){
-let ctx=new (window.AudioContext||window.webkitAudioContext)();
-let osc=ctx.createOscillator();
-osc.frequency.value=800;
-osc.connect(ctx.destination);
-osc.start();
-osc.stop(ctx.currentTime+0.2);
 }
 
 </script>
