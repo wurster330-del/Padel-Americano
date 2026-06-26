@@ -3,69 +3,71 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager</title>
+<title>Padel Manager V2</title>
 
 <style>
 body {
-    margin: 0;
-    font-family: Arial;
-    background: #0f0f0f;
-    color: white;
-    text-align: center;
+    margin:0;
+    font-family:Arial;
+    background:#0f0f0f;
+    color:white;
+    text-align:center;
 }
 
 input, select, button {
-    width: 90%;
-    padding: 10px;
-    margin: 5px;
-    font-size: 18px;
+    width:90%;
+    padding:10px;
+    margin:5px;
+    font-size:18px;
 }
 
 button {
-    background: #222;
-    color: white;
-    border: none;
-    border-radius: 8px;
+    background:#222;
+    color:white;
+    border:none;
+    border-radius:8px;
 }
 
 .timer {
-    font-size: 60px;
-    margin: 10px;
+    font-size:60px;
+    margin:10px;
 }
 
 .box {
-    margin: 10px;
-    padding: 10px;
-    background: #1a1a1a;
-    border-radius: 10px;
+    margin:10px;
+    padding:10px;
+    background:#1a1a1a;
+    border-radius:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Padel Manager</h2>
+<h2>Padel Manager V2</h2>
 
 <div id="setup">
-    <input id="p1" placeholder="Spieler 1">
-    <input id="p2" placeholder="Spieler 2">
-    <input id="p3" placeholder="Spieler 3">
-    <input id="p4" placeholder="Spieler 4">
-    <input id="p5" placeholder="Spieler 5">
-    <input id="p6" placeholder="Spieler 6">
 
-    <select id="count">
-        <option value="4">4 Spieler</option>
-        <option value="5">5 Spieler</option>
-        <option value="6">6 Spieler</option>
-    </select>
+<input id="p1" placeholder="Spieler 1">
+<input id="p2" placeholder="Spieler 2">
+<input id="p3" placeholder="Spieler 3">
+<input id="p4" placeholder="Spieler 4">
+<input id="p5" placeholder="Spieler 5">
+<input id="p6" placeholder="Spieler 6">
 
-    <select id="time">
-        <option value="120">120 Minuten</option>
-        <option value="180">180 Minuten</option>
-    </select>
+<select id="count">
+<option value="4">4 Spieler</option>
+<option value="5">5 Spieler</option>
+<option value="6">6 Spieler</option>
+</select>
 
-    <button onclick="start()">Spiel starten</button>
+<select id="time">
+<option value="120">120 Minuten</option>
+<option value="180">180 Minuten</option>
+</select>
+
+<button onclick="start()">Spiel starten</button>
+
 </div>
 
 <div id="game" style="display:none">
@@ -78,27 +80,28 @@ button {
 </div>
 
 <div class="box" id="current"></div>
-
 <div class="box" id="next"></div>
 
 <button onclick="toggle()">Start / Pause</button>
-<button onclick="next()">Nächste Runde</button>
+<button onclick="nextRound()">Nächste Runde</button>
 
 </div>
 
 <script>
 
 let players=[];
-let round=1;
-let time=0;
+let order=[];
+let round=0;
+
 let total=0;
-let match=20*60;
+let time=0;
 let running=false;
 let interval;
-let last="";
 
-let currentMatch="";
-let nextMatch="";
+let matchTime=20*60;
+
+let schedule=[];
+let current=0;
 
 function start(){
 
@@ -111,56 +114,82 @@ players=players.slice(0,parseInt(count.value));
 total=parseInt(time.value)*60;
 time=total;
 
+buildSchedule();
+
 document.getElementById("setup").style.display="none";
 document.getElementById("game").style.display="block";
 
-generate();
 render();
 }
 
-function shuffle(a){
-return a.sort(()=>Math.random()-0.5);
+function buildSchedule(){
+
+schedule=[];
+
+let p=[...players];
+
+if(p.length===4){
+schedule=[
+[p[0],p[1],p[2],p[3]],
+[p[0],p[2],p[1],p[3]],
+[p[0],p[3],p[1],p[2]]
+];
 }
 
-function generate(){
+if(p.length===5 || p.length===6){
 
-let p=shuffle([...players]);
+// simple fair rotation
+for(let i=0;i<10;i++){
 
-let a=p.slice(0,2);
-let b=p.slice(2,4);
-let bench=p.slice(4);
+let rot=[...p];
 
-currentMatch={
-a,b,bench
-};
+// rotate array
+for(let r=0;r<i;r++){
+rot.push(rot.shift());
+}
 
-// NEXT MATCH
-let p2=shuffle([...players]);
+let a=[rot[0],rot[1]];
+let b=[rot[2],rot[3]];
+let bench=rot.slice(4);
 
-let a2=p2.slice(0,2);
-let b2=p2.slice(2,4);
-let bench2=p2.slice(4);
+schedule.push({a,b,bench});
+}
+}
 
-nextMatch={
-a:a2,b:b2,bench:bench2
-};
 }
 
 function render(){
 
-document.getElementById("round").innerText=round;
+let game=schedule[current];
+
+if(!game) return;
+
+document.getElementById("round").innerText=current+1;
 
 document.getElementById("current").innerHTML=
 "<b>JETZT</b><br>"+
-"A: "+currentMatch.a.join(" + ")+"<br>"+
-"B: "+currentMatch.b.join(" + ")+"<br>"+
-(currentMatch.bench.length?"Pause: "+currentMatch.bench:"");
+"A: "+game.a.join(" + ")+"<br>"+
+"B: "+game.b.join(" + ")+"<br>"+
+(game.bench.length?"Pause: "+game.bench:"");
+
+let next=schedule[current+1];
 
 document.getElementById("next").innerHTML=
+next?
 "<b>NÄCHSTES MATCH</b><br>"+
-"A: "+nextMatch.a.join(" + ")+"<br>"+
-"B: "+nextMatch.b.join(" + ")+"<br>"+
-(nextMatch.bench.length?"Pause: "+nextMatch.bench:"");
+"A: "+next.a.join(" + ")+"<br>"+
+"B: "+next.b.join(" + ")+"<br>"+
+(next.bench.length?"Pause: "+next.bench:"")
+:
+"<b>NÄCHSTES MATCH</b><br>— Ende —";
+}
+
+function nextRound(){
+
+if(current < schedule.length-1){
+current++;
+render();
+}
 }
 
 function toggle(){
@@ -173,18 +202,10 @@ interval=setInterval(()=>{
 if(time>0){
 time--;
 document.getElementById("timer").innerText=format(time);
-}else{
-clearInterval(interval);
 }
 },1000);
 running=true;
 }
-}
-
-function next(){
-round++;
-generate();
-render();
 }
 
 function format(s){
