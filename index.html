@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V2</title>
+<title>Padel Manager V4</title>
 
 <style>
 body {
@@ -29,7 +29,7 @@ button {
 }
 
 .timer {
-    font-size:60px;
+    font-size:55px;
     margin:10px;
 }
 
@@ -44,7 +44,7 @@ button {
 
 <body>
 
-<h2>Padel Manager V2</h2>
+<h2>Padel Manager V4 (Fair Engine)</h2>
 
 <div id="setup">
 
@@ -61,9 +61,15 @@ button {
 <option value="6">6 Spieler</option>
 </select>
 
-<select id="time">
-<option value="120">120 Minuten</option>
-<option value="180">180 Minuten</option>
+<select id="sessionTime">
+<option value="120">120 Minuten Gesamtzeit</option>
+<option value="180">180 Minuten Gesamtzeit</option>
+</select>
+
+<select id="matchTime">
+<option value="15">15 Minuten Matchzeit</option>
+<option value="20" selected>20 Minuten Matchzeit</option>
+<option value="25">25 Minuten Matchzeit</option>
 </select>
 
 <button onclick="start()">Spiel starten</button>
@@ -72,11 +78,15 @@ button {
 
 <div id="game" style="display:none">
 
-<div class="timer" id="timer">00:00:00</div>
+<div class="timer" id="sessionTimer">00:00:00</div>
 
 <div class="box">
-<b>Runde:</b> <span id="round">1</span><br>
-<b>Matchzeit:</b> 20 Minuten
+<b>Match Timer</b>
+<div class="timer" id="matchTimer">00:00</div>
+</div>
+
+<div class="box">
+<b>Runde:</b> <span id="round">1</span>
 </div>
 
 <div class="box" id="current"></div>
@@ -90,18 +100,21 @@ button {
 <script>
 
 let players=[];
-let order=[];
-let round=0;
-
-let total=0;
-let time=0;
-let running=false;
-let interval;
-
-let matchTime=20*60;
+let stats={};
 
 let schedule=[];
 let current=0;
+let round=1;
+
+let sessionTime=0;
+let sessionLeft=0;
+
+let matchTime=0;
+let matchLeft=0;
+
+let running=false;
+let interval;
+let matchInterval;
 
 function start(){
 
@@ -111,8 +124,15 @@ p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
 
 players=players.slice(0,parseInt(count.value));
 
-total=parseInt(time.value)*60;
-time=total;
+players.forEach(p=>{
+stats[p]={partner:{},enemy:{},bench:0};
+});
+
+sessionTime=parseInt(sessionTime.value)*60;
+sessionLeft=sessionTime;
+
+matchTime=parseInt(matchTime.value)*60;
+matchLeft=matchTime;
 
 buildSchedule();
 
@@ -120,57 +140,76 @@ document.getElementById("setup").style.display="none";
 document.getElementById("game").style.display="block";
 
 render();
+startMatch();
+}
+
+function bestPair(pool){
+
+let best=null;
+let bestScore=9999;
+
+for(let i=0;i<pool.length;i++){
+for(let j=i+1;j<pool.length;j++){
+
+let a=pool[i];
+let b=pool[j];
+
+let score=(stats[a].partner[b]||0);
+
+if(score<bestScore){
+bestScore=score;
+best=[a,b];
+}
+}
+}
+
+return best;
 }
 
 function buildSchedule(){
 
 schedule=[];
 
-let p=[...players];
+let pool=[...players];
 
-if(p.length===4){
-schedule=[
-[p[0],p[1],p[2],p[3]],
-[p[0],p[2],p[1],p[3]],
-[p[0],p[3],p[1],p[2]]
-];
-}
-
-if(p.length===5 || p.length===6){
-
-// simple fair rotation
 for(let i=0;i<10;i++){
 
-let rot=[...p];
+let bench=[];
+let active=[...pool];
 
-// rotate array
-for(let r=0;r<i;r++){
-rot.push(rot.shift());
+if(active.length===6){
+bench=[active.pop()];
 }
 
-let a=[rot[0],rot[1]];
-let b=[rot[2],rot[3]];
-let bench=rot.slice(4);
+let teamA=bestPair(active);
+active=active.filter(p=>!teamA.includes(p));
 
-schedule.push({a,b,bench});
-}
-}
+let teamB=bestPair(active);
 
+schedule.push({
+a:teamA,
+b:teamB,
+bench:bench
+});
+
+// stats update (preview learning)
+stats[teamA[0]].partner[teamA[1]]=(stats[teamA[0]].partner[teamA[1]]||0)+1;
+stats[teamB[0]].partner[teamB[1]]=(stats[teamB[0]].partner[teamB[1]]||0)+1;
+
+}
 }
 
 function render(){
 
-let game=schedule[current];
+let g=schedule[current];
 
-if(!game) return;
-
-document.getElementById("round").innerText=current+1;
+document.getElementById("round").innerText=round;
 
 document.getElementById("current").innerHTML=
 "<b>JETZT</b><br>"+
-"A: "+game.a.join(" + ")+"<br>"+
-"B: "+game.b.join(" + ")+"<br>"+
-(game.bench.length?"Pause: "+game.bench:"");
+"A: "+g.a.join(" + ")+"<br>"+
+"B: "+g.b.join(" + ")+"<br>"+
+(g.bench.length?"Pause: "+g.bench:"");
 
 let next=schedule[current+1];
 
@@ -184,27 +223,50 @@ next?
 "<b>NÄCHSTES MATCH</b><br>— Ende —";
 }
 
-function nextRound(){
-
-if(current < schedule.length-1){
-current++;
-render();
-}
-}
-
 function toggle(){
 
 if(running){
 clearInterval(interval);
+clearInterval(matchInterval);
 running=false;
 }else{
 interval=setInterval(()=>{
-if(time>0){
-time--;
-document.getElementById("timer").innerText=format(time);
+if(sessionLeft>0){
+sessionLeft--;
+document.getElementById("sessionTimer").innerText=format(sessionLeft);
 }
 },1000);
+
+startMatch();
 running=true;
+}
+}
+
+function startMatch(){
+
+clearInterval(matchInterval);
+
+matchLeft=matchTime;
+
+matchInterval=setInterval(()=>{
+if(matchLeft>0){
+matchLeft--;
+document.getElementById("matchTimer").innerText=format(matchLeft);
+}else{
+clearInterval(matchInterval);
+}
+},1000);
+}
+
+function nextRound(){
+
+if(current < schedule.length-1){
+
+current++;
+round++;
+
+startMatch();
+render();
 }
 }
 
