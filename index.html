@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V4</title>
+<title>Padel Manager V4.1 FIX</title>
 
 <style>
 body {
@@ -44,7 +44,7 @@ button {
 
 <body>
 
-<h2>Padel Manager V4 (Fair Engine)</h2>
+<h2>Padel Manager V4.1 FIX</h2>
 
 <div id="setup">
 
@@ -100,21 +100,21 @@ button {
 <script>
 
 let players=[];
-let stats={};
-
 let schedule=[];
 let current=0;
 let round=1;
 
-let sessionTime=0;
+// TIMER
 let sessionLeft=0;
-
-let matchTime=0;
 let matchLeft=0;
 
-let running=false;
-let interval;
-let matchInterval;
+let sessionRunning=false;
+let sessionInterval=null;
+let matchInterval=null;
+
+// SETTINGS
+let sessionDuration=0;
+let matchDuration=0;
 
 function start(){
 
@@ -124,15 +124,15 @@ p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
 
 players=players.slice(0,parseInt(count.value));
 
-players.forEach(p=>{
-stats[p]={partner:{},enemy:{},bench:0};
-});
+// reset
+current=0;
+round=1;
 
-sessionTime=parseInt(sessionTime.value)*60;
-sessionLeft=sessionTime;
+sessionDuration=parseInt(sessionTime.value)*60;
+matchDuration=parseInt(matchTime.value)*60;
 
-matchTime=parseInt(matchTime.value)*60;
-matchLeft=matchTime;
+sessionLeft=sessionDuration;
+matchLeft=matchDuration;
 
 buildSchedule();
 
@@ -140,62 +140,80 @@ document.getElementById("setup").style.display="none";
 document.getElementById("game").style.display="block";
 
 render();
-startMatch();
-}
-
-function bestPair(pool){
-
-let best=null;
-let bestScore=9999;
-
-for(let i=0;i<pool.length;i++){
-for(let j=i+1;j<pool.length;j++){
-
-let a=pool[i];
-let b=pool[j];
-
-let score=(stats[a].partner[b]||0);
-
-if(score<bestScore){
-bestScore=score;
-best=[a,b];
-}
-}
-}
-
-return best;
+updateUI();
 }
 
 function buildSchedule(){
 
 schedule=[];
 
-let pool=[...players];
+let p=[...players];
 
 for(let i=0;i<10;i++){
 
-let bench=[];
-let active=[...pool];
-
-if(active.length===6){
-bench=[active.pop()];
-}
-
-let teamA=bestPair(active);
-active=active.filter(p=>!teamA.includes(p));
-
-let teamB=bestPair(active);
+let rot=[...p];
+for(let r=0;r<i;r++) rot.push(rot.shift());
 
 schedule.push({
-a:teamA,
-b:teamB,
-bench:bench
+a:[rot[0],rot[1]],
+b:[rot[2],rot[3]],
+bench:rot.slice(4)
 });
+}
+}
 
-// stats update (preview learning)
-stats[teamA[0]].partner[teamA[1]]=(stats[teamA[0]].partner[teamA[1]]||0)+1;
-stats[teamB[0]].partner[teamB[1]]=(stats[teamB[0]].partner[teamB[1]]||0)+1;
+function toggle(){
 
+if(sessionRunning){
+clearInterval(sessionInterval);
+clearInterval(matchInterval);
+sessionRunning=false;
+}else{
+
+sessionRunning=true;
+
+// SESSION TIMER
+sessionInterval=setInterval(()=>{
+if(sessionLeft>0){
+sessionLeft--;
+document.getElementById("sessionTimer").innerText=format(sessionLeft);
+}else{
+clearInterval(sessionInterval);
+clearInterval(matchInterval);
+}
+},1000);
+
+// MATCH TIMER
+startMatchTimer();
+}
+}
+
+function startMatchTimer(){
+
+clearInterval(matchInterval);
+
+matchLeft=matchDuration;
+
+document.getElementById("matchTimer").innerText=format(matchLeft);
+
+matchInterval=setInterval(()=>{
+if(matchLeft>0){
+matchLeft--;
+document.getElementById("matchTimer").innerText=format(matchLeft);
+}else{
+clearInterval(matchInterval);
+}
+},1000);
+}
+
+function nextRound(){
+
+if(current < schedule.length-1){
+current++;
+round++;
+
+startMatchTimer();
+render();
 }
 }
 
@@ -211,63 +229,21 @@ document.getElementById("current").innerHTML=
 "B: "+g.b.join(" + ")+"<br>"+
 (g.bench.length?"Pause: "+g.bench:"");
 
-let next=schedule[current+1];
+let n=schedule[current+1];
 
 document.getElementById("next").innerHTML=
-next?
+n?
 "<b>NÄCHSTES MATCH</b><br>"+
-"A: "+next.a.join(" + ")+"<br>"+
-"B: "+next.b.join(" + ")+"<br>"+
-(next.bench.length?"Pause: "+next.bench:"")
+"A: "+n.a.join(" + ")+"<br>"+
+"B: "+n.b.join(" + ")+"<br>"+
+(n.bench.length?"Pause: "+n.bench:"")
 :
 "<b>NÄCHSTES MATCH</b><br>— Ende —";
 }
 
-function toggle(){
-
-if(running){
-clearInterval(interval);
-clearInterval(matchInterval);
-running=false;
-}else{
-interval=setInterval(()=>{
-if(sessionLeft>0){
-sessionLeft--;
+function updateUI(){
 document.getElementById("sessionTimer").innerText=format(sessionLeft);
-}
-},1000);
-
-startMatch();
-running=true;
-}
-}
-
-function startMatch(){
-
-clearInterval(matchInterval);
-
-matchLeft=matchTime;
-
-matchInterval=setInterval(()=>{
-if(matchLeft>0){
-matchLeft--;
 document.getElementById("matchTimer").innerText=format(matchLeft);
-}else{
-clearInterval(matchInterval);
-}
-},1000);
-}
-
-function nextRound(){
-
-if(current < schedule.length-1){
-
-current++;
-round++;
-
-startMatch();
-render();
-}
 }
 
 function format(s){
