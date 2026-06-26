@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V4.7</title>
+<title>Padel Manager V4.8</title>
 
 <style>
 body {
@@ -14,7 +14,7 @@ body {
     text-align:center;
 }
 
-select, input, button {
+select, button {
     width:90%;
     padding:10px;
     margin:5px;
@@ -26,6 +26,10 @@ button {
     color:white;
     border:none;
     border-radius:8px;
+}
+
+button:disabled {
+    opacity:0.4;
 }
 
 #matchTimer {
@@ -54,50 +58,25 @@ button {
 
 <body>
 
-<h2>Padel Manager V4.7</h2>
+<h2>Padel Manager V4.8</h2>
 
 <div id="setup">
 
-<!-- FIXED PLAYERS -->
-<select id="p1">
-<option>Marco</option><option>Tobias</option><option>Werner</option>
-<option>David</option><option>Christian</option><option>Stefan</option>
-</select>
+<select id="p1"><option>Marco</option><option>Tobias</option><option>Werner</option><option>David</option><option>Christian</option><option>Stefan</option></select>
+<select id="p2"><option>Marco</option><option selected>Tobias</option><option>Werner</option><option>David</option><option>Christian</option><option>Stefan</option></select>
+<select id="p3"><option>Marco</option><option>Tobias</option><option selected>Werner</option><option>David</option><option>Christian</option><option>Stefan</option></select>
+<select id="p4"><option>Marco</option><option>Tobias</option><option>Werner</option><option selected>David</option><option>Christian</option><option>Stefan</option></select>
+<select id="p5"><option>Marco</option><option>Tobias</option><option>Werner</option><option>David</option><option selected>Christian</option><option>Stefan</option></select>
+<select id="p6"><option>Marco</option><option>Tobias</option><option>Werner</option><option>David</option><option>Christian</option><option selected>Stefan</option></select>
 
-<select id="p2">
-<option>Marco</option><option selected>Tobias</option><option>Werner</option>
-<option>David</option><option>Christian</option><option>Stefan</option>
-</select>
-
-<select id="p3">
-<option>Marco</option><option>Tobias</option><option selected>Werner</option>
-<option>David</option><option>Christian</option><option>Stefan</option>
-</select>
-
-<select id="p4">
-<option>Marco</option><option>Tobias</option><option>Werner</option>
-<option selected>David</option><option>Christian</option><option>Stefan</option>
-</select>
-
-<select id="p5">
-<option>Marco</option><option>Tobias</option><option>Werner</option>
-<option>David</option><option selected>Christian</option><option>Stefan</option>
-</select>
-
-<select id="p6">
-<option>Marco</option><option>Tobias</option><option>Werner</option>
-<option>David</option><option>Christian</option><option selected>Stefan</option>
-</select>
-
-<select id="count">
-<option value="4">4 Spieler</option>
-<option value="5">5 Spieler</option>
-<option value="6" selected>6 Spieler</option>
+<select id="mode">
+<option value="4">4 Spieler (2 aktiv)</option>
+<option value="6" selected>6 Spieler (Rotation)</option>
 </select>
 
 <select id="sessionTime">
-<option value="120">120 Minuten</option>
-<option value="180">180 Minuten</option>
+<option value="120">120 min</option>
+<option value="180">180 min</option>
 </select>
 
 <select id="matchTime">
@@ -107,13 +86,7 @@ button {
 <option value="25">25</option>
 </select>
 
-<select id="warning">
-<option value="0">kein Signal</option>
-<option value="60">60s vorher</option>
-<option value="30" selected>30s vorher</option>
-</select>
-
-<button onclick="start()">Spiel starten</button>
+<button onclick="start()">Start</button>
 
 </div>
 
@@ -124,123 +97,113 @@ button {
 </div>
 
 <div class="box">
-<b>Gesamtzeit:</b> <span id="sessionTimer">00:00:00</span>
-</div>
-
-<div class="box">
 <b>Runde:</b> <span id="round">1</span>
 </div>
 
 <div class="box" id="current"></div>
-<div class="box" id="next"></div>
 
 <button onclick="toggle()">Start / Pause</button>
-<button onclick="nextRound()">Nächste Runde</button>
+<button onclick="nextRound()" id="nextBtn" disabled>Nächste Runde</button>
 
 </div>
 
 <script>
 
+let players=[];
+let active=[];
+let bench=[];
 let schedule=[];
 let current=0;
 let round=1;
 
-let sessionLeft=0;
 let matchLeft=0;
-
-let sessionInterval;
-let matchInterval;
+let matchDuration=0;
 
 let running=false;
-
-let sessionDuration=0;
-let matchDuration=0;
-let warningTime=0;
-
-function getPlayers(){
-return [
-p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
-];
-}
+let matchInterval;
 
 function start(){
 
-let players=getPlayers().slice(0,parseInt(count.value));
+players=[
+p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
+];
 
-sessionDuration=parseInt(sessionTime.value)*60;
 matchDuration=parseInt(matchTime.value)*60;
-warningTime=parseInt(warning.value);
 
-sessionLeft=sessionDuration;
-matchLeft=matchDuration;
+let mode=parseInt(document.getElementById("mode").value);
 
-buildSchedule(players);
+// ACTIVE / BENCH LOGIC
+if(mode===4){
+active=players.slice(0,4);
+bench=players.slice(4,6);
+}else{
+active=players;
+bench=[];
+}
+
+buildSchedule();
 
 document.getElementById("setup").style.display="none";
 document.getElementById("game").style.display="block";
 
 render();
-updateUI();
 }
 
-function buildSchedule(p){
+function buildSchedule(){
 
 schedule=[];
 
 for(let i=0;i<10;i++){
 
-let rot=[...p];
+let rot=[...active];
+
 for(let r=0;r<i;r++) rot.push(rot.shift());
 
 schedule.push({
 a:[rot[0],rot[1]],
-b:[rot[2],rot[3]],
-bench:rot.slice(4)
+b:[rot[2],rot[3]]
 });
 }
 }
 
 function toggle(){
 
-if(running){
-clearInterval(sessionInterval);
-clearInterval(matchInterval);
-running=false;
-}else{
+if(!running){
+
 running=true;
+startMatchTimer();
 
-sessionInterval=setInterval(()=>{
-if(sessionLeft>0){
-sessionLeft--;
-document.getElementById("sessionTimer").innerText=format(sessionLeft);
-}
-},1000);
+}else{
 
-startMatch();
-}
+running=false;
+clearInterval(matchInterval);
 }
 
-function startMatch(){
+}
+
+function startMatchTimer(){
 
 clearInterval(matchInterval);
 
 matchLeft=matchDuration;
 
+document.getElementById("nextBtn").disabled=true;
+
 matchInterval=setInterval(()=>{
 
+if(!running) return;
+
 if(matchLeft>0){
+
 matchLeft--;
 
-let el=document.getElementById("matchTimer");
-el.innerText=format(matchLeft);
+document.getElementById("matchTimer").innerText=format(matchLeft);
 
-el.className="";
-
-if(matchLeft<=60 && matchLeft>30) el.classList.add("warn");
-if(matchLeft<=30 && matchLeft>0) el.classList.add("danger");
-
-}else{
+if(matchLeft<=0){
+document.getElementById("nextBtn").disabled=false;
 clearInterval(matchInterval);
+}
+
 }
 
 },1000);
@@ -248,12 +211,21 @@ clearInterval(matchInterval);
 
 function nextRound(){
 
+if(matchLeft>0) return;
+
 if(current < schedule.length-1){
+
 current++;
 round++;
+
 render();
-startMatch();
+
+if(running){
+startMatchTimer();
 }
+
+}
+
 }
 
 function render(){
@@ -263,33 +235,14 @@ let g=schedule[current];
 document.getElementById("round").innerText=round;
 
 document.getElementById("current").innerHTML=
-"<b>JETZT</b><br>"+
-"A: "+g.a.join(" + ")+"<br>"+
-"B: "+g.b.join(" + ")+"<br>"+
-(g.bench.length?"Pause: "+g.bench:"");
+"A: "+g.a.join(" + ")+"<br>B: "+g.b.join(" + ");
 
-let n=schedule[current+1];
-
-document.getElementById("next").innerHTML=
-n?
-"<b>NÄCHSTES MATCH</b><br>"+
-"A: "+n.a.join(" + ")+"<br>"+
-"B: "+n.b.join(" + ")+"<br>"+
-(n.bench.length?"Pause: "+n.bench:"")
-:
-"<b>NÄCHSTES MATCH</b><br>— Ende —";
-}
-
-function updateUI(){
-document.getElementById("sessionTimer").innerText=format(sessionLeft);
-document.getElementById("matchTimer").innerText=format(matchLeft);
 }
 
 function format(s){
-let h=String(Math.floor(s/3600)).padStart(2,"0");
-let m=String(Math.floor((s%3600)/60)).padStart(2,"0");
+let m=String(Math.floor(s/60)).padStart(2,"0");
 let sec=String(s%60).padStart(2,"0");
-return h+":"+m+":"+sec;
+return m+":"+sec;
 }
 
 </script>
