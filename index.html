@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V4.2</title>
+<title>Padel Manager V4.4</title>
 
 <style>
 body {
@@ -14,6 +14,7 @@ body {
     text-align:center;
 }
 
+/* INPUTS */
 input, select, button {
     width:90%;
     padding:10px;
@@ -28,11 +29,39 @@ button {
     border-radius:8px;
 }
 
-.timer {
-    font-size:55px;
+/* SESSION TIMER (klein) */
+#sessionTimer {
+    font-size:28px;
+    opacity:0.6;
+}
+
+/* MATCH TIMER (groß) */
+#matchTimer {
+    font-size:95px;
+    font-weight:bold;
+    color:#00ffcc;
     margin:10px;
 }
 
+/* WARN COLORS */
+.warn {
+    color: orange !important;
+}
+
+.danger {
+    color: red !important;
+    animation: blink 0.8s infinite;
+}
+
+.fastblink {
+    animation: blink 0.3s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.2; }
+}
+
+/* BOX */
 .box {
     margin:10px;
     padding:10px;
@@ -44,7 +73,7 @@ button {
 
 <body>
 
-<h2>Padel Manager V4.2</h2>
+<h2>Padel Manager V4.4 🔥</h2>
 
 <div id="setup">
 
@@ -68,8 +97,8 @@ button {
 
 <select id="matchTime">
 <option value="15">15 Minuten</option>
-<option value="18" selected>18 Minuten ⭐</option>
-<option value="20">20 Minuten</option>
+<option value="18">18 Minuten</option>
+<option value="20" selected>20 Minuten</option>
 <option value="25">25 Minuten</option>
 </select>
 
@@ -85,11 +114,13 @@ button {
 
 <div id="game" style="display:none">
 
-<div class="timer" id="sessionTimer">00:00:00</div>
+<div class="box">
+    <div id="matchTimer">00:00</div>
+</div>
 
 <div class="box">
-<b>Match Timer</b>
-<div class="timer" id="matchTimer">00:00</div>
+    <b>Gesamtzeit</b><br>
+    <div id="sessionTimer">00:00:00</div>
 </div>
 
 <div class="box">
@@ -196,20 +227,29 @@ clearInterval(matchInterval);
 
 matchLeft=matchDuration;
 
-document.getElementById("matchTimer").innerText=format(matchLeft);
-
 let warned=false;
 
 matchInterval=setInterval(()=>{
 
 if(matchLeft>0){
-
 matchLeft--;
 
-document.getElementById("matchTimer").innerText=format(matchLeft);
+// UI
+let el=document.getElementById("matchTimer");
+el.innerText=format(matchLeft);
 
-// WARNING LOGIC
-if(warningTime>0 && !warned && matchLeft<=warningTime){
+// RESET
+el.className="";
+
+if(matchLeft<=60 && matchLeft>30){
+el.classList.add("warn");
+}
+
+if(matchLeft<=30 && matchLeft>0){
+el.classList.add("danger");
+}
+
+if(matchLeft<=warningTime && !warned){
 beep();
 warned=true;
 }
