@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V4.6 FIX</title>
+<title>Padel Manager V4.7</title>
 
 <style>
 body {
@@ -14,7 +14,7 @@ body {
     text-align:center;
 }
 
-input, select, button {
+select, input, button {
     width:90%;
     padding:10px;
     margin:5px;
@@ -28,14 +28,9 @@ button {
     border-radius:8px;
 }
 
-button:disabled {
-    opacity:0.4;
-}
-
 #matchTimer {
     font-size:95px;
     font-weight:bold;
-    margin:10px;
 }
 
 .warn { color:orange; }
@@ -59,42 +54,66 @@ button:disabled {
 
 <body>
 
-<h2>Padel Manager V4.6</h2>
+<h2>Padel Manager V4.7</h2>
 
 <div id="setup">
 
-<input id="p1" placeholder="Spieler 1">
-<input id="p2" placeholder="Spieler 2">
-<input id="p3" placeholder="Spieler 3">
-<input id="p4" placeholder="Spieler 4">
-<input id="p5" placeholder="Spieler 5">
-<input id="p6" placeholder="Spieler 6">
+<!-- FIXED PLAYERS -->
+<select id="p1">
+<option>Marco</option><option>Tobias</option><option>Werner</option>
+<option>David</option><option>Christian</option><option>Stefan</option>
+</select>
+
+<select id="p2">
+<option>Marco</option><option selected>Tobias</option><option>Werner</option>
+<option>David</option><option>Christian</option><option>Stefan</option>
+</select>
+
+<select id="p3">
+<option>Marco</option><option>Tobias</option><option selected>Werner</option>
+<option>David</option><option>Christian</option><option>Stefan</option>
+</select>
+
+<select id="p4">
+<option>Marco</option><option>Tobias</option><option>Werner</option>
+<option selected>David</option><option>Christian</option><option>Stefan</option>
+</select>
+
+<select id="p5">
+<option>Marco</option><option>Tobias</option><option>Werner</option>
+<option>David</option><option selected>Christian</option><option>Stefan</option>
+</select>
+
+<select id="p6">
+<option>Marco</option><option>Tobias</option><option>Werner</option>
+<option>David</option><option>Christian</option><option selected>Stefan</option>
+</select>
 
 <select id="count">
 <option value="4">4 Spieler</option>
 <option value="5">5 Spieler</option>
-<option value="6">6 Spieler</option>
+<option value="6" selected>6 Spieler</option>
 </select>
 
 <select id="sessionTime">
-<option value="120">120 Minuten Gesamtzeit</option>
-<option value="180">180 Minuten Gesamtzeit</option>
+<option value="120">120 Minuten</option>
+<option value="180">180 Minuten</option>
 </select>
 
 <select id="matchTime">
-<option value="15">15 Minuten</option>
-<option value="18">18 Minuten</option>
-<option value="20" selected>20 Minuten</option>
-<option value="25">25 Minuten</option>
+<option value="15">15</option>
+<option value="18">18</option>
+<option value="20" selected>20</option>
+<option value="25">25</option>
 </select>
 
 <select id="warning">
 <option value="0">kein Signal</option>
-<option value="60">60 Sekunden vorher</option>
-<option value="30" selected>30 Sekunden vorher</option>
+<option value="60">60s vorher</option>
+<option value="30" selected>30s vorher</option>
 </select>
 
-<button onclick="start()">Spiel vorbereiten</button>
+<button onclick="start()">Spiel starten</button>
 
 </div>
 
@@ -115,38 +134,38 @@ button:disabled {
 <div class="box" id="current"></div>
 <div class="box" id="next"></div>
 
-<button onclick="toggle()">▶ Start / ⏸ Pause</button>
-<button id="nextBtn" onclick="nextRound()" disabled>Nächste Runde</button>
+<button onclick="toggle()">Start / Pause</button>
+<button onclick="nextRound()">Nächste Runde</button>
 
 </div>
 
 <script>
 
-let players=[];
 let schedule=[];
 let current=0;
 let round=1;
 
-// timers
 let sessionLeft=0;
 let matchLeft=0;
 
 let sessionInterval;
 let matchInterval;
 
-let matchDuration=0;
+let running=false;
+
 let sessionDuration=0;
+let matchDuration=0;
 let warningTime=0;
 
-let running=false;
+function getPlayers(){
+return [
+p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
+];
+}
 
 function start(){
 
-players=[
-p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
-].filter(x=>x);
-
-players=players.slice(0,parseInt(count.value));
+let players=getPlayers().slice(0,parseInt(count.value));
 
 sessionDuration=parseInt(sessionTime.value)*60;
 matchDuration=parseInt(matchTime.value)*60;
@@ -155,22 +174,18 @@ warningTime=parseInt(warning.value);
 sessionLeft=sessionDuration;
 matchLeft=matchDuration;
 
-buildSchedule();
+buildSchedule(players);
 
 document.getElementById("setup").style.display="none";
 document.getElementById("game").style.display="block";
 
 render();
 updateUI();
-
-// IMPORTANT: NO AUTO START
 }
 
-function buildSchedule(){
+function buildSchedule(p){
 
 schedule=[];
-
-let p=[...players];
 
 for(let i=0;i<10;i++){
 
@@ -201,22 +216,19 @@ document.getElementById("sessionTimer").innerText=format(sessionLeft);
 }
 },1000);
 
-startMatchTimer();
+startMatch();
 }
 }
 
-function startMatchTimer(){
+function startMatch(){
 
 clearInterval(matchInterval);
 
 matchLeft=matchDuration;
 
-document.getElementById("nextBtn").disabled=true;
-
 matchInterval=setInterval(()=>{
 
 if(matchLeft>0){
-
 matchLeft--;
 
 let el=document.getElementById("matchTimer");
@@ -227,12 +239,7 @@ el.className="";
 if(matchLeft<=60 && matchLeft>30) el.classList.add("warn");
 if(matchLeft<=30 && matchLeft>0) el.classList.add("danger");
 
-if(matchLeft===0){
-document.getElementById("nextBtn").disabled=false;
-}
-
 }else{
-document.getElementById("nextBtn").disabled=false;
 clearInterval(matchInterval);
 }
 
@@ -241,13 +248,11 @@ clearInterval(matchInterval);
 
 function nextRound(){
 
-if(matchLeft>0) return;
-
 if(current < schedule.length-1){
 current++;
 round++;
 render();
-startMatchTimer();
+startMatch();
 }
 }
 
