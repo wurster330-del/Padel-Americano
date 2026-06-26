@@ -1,85 +1,58 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Padel Manager</title>
+
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #0f0f0f;
-        color: white;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f0f0f;
+    color: white;
+    text-align: center;
+}
 
-    h1 {
-        margin: 10px;
-    }
+input, select, button {
+    width: 90%;
+    padding: 10px;
+    margin: 5px;
+    font-size: 18px;
+}
 
-    .screen {
-        width: 100%;
-        max-width: 800px;
-        padding: 10px;
-        box-sizing: border-box;
-    }
+button {
+    background: #222;
+    color: white;
+    border: none;
+    border-radius: 8px;
+}
 
-    input, select, button {
-        width: 100%;
-        padding: 12px;
-        margin: 5px 0;
-        font-size: 18px;
-        border-radius: 8px;
-        border: none;
-    }
+.timer {
+    font-size: 60px;
+    margin: 10px;
+}
 
-    button {
-        background: #1f1f1f;
-        color: white;
-        cursor: pointer;
-    }
-
-    button:hover {
-        background: #333;
-    }
-
-    .timer {
-        font-size: 60px;
-        text-align: center;
-        margin: 20px 0;
-    }
-
-    .teams {
-        text-align: center;
-        font-size: 20px;
-        margin: 10px 0;
-    }
-
-    .round {
-        text-align: center;
-        font-size: 18px;
-        color: #aaa;
-    }
-
-    .hidden {
-        display: none;
-    }
+.box {
+    margin: 10px;
+    padding: 10px;
+    background: #1a1a1a;
+    border-radius: 10px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>Padel Manager</h1>
+<h2>Padel Manager</h2>
 
-<div class="screen" id="setup">
+<div id="setup">
     <input id="p1" placeholder="Spieler 1">
     <input id="p2" placeholder="Spieler 2">
     <input id="p3" placeholder="Spieler 3">
     <input id="p4" placeholder="Spieler 4">
-    <input id="p5" placeholder="Spieler 5 (optional)">
-    <input id="p6" placeholder="Spieler 6 (optional)">
+    <input id="p5" placeholder="Spieler 5">
+    <input id="p6" placeholder="Spieler 6">
 
     <select id="count">
         <option value="4">4 Spieler</option>
@@ -92,143 +65,135 @@
         <option value="180">180 Minuten</option>
     </select>
 
-    <button onclick="startGame()">Spiel starten</button>
+    <button onclick="start()">Spiel starten</button>
 </div>
 
-<div class="screen hidden" id="game">
+<div id="game" style="display:none">
 
-    <div class="round" id="round">Runde 1</div>
+<div class="timer" id="timer">00:00:00</div>
 
-    <div class="timer" id="timer">00:00:00</div>
+<div class="box">
+<b>Runde:</b> <span id="round">1</span><br>
+<b>Matchzeit:</b> 20 Minuten
+</div>
 
-    <div class="teams" id="teams"></div>
+<div class="box" id="current"></div>
 
-    <button onclick="toggleTimer()">Start / Pause</button>
-    <button onclick="nextRound()">Nächste Runde</button>
-    <button onclick="toggleFullscreen()">Vollbild</button>
-    <button onclick="resetGame()">Neues Spiel</button>
+<div class="box" id="next"></div>
+
+<button onclick="toggle()">Start / Pause</button>
+<button onclick="next()">Nächste Runde</button>
 
 </div>
 
 <script>
-let players = [];
-let playingTime = 0;
-let timeLeft = 0;
-let interval = null;
-let running = false;
-let round = 1;
-let lastPair = "";
 
-function startGame() {
-    players = [
-        p1.value, p2.value, p3.value, p4.value, p5.value, p6.value
-    ].filter(p => p);
+let players=[];
+let round=1;
+let time=0;
+let total=0;
+let match=20*60;
+let running=false;
+let interval;
+let last="";
 
-    const selectedCount = parseInt(document.getElementById("count").value);
-    players = players.slice(0, selectedCount);
+let currentMatch="";
+let nextMatch="";
 
-    playingTime = parseInt(document.getElementById("time").value) * 60;
-    timeLeft = playingTime;
+function start(){
 
-    document.getElementById("setup").classList.add("hidden");
-    document.getElementById("game").classList.remove("hidden");
+players=[
+p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
+].filter(x=>x);
 
-    generateTeams();
-    updateTimer();
+players=players.slice(0,parseInt(count.value));
+
+total=parseInt(time.value)*60;
+time=total;
+
+document.getElementById("setup").style.display="none";
+document.getElementById("game").style.display="block";
+
+generate();
+render();
 }
 
-function formatTime(s) {
-    const h = String(Math.floor(s / 3600)).padStart(2, "0");
-    const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
-    const sec = String(s % 60).padStart(2, "0");
-    return `${h}:${m}:${sec}`;
+function shuffle(a){
+return a.sort(()=>Math.random()-0.5);
 }
 
-function updateTimer() {
-    document.getElementById("timer").innerText = formatTime(timeLeft);
+function generate(){
+
+let p=shuffle([...players]);
+
+let a=p.slice(0,2);
+let b=p.slice(2,4);
+let bench=p.slice(4);
+
+currentMatch={
+a,b,bench
+};
+
+// NEXT MATCH
+let p2=shuffle([...players]);
+
+let a2=p2.slice(0,2);
+let b2=p2.slice(2,4);
+let bench2=p2.slice(4);
+
+nextMatch={
+a:a2,b:b2,bench:bench2
+};
 }
 
-function toggleTimer() {
-    if (running) {
-        clearInterval(interval);
-        running = false;
-    } else {
-        interval = setInterval(() => {
-            if (timeLeft > 0) {
-                timeLeft--;
-                updateTimer();
-            } else {
-                clearInterval(interval);
-                beep();
-            }
-        }, 1000);
-        running = true;
-    }
+function render(){
+
+document.getElementById("round").innerText=round;
+
+document.getElementById("current").innerHTML=
+"<b>JETZT</b><br>"+
+"A: "+currentMatch.a.join(" + ")+"<br>"+
+"B: "+currentMatch.b.join(" + ")+"<br>"+
+(currentMatch.bench.length?"Pause: "+currentMatch.bench:"");
+
+document.getElementById("next").innerHTML=
+"<b>NÄCHSTES MATCH</b><br>"+
+"A: "+nextMatch.a.join(" + ")+"<br>"+
+"B: "+nextMatch.b.join(" + ")+"<br>"+
+(nextMatch.bench.length?"Pause: "+nextMatch.bench:"");
 }
 
-function shuffle(arr) {
-    return arr.sort(() => Math.random() - 0.5);
+function toggle(){
+
+if(running){
+clearInterval(interval);
+running=false;
+}else{
+interval=setInterval(()=>{
+if(time>0){
+time--;
+document.getElementById("timer").innerText=format(time);
+}else{
+clearInterval(interval);
+}
+},1000);
+running=true;
+}
 }
 
-function generateTeams() {
-    let tries = 0;
-    let valid = false;
-    let p, teamA, teamB, bench;
-
-    while (!valid && tries < 20) {
-        let shuffled = shuffle([...players]);
-
-        bench = shuffled.slice(4);
-        p = shuffled.slice(0, 4);
-
-        teamA = p.slice(0, 2).sort().join("-");
-        teamB = p.slice(2, 4).sort().join("-");
-
-        let key = teamA + "|" + teamB;
-
-        if (key !== lastPair) {
-            lastPair = key;
-            valid = true;
-
-            document.getElementById("teams").innerHTML =
-                `<b>Team A:</b> ${p[0]} & ${p[1]}<br>
-                 <b>Team B:</b> ${p[2]} & ${p[3]}<br>
-                 ${bench.length ? "<b>Pause:</b> " + bench.join(", ") : ""}`;
-        }
-        tries++;
-    }
+function next(){
+round++;
+generate();
+render();
 }
 
-function nextRound() {
-    clearInterval(interval);
-    running = false;
-
-    round++;
-    document.getElementById("round").innerText = "Runde " + round;
-
-    generateTeams();
+function format(s){
+let h=String(Math.floor(s/3600)).padStart(2,"0");
+let m=String(Math.floor((s%3600)/60)).padStart(2,"0");
+let sec=String(s%60).padStart(2,"0");
+return h+":"+m+":"+sec;
 }
 
-function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-}
-
-function resetGame() {
-    location.reload();
-}
-
-function beep() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    osc.frequency.value = 800;
-    osc.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.3);
-}
 </script>
 
 </body>
