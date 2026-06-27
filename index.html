@@ -154,13 +154,13 @@ let timer;
 let seconds = 1200;
 
 // 🔊 Sound
-function beep() {
+function beep(freq = 800, duration = 200) {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = ctx.createOscillator();
-  osc.frequency.value = 800;
+  osc.frequency.value = freq;
   osc.connect(ctx.destination);
   osc.start();
-  setTimeout(() => osc.stop(), 200);
+  setTimeout(() => osc.stop(), duration);
 }
 
 // MATCH ANZEIGE
@@ -169,20 +169,20 @@ function showMatch() {
     matches[currentMatch][0] + "<br>vs<br>" + matches[currentMatch][1];
 }
 
-// START SPIELABEND (direkt erster Match)
+// START SPIELABEND
 startBtn.addEventListener("click", () => {
   startScreen.classList.remove("active");
   gameScreen.classList.add("active");
   showMatch();
 });
 
-// NEXT MATCH (sauberer Wechsel)
+// NEXT MATCH
 nextBtn.addEventListener("click", () => {
   currentMatch = (currentMatch + 1) % matches.length;
   showMatch();
 });
 
-// MATCH START (direkt Court)
+// START MATCH
 startMatchBtn.addEventListener("click", () => {
   beep();
   startCourt();
@@ -209,7 +209,7 @@ function startCountdown(sec) {
     if (c < 0) {
       clearInterval(interval);
       cd.innerText = "";
-      beep();
+      beep(1000); // Start Sound
       startTimer();
     }
   }, 1000);
@@ -221,6 +221,11 @@ function startTimer() {
   timer = setInterval(() => {
     let min = Math.floor(seconds / 60);
     let sec = seconds % 60;
+
+    // 🧠 Halbzeit-Signal
+    if (seconds === 600) {
+      beep(600, 400); // Halbzeit Sound
+    }
 
     let colorClass = "green";
     if (seconds < 300) colorClass = "orange";
@@ -242,12 +247,14 @@ function startTimer() {
 }
 
 function endMatch() {
-  beep();
+  beep(400, 600); // Ende Sound
+
   courtScreen.innerHTML = "<h1 style='font-size:90px'>MATCH BEENDET</h1>";
 
   setTimeout(() => {
     courtScreen.style.display = "none";
     gameScreen.classList.add("active");
+
     seconds = 1200;
   }, 3000);
 }
