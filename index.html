@@ -53,6 +53,7 @@
       border-radius: 10px;
     }
 
+    /* ===== SPIELLEITER ===== */
     #matchInfo {
       font-size: 32px;
       margin: 40px 0;
@@ -66,7 +67,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: black;
+      background: #000;
       color: white;
       flex-direction: column;
       justify-content: center;
@@ -74,26 +75,31 @@
     }
 
     #courtMatch {
-      font-size: 48px;
-      margin-bottom: 30px;
-    }
-
-    #timer {
-      font-size: 120px;
-      font-weight: bold;
+      font-size: 70px;
+      font-weight: 700;
+      margin-bottom: 20px;
     }
 
     #countdown {
-      font-size: 80px;
+      font-size: 110px;
+      font-weight: 800;
       color: orange;
+      margin-bottom: 20px;
+    }
+
+    #timer {
+      font-size: 260px;
+      font-weight: 900;
+      letter-spacing: 3px;
     }
   </style>
 </head>
 
 <body>
 
-<!-- START -->
+<!-- START SCREEN -->
 <div id="startScreen" class="screen active">
+
   <h1>🎾 Padel Manager</h1>
 
   <div class="players">
@@ -104,10 +110,12 @@
   </div>
 
   <button id="startBtn" class="start-btn">Spiel starten</button>
+
 </div>
 
 <!-- SPIELLEITER -->
 <div id="gameScreen" class="screen">
+
   <h2>Spielleiter</h2>
 
   <div id="matchInfo"></div>
@@ -115,13 +123,16 @@
   <button id="startMatchBtn">START</button>
   <button id="nextBtn">NEXT</button>
   <button id="resetBtn">RESET</button>
+
 </div>
 
-<!-- COURT -->
+<!-- COURT MODE -->
 <div id="courtScreen">
+
   <div id="courtMatch"></div>
   <div id="countdown"></div>
   <div id="timer"></div>
+
 </div>
 
 <script>
@@ -182,7 +193,6 @@ function startCourt() {
 
 function startCountdown(sec) {
   let c = sec;
-
   const cd = document.getElementById("countdown");
 
   const interval = setInterval(() => {
@@ -218,7 +228,7 @@ function startTimer() {
 }
 
 function endMatch() {
-  courtScreen.innerHTML = "<h1>MATCH BEENDET</h1>";
+  courtScreen.innerHTML = "<h1 style='font-size:80px'>MATCH BEENDET</h1>";
 
   setTimeout(() => {
     courtScreen.style.display = "none";
