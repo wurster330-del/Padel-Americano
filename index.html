@@ -46,19 +46,19 @@
     }
 
     button {
-      font-size: 24px;
-      padding: 15px 30px;
+      font-size: 26px;
+      padding: 18px 32px;
       margin: 10px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
     }
 
     #matchInfo {
-      font-size: 32px;
+      font-size: 34px;
       margin: 40px 0;
     }
 
-    /* ===== COURT MODE ===== */
+    /* COURT */
     #courtScreen {
       display: none;
       position: fixed;
@@ -74,25 +74,24 @@
     }
 
     #courtMatch {
-      font-size: 70px;
+      font-size: 72px;
       font-weight: 700;
       margin-bottom: 20px;
     }
 
     #countdown {
-      font-size: 110px;
+      font-size: 120px;
       font-weight: 800;
       color: orange;
       margin-bottom: 20px;
     }
 
     #timer {
-      font-size: 260px;
+      font-size: 280px;
       font-weight: 900;
       letter-spacing: 3px;
     }
 
-    /* ===== AMPEL ===== */
     .green { color: #2ecc71; }
     .orange { color: #f39c12; }
     .red { color: #e74c3c; }
@@ -113,7 +112,7 @@
     <button class="player">Stefan</button>
   </div>
 
-  <button id="startBtn" class="start-btn">Spiel starten</button>
+  <button id="startBtn" class="start-btn">START SPIELABEND</button>
 
 </div>
 
@@ -124,26 +123,21 @@
 
   <div id="matchInfo"></div>
 
-  <button id="startMatchBtn">START</button>
-  <button id="nextBtn">NEXT</button>
-  <button id="resetBtn">RESET</button>
-
+  <button id="nextBtn">NEXT MATCH</button>
+  <button id="startMatchBtn">START MATCH</button>
 </div>
 
 <!-- COURT -->
 <div id="courtScreen">
-
   <div id="courtMatch"></div>
   <div id="countdown"></div>
   <div id="timer"></div>
-
 </div>
 
 <script>
 const startBtn = document.getElementById("startBtn");
 const startMatchBtn = document.getElementById("startMatchBtn");
 const nextBtn = document.getElementById("nextBtn");
-const resetBtn = document.getElementById("resetBtn");
 
 const startScreen = document.getElementById("startScreen");
 const gameScreen = document.getElementById("gameScreen");
@@ -157,41 +151,38 @@ const matches = [
 
 let currentMatch = 0;
 let timer;
-let seconds = 1200; // 20 Minuten
+let seconds = 1200;
 
 // 🔊 Sound
 function beep() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = ctx.createOscillator();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(800, ctx.currentTime);
+  osc.frequency.value = 800;
   osc.connect(ctx.destination);
   osc.start();
   setTimeout(() => osc.stop(), 200);
 }
 
+// MATCH ANZEIGE
 function showMatch() {
   document.getElementById("matchInfo").innerHTML =
     matches[currentMatch][0] + "<br>vs<br>" + matches[currentMatch][1];
 }
 
+// START SPIELABEND (direkt erster Match)
 startBtn.addEventListener("click", () => {
   startScreen.classList.remove("active");
   gameScreen.classList.add("active");
   showMatch();
 });
 
+// NEXT MATCH (sauberer Wechsel)
 nextBtn.addEventListener("click", () => {
   currentMatch = (currentMatch + 1) % matches.length;
   showMatch();
 });
 
-resetBtn.addEventListener("click", () => {
-  currentMatch = 0;
-  gameScreen.classList.remove("active");
-  startScreen.classList.add("active");
-});
-
+// MATCH START (direkt Court)
 startMatchBtn.addEventListener("click", () => {
   beep();
   startCourt();
@@ -232,8 +223,8 @@ function startTimer() {
     let sec = seconds % 60;
 
     let colorClass = "green";
-    if (seconds < 300) colorClass = "orange"; // letzte 5 Minuten
-    if (seconds < 60) colorClass = "red";     // letzte Minute
+    if (seconds < 300) colorClass = "orange";
+    if (seconds < 60) colorClass = "red";
 
     t.className = colorClass;
 
@@ -252,7 +243,7 @@ function startTimer() {
 
 function endMatch() {
   beep();
-  courtScreen.innerHTML = "<h1 style='font-size:80px'>MATCH BEENDET</h1>";
+  courtScreen.innerHTML = "<h1 style='font-size:90px'>MATCH BEENDET</h1>";
 
   setTimeout(() => {
     courtScreen.style.display = "none";
