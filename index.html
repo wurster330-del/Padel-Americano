@@ -102,7 +102,6 @@
 
 <!-- START -->
 <div id="startScreen" class="screen active">
-
   <h1>🎾 Padel Manager</h1>
 
   <div class="players">
@@ -113,18 +112,16 @@
   </div>
 
   <button id="startBtn" class="start-btn">START SPIELABEND</button>
-
 </div>
 
 <!-- SPIELLEITER -->
 <div id="gameScreen" class="screen">
-
   <h2>Spielleiter</h2>
 
   <div id="matchInfo"></div>
 
-  <button id="nextBtn">NEXT MATCH</button>
   <button id="startMatchBtn">START MATCH</button>
+  <button id="nextBtn">NEXT MATCH</button>
 </div>
 
 <!-- COURT -->
@@ -142,6 +139,8 @@ const nextBtn = document.getElementById("nextBtn");
 const startScreen = document.getElementById("startScreen");
 const gameScreen = document.getElementById("gameScreen");
 const courtScreen = document.getElementById("courtScreen");
+
+const STORAGE_KEY = "padel_state_v1";
 
 const matches = [
   ["Werner + Marco", "David + Stefan"],
@@ -163,23 +162,42 @@ function beep(freq = 800, duration = 200) {
   setTimeout(() => osc.stop(), duration);
 }
 
+// 💾 SAVE STATE
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    currentMatch,
+    seconds
+  }));
+}
+
+// 📥 LOAD STATE
+function loadState() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  if (!data) return;
+
+  const state = JSON.parse(data);
+  currentMatch = state.currentMatch ?? 0;
+  seconds = state.seconds ?? 1200;
+}
+
 // MATCH ANZEIGE
 function showMatch() {
   document.getElementById("matchInfo").innerHTML =
     matches[currentMatch][0] + "<br>vs<br>" + matches[currentMatch][1];
 }
 
-// START SPIELABEND
+// START
 startBtn.addEventListener("click", () => {
   startScreen.classList.remove("active");
   gameScreen.classList.add("active");
   showMatch();
 });
 
-// NEXT MATCH
+// NEXT
 nextBtn.addEventListener("click", () => {
   currentMatch = (currentMatch + 1) % matches.length;
   showMatch();
+  saveState();
 });
 
 // START MATCH
@@ -188,6 +206,7 @@ startMatchBtn.addEventListener("click", () => {
   startCourt();
 });
 
+// COURT MODE
 function startCourt() {
   gameScreen.classList.remove("active");
   courtScreen.style.display = "flex";
@@ -209,7 +228,7 @@ function startCountdown(sec) {
     if (c < 0) {
       clearInterval(interval);
       cd.innerText = "";
-      beep(1000); // Start Sound
+      beep(1000);
       startTimer();
     }
   }, 1000);
@@ -222,10 +241,7 @@ function startTimer() {
     let min = Math.floor(seconds / 60);
     let sec = seconds % 60;
 
-    // 🧠 Halbzeit-Signal
-    if (seconds === 600) {
-      beep(600, 400); // Halbzeit Sound
-    }
+    if (seconds === 600) beep(600, 400);
 
     let colorClass = "green";
     if (seconds < 300) colorClass = "orange";
@@ -239,6 +255,8 @@ function startTimer() {
 
     seconds--;
 
+    saveState();
+
     if (seconds < 0) {
       clearInterval(timer);
       endMatch();
@@ -246,18 +264,27 @@ function startTimer() {
   }, 1000);
 }
 
+// END MATCH
 function endMatch() {
-  beep(400, 600); // Ende Sound
+  beep(400, 600);
 
   courtScreen.innerHTML = "<h1 style='font-size:90px'>MATCH BEENDET</h1>";
+
+  currentMatch = (currentMatch + 1) % matches.length;
+  seconds = 1200;
+
+  saveState();
 
   setTimeout(() => {
     courtScreen.style.display = "none";
     gameScreen.classList.add("active");
-
-    seconds = 1200;
+    showMatch();
   }, 3000);
 }
+
+// INIT
+loadState();
+showMatch();
 </script>
 
 </body>
