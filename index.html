@@ -14,15 +14,15 @@ body {
   text-align: center;
 }
 
-.screen { display: none; padding: 30px; }
-.active { display: block; }
+.screen { display:none; padding:30px; }
+.active { display:block; }
 
 button {
   font-size: 22px;
-  padding: 14px 20px;
-  margin: 8px;
-  border: none;
+  padding: 14px 18px;
+  margin: 6px;
   border-radius: 10px;
+  border: none;
 }
 
 .selected {
@@ -30,18 +30,30 @@ button {
   color: white;
 }
 
-/* PLAYER BUTTONS */
-.player-btn {
-  background: #1f6feb;
-  color: white;
-  display: inline-block;
-}
-
-/* GRID */
 .grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+/* COURT */
+#courtScreen {
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:black;
+  color:white;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+#timer {
+  font-size: 240px;
+  font-weight: 900;
 }
 </style>
 </head>
@@ -53,23 +65,36 @@ button {
 
 <h1>🎾 Setup Spielabend</h1>
 
-<h2>👥 Spieler auswählen (Tippen)</h2>
+<h2>👥 Spieler</h2>
 
-<div class="grid" id="playerGrid">
+<div class="grid">
 
-  <button class="player-btn" onclick="togglePlayer(this,'Werner')">Werner</button>
-  <button class="player-btn" onclick="togglePlayer(this,'Marco')">Marco</button>
-  <button class="player-btn" onclick="togglePlayer(this,'David')">David</button>
-  <button class="player-btn" onclick="togglePlayer(this,'Stefan')">Stefan</button>
-
-  <button class="player-btn" onclick="togglePlayer(this,'Christian')">Christian</button>
-  <button class="player-btn" onclick="togglePlayer(this,'Tobias')">Tobias</button>
+<button onclick="togglePlayer(this,'Werner')">Werner</button>
+<button onclick="togglePlayer(this,'Marco')">Marco</button>
+<button onclick="togglePlayer(this,'David')">David</button>
+<button onclick="togglePlayer(this,'Stefan')">Stefan</button>
+<button onclick="togglePlayer(this,'Christian')">Christian</button>
+<button onclick="togglePlayer(this,'Tobias')">Tobias</button>
 
 </div>
 
-<h2>⏱️ Spielzeit</h2>
-<button onclick="setTime(120)">120 min</button>
-<button onclick="setTime(180)">180 min</button>
+<h3>➕ Extraspieler (frei)</h3>
+<input id="extraName" placeholder="Name eingeben">
+
+<button onclick="addExtra()">Hinzufügen</button>
+
+<div id="extraList"></div>
+
+<hr>
+
+<h3>⏱️ Matchdauer</h3>
+<button onclick="setMatchTime(15)">15 min</button>
+<button onclick="setMatchTime(18)">18 min</button>
+<button onclick="setMatchTime(20)">20 min</button>
+
+<h3>🏁 Gesamtspielzeit</h3>
+<button onclick="setTotalTime(120)">120 min</button>
+<button onclick="setTotalTime(180)">180 min</button>
 
 <br><br>
 
@@ -100,72 +125,84 @@ onclick="startGame()">START SPIELABEND</button>
 
 <script>
 
+let players = ["Werner","Marco","David","Stefan","Christian","Tobias"];
+let extraPlayers = [];
+
 let selectedPlayers = [];
+let matchTime = 20 * 60;
 let totalTime = 120 * 60;
+
 let matches = [];
 let current = 0;
 let seconds;
+
 let timer;
 
-// SOUND
-function beep() {
-  const ctx = new AudioContext();
-  const osc = ctx.createOscillator();
-  osc.frequency.value = 800;
-  osc.connect(ctx.destination);
-  osc.start();
-  setTimeout(()=>osc.stop(),200);
-}
+// TOGGLE FIX PLAYERS
+function togglePlayer(btn,name){
 
-// PLAYER TOGGLE
-function togglePlayer(btn, name) {
-
-  if(selectedPlayers.includes(name)) {
-    selectedPlayers = selectedPlayers.filter(p => p !== name);
+  if(selectedPlayers.includes(name)){
+    selectedPlayers = selectedPlayers.filter(p=>p!==name);
     btn.classList.remove("selected");
   } else {
     selectedPlayers.push(name);
     btn.classList.add("selected");
   }
-
-  console.log("Aktive Spieler:", selectedPlayers);
 }
 
-// TIME
-function setTime(min) {
-  totalTime = min * 60;
+// EXTRA PLAYER
+function addExtra(){
+  let name = document.getElementById("extraName").value;
+  if(!name) return;
+
+  extraPlayers.push(name);
+  selectedPlayers.push(name);
+
+  document.getElementById("extraList").innerHTML +=
+    "<div>➕ "+name+"</div>";
+}
+
+// SETTINGS
+function setMatchTime(m){
+  matchTime = m * 60;
+}
+
+function setTotalTime(m){
+  totalTime = m * 60;
 }
 
 // MATCH GENERATION
-function generateMatches() {
+function generateMatches(){
 
-  let p = [...selectedPlayers];
+  let pool = [...selectedPlayers];
 
   matches = [];
 
-  for(let i=0; i<p.length-3; i+=4) {
-    matches.push([
-      p[i] + " + " + p[i+1],
-      p[i+2] + " + " + p[i+3]
-    ]);
+  for(let i=0;i<pool.length;i+=4){
+    if(pool[i+3]){
+      matches.push([
+        pool[i]+" + "+pool[i+1],
+        pool[i+2]+" + "+pool[i+3]
+      ]);
+    }
   }
 
-  if(matches.length === 0) {
-    matches = [["Nicht genug Spieler", ""]];
+  if(matches.length === 0){
+    matches = [["Nicht genug Spieler",""]];
   }
 }
 
 // START
-function startGame() {
+function startGame(){
 
-  if(selectedPlayers.length < 4) {
+  if(selectedPlayers.length < 4){
     alert("Mindestens 4 Spieler nötig");
     return;
   }
 
   generateMatches();
 
-  seconds = totalTime;
+  seconds = matchTime;
 
   document.getElementById("setupScreen").classList.remove("active");
   document.getElementById("gameScreen").classList.add("active");
@@ -174,44 +211,45 @@ function startGame() {
 }
 
 // MATCH
-function showMatch() {
+function showMatch(){
   document.getElementById("matchInfo").innerHTML =
-    matches[current][0] + "<br>vs<br>" + matches[current][1];
+    matches[current][0]+"<br>vs<br>"+matches[current][1];
 }
 
-function nextMatch() {
+function nextMatch(){
   current = (current + 1) % matches.length;
   showMatch();
 }
 
 // COURT
-function startCourt() {
+function startCourt(){
+
   document.getElementById("gameScreen").classList.remove("active");
-  document.getElementById("courtScreen").style.display = "flex";
+  document.getElementById("courtScreen").style.display="flex";
 
   document.getElementById("courtMatch").innerHTML =
-    matches[current][0] + " VS " + matches[current][1];
+    matches[current][0]+" VS "+matches[current][1];
 
   startCountdown(10);
 }
 
-function startCountdown(s) {
+function startCountdown(s){
   let c = s;
   const el = document.getElementById("countdown");
 
-  let i = setInterval(()=>{
-    el.innerText = "Start in " + c;
+  let i=setInterval(()=>{
+    el.innerText="Start in "+c;
     c--;
-    if(c < 0){
+    if(c<0){
       clearInterval(i);
-      el.innerText = "";
-      beep();
+      el.innerText="";
       startTimer();
     }
   },1000);
 }
 
-function startTimer() {
+function startTimer(){
+
   const el = document.getElementById("timer");
 
   timer = setInterval(()=>{
@@ -224,7 +262,7 @@ function startTimer() {
 
     seconds--;
 
-    if(seconds < 0){
+    if(seconds<0){
       clearInterval(timer);
       end();
     }
@@ -232,8 +270,7 @@ function startTimer() {
   },1000);
 }
 
-function end() {
-  beep();
+function end(){
   document.getElementById("courtScreen").innerHTML =
     "<h1 style='font-size:80px'>MATCH BEENDET</h1>";
 }
