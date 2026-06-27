@@ -53,7 +53,6 @@
       border-radius: 10px;
     }
 
-    /* ===== SPIELLEITER ===== */
     #matchInfo {
       font-size: 32px;
       margin: 40px 0;
@@ -92,12 +91,17 @@
       font-weight: 900;
       letter-spacing: 3px;
     }
+
+    /* ===== AMPEL ===== */
+    .green { color: #2ecc71; }
+    .orange { color: #f39c12; }
+    .red { color: #e74c3c; }
   </style>
 </head>
 
 <body>
 
-<!-- START SCREEN -->
+<!-- START -->
 <div id="startScreen" class="screen active">
 
   <h1>🎾 Padel Manager</h1>
@@ -126,7 +130,7 @@
 
 </div>
 
-<!-- COURT MODE -->
+<!-- COURT -->
 <div id="courtScreen">
 
   <div id="courtMatch"></div>
@@ -153,7 +157,18 @@ const matches = [
 
 let currentMatch = 0;
 let timer;
-let seconds = 600; // 10 Minuten Testwert
+let seconds = 1200; // 20 Minuten
+
+// 🔊 Sound
+function beep() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(800, ctx.currentTime);
+  osc.connect(ctx.destination);
+  osc.start();
+  setTimeout(() => osc.stop(), 200);
+}
 
 function showMatch() {
   document.getElementById("matchInfo").innerHTML =
@@ -178,6 +193,7 @@ resetBtn.addEventListener("click", () => {
 });
 
 startMatchBtn.addEventListener("click", () => {
+  beep();
   startCourt();
 });
 
@@ -202,6 +218,7 @@ function startCountdown(sec) {
     if (c < 0) {
       clearInterval(interval);
       cd.innerText = "";
+      beep();
       startTimer();
     }
   }, 1000);
@@ -213,6 +230,12 @@ function startTimer() {
   timer = setInterval(() => {
     let min = Math.floor(seconds / 60);
     let sec = seconds % 60;
+
+    let colorClass = "green";
+    if (seconds < 300) colorClass = "orange"; // letzte 5 Minuten
+    if (seconds < 60) colorClass = "red";     // letzte Minute
+
+    t.className = colorClass;
 
     t.innerText =
       String(min).padStart(2, "0") + ":" +
@@ -228,12 +251,13 @@ function startTimer() {
 }
 
 function endMatch() {
+  beep();
   courtScreen.innerHTML = "<h1 style='font-size:80px'>MATCH BEENDET</h1>";
 
   setTimeout(() => {
     courtScreen.style.display = "none";
     gameScreen.classList.add("active");
-    seconds = 600;
+    seconds = 1200;
   }, 3000);
 }
 </script>
