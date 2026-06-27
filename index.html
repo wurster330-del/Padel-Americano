@@ -1,324 +1,148 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Padel Manager V5.0 Beta</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Padel Manager</title>
 
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0f0f14;
-    color: #fff;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: white;
+      text-align: center;
+    }
 
-/* HEADER (nur Setup sichtbar) */
-header {
-    padding: 14px;
-    text-align: center;
-    background: #1c1c25;
-    font-size: 18px;
-    font-weight: bold;
-}
+    .screen {
+      display: none;
+      padding: 40px;
+    }
 
-/* SCREENS */
-.screen {
-    display: none;
-    padding: 20px;
-}
-.active {
-    display: block;
-}
+    .active {
+      display: block;
+    }
 
-/* SETUP */
-.player {
-    font-size: 22px;
-    margin: 10px 0;
-}
+    h1, h2 {
+      margin-top: 0;
+    }
 
-button {
-    padding: 18px;
-    font-size: 20px;
-    border: none;
-    border-radius: 10px;
-}
+    .players {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 30px 0;
+    }
 
-.primary { background: #2d7dff; color: white; }
-.gray { background: #333; color: white; }
+    .player {
+      font-size: 24px;
+      padding: 20px;
+      border: none;
+      border-radius: 12px;
+      background: #1f6feb;
+      color: white;
+    }
 
-.setupBtn {
-    width: 100%;
-    margin-top: 12px;
-}
+    .start-btn {
+      font-size: 28px;
+      padding: 20px 40px;
+      border: none;
+      border-radius: 12px;
+      background: #2ea043;
+      color: white;
+      margin-top: 20px;
+    }
 
-/* FULLSCREEN GAME MODE */
-#game {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #0f0f14;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
+    #matchInfo {
+      font-size: 32px;
+      margin: 40px 0;
+    }
 
-#game.active {
-    display: flex;
-}
-
-/* TIMER */
-.timer {
-    font-size: 200px; /* 🔥 deutlich größer */
-    font-weight: bold;
-    text-align: center;
-}
-
-/* MATCH DISPLAY */
-.matchBox {
-    text-align: center;
-    margin-top: 20px;
-}
-
-.team {
-    font-size: 48px;
-    font-weight: bold;
-}
-
-.vs {
-    font-size: 30px;
-    margin: 10px 0;
-    color: #aaa;
-}
-
-/* STATUS TEXT */
-.status {
-    font-size: 24px;
-    color: #aaa;
-    margin-top: 20px;
-}
-</style>
+    button {
+      font-size: 24px;
+      padding: 15px 30px;
+      margin: 10px;
+      border: none;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
-<header id="header">🎾 Padel Manager V5.0 Beta – Build 0004</header>
+  <!-- START SCREEN -->
+  <div id="startScreen" class="screen active">
 
-<!-- SETUP -->
-<div id="setup" class="screen active">
-    <h2>Spielerauswahl</h2>
+    <h1>🎾 Padel Manager</h1>
 
-    <label class="player"><input type="checkbox" value="Werner" checked> Werner</label>
-    <label class="player"><input type="checkbox" value="Marco" checked> Marco</label>
-    <label class="player"><input type="checkbox" value="David" checked> David</label>
-    <label class="player"><input type="checkbox" value="Stefan" checked> Stefan</label>
+    <div class="players">
+      <button class="player">Werner</button>
+      <button class="player">Marco</button>
+      <button class="player">David</button>
+      <button class="player">Stefan</button>
+    </div>
 
-    <button class="primary setupBtn" onclick="startGame()">Spiel starten</button>
-</div>
+    <button id="startBtn" class="start-btn">
+      Spiel starten
+    </button>
 
-<!-- GAME -->
-<div id="game">
+  </div>
 
-    <div class="status" id="status">Bereit...</div>
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="screen">
 
-    <div class="timer" id="timer">00:00</div>
+    <h2>Spielleiter</h2>
 
-    <div class="matchBox" id="matchInfo"></div>
+    <div id="matchInfo">
+      Werner + Marco<br>
+      vs<br>
+      David + Stefan
+    </div>
 
-</div>
+    <button id="nextBtn">Next</button>
+    <button id="resetBtn">Reset</button>
 
-<script>
+  </div>
 
-let players = [];
-let matches = [];
-let index = 0;
+  <script>
+    const startBtn = document.getElementById("startBtn");
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
 
-let totalTime = 20 * 60;
-let remaining = totalTime;
-let interval;
-let running = false;
+    const nextBtn = document.getElementById("nextBtn");
+    const resetBtn = document.getElementById("resetBtn");
 
-let prepCountdown = 10;
-let prepInterval;
-
-// MATCH GENERATION
-function generate(p) {
-    return [
-        [p[0], p[1], p[2], p[3]],
-        [p[0], p[2], p[1], p[3]],
-        [p[0], p[3], p[1], p[2]]
+    const matches = [
+      ["Werner + Marco", "David + Stefan"],
+      ["Werner + David", "Marco + Stefan"],
+      ["Werner + Stefan", "Marco + David"]
     ];
-}
 
-function startGame() {
-    players = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
-        .map(x => x.value);
+    let currentMatch = 0;
 
-    if (players.length !== 4) {
-        alert("Bitte genau 4 Spieler auswählen!");
-        return;
+    startBtn.addEventListener("click", () => {
+      startScreen.classList.remove("active");
+      gameScreen.classList.add("active");
+      showMatch();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      currentMatch++;
+      if (currentMatch >= matches.length) currentMatch = 0;
+      showMatch();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      currentMatch = 0;
+      startScreen.classList.add("active");
+      gameScreen.classList.remove("active");
+    });
+
+    function showMatch() {
+      document.getElementById("matchInfo").innerHTML =
+        matches[currentMatch][0] + "<br>vs<br>" + matches[currentMatch][1];
     }
-
-    matches = generate(players);
-    index = 0;
-
-    document.getElementById("setup").classList.remove("active");
-    document.getElementById("game").classList.add("active");
-
-    loadMatch();
-    startPrepPhase();
-}
-
-function loadMatch() {
-    let m = matches[index];
-
-    document.getElementById("matchInfo").innerHTML = `
-        <div class="team">${m[0]} + ${m[1]}</div>
-        <div class="vs">vs</div>
-        <div class="team">${m[2]} + ${m[3]}</div>
-    `;
-}
-
-function startPrepPhase() {
-    let status = document.getElementById("status");
-    let timer = document.getElementById("timer");
-
-    prepCountdown = 10;
-    timer.innerText = "00:10";
-    status.innerText = "Bereit...";
-
-    prepInterval = setInterval(() => {
-        prepCountdown--;
-        timer.innerText = "00:" + prepCountdown.toString().padStart(2,'0');
-
-        if (prepCountdown <= 0) {
-            clearInterval(prepInterval);
-            startMatch();
-        }
-    }, 1000);
-}
-
-function startMatch() {
-    document.getElementById("status").innerText = "Spiel läuft";
-
-    remaining = totalTime;
-    updateTimer();
-
-    running = true;
-
-    interval = setInterval(() => {
-        if (remaining > 0) {
-            remaining--;
-            updateTimer();
-        } else {
-            stopTimer();
-            document.getElementById("status").innerText = "Match beendet";
-            alert("Match beendet!");
-        }
-    }, 1000);
-}
-
-function updateTimer() {
-    let m = Math.floor(remaining / 60);
-    let s = remaining % 60;
-
-    document.getElementById("timer").innerText =
-        `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-}
-
-function stopTimer() {
-    clearInterval(interval);
-    running = false;
-}
-
-</script>
+  </script>
 
 </body>
 </html>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0d1117;
-  color: white;
-  text-align: center;
-}
-
-/* Screens */
-.screen {
-  display: none;
-  padding: 40px;
-}
-
-.screen.active {
-  display: block;
-}
-
-/* Players */
-.players {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin: 30px 0;
-}
-
-.player {
-  font-size: 24px;
-  padding: 20px;
-  border: none;
-  border-radius: 12px;
-  background: #1f6feb;
-  color: white;
-}
-
-/* Start Button */
-.start-btn {
-  font-size: 28px;
-  padding: 20px 40px;
-  border: none;
-  border-radius: 12px;
-  background: #2ea043;
-  color: white;
-}
-
-/* Game Screen */
-#matchInfo {
-  font-size: 32px;
-  margin: 40px 0;
-}
-
-button {
-  font-size: 24px;
-  padding: 15px 30px;
-  margin: 10px;
-  border: none;
-  border-radius: 10px;
-}// ===== ELEMENTE =====
-const startBtn = document.getElementById("startBtn");
-const startScreen = document.getElementById("startScreen");
-const gameScreen = document.getElementById("gameScreen");
-
-const nextBtn = document.getElementById("nextBtn");
-const resetBtn = document.getElementById("resetBtn");
-
-// ===== SPIEL STARTEN =====
-startBtn.addEventListener("click", () => {
-  startScreen.classList.remove("active");
-  startScreen.classList.add("hidden");
-
-  gameScreen.classList.add("active");
-  gameScreen.classList.remove("hidden");
-});
-
-// ===== NEXT =====
-nextBtn.addEventListener("click", () => {
-  alert("Nächste Runde (kommt später Logik rein)");
-});
-
-// ===== RESET =====
-resetBtn.addEventListener("click", () => {
-  gameScreen.classList.remove("active");
-  startScreen.classList.add("active");
-});
