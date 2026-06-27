@@ -1,280 +1,290 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Padel Manager</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Padel Manager</title>
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #0d1117;
-  color: white;
-  text-align: center;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: white;
+      text-align: center;
+    }
 
-.screen { display:none; padding:30px; }
-.active { display:block; }
+    .screen { display: none; padding: 40px; }
+    .active { display: block; }
 
-button {
-  font-size: 22px;
-  padding: 14px 18px;
-  margin: 6px;
-  border-radius: 10px;
-  border: none;
-}
+    h1, h2 { margin-top: 0; }
 
-.selected {
-  background: #2ea043 !important;
-  color: white;
-}
+    .players {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 30px 0;
+    }
 
-.grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-}
+    .player {
+      font-size: 24px;
+      padding: 20px;
+      border: none;
+      border-radius: 12px;
+      background: #1f6feb;
+      color: white;
+    }
 
-/* COURT */
-#courtScreen {
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:black;
-  color:white;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
+    .start-btn {
+      font-size: 28px;
+      padding: 20px 40px;
+      border: none;
+      border-radius: 12px;
+      background: #2ea043;
+      color: white;
+      margin-top: 20px;
+    }
 
-#timer {
-  font-size: 240px;
-  font-weight: 900;
-}
-</style>
+    button {
+      font-size: 26px;
+      padding: 18px 32px;
+      margin: 10px;
+      border: none;
+      border-radius: 12px;
+    }
+
+    #matchInfo {
+      font-size: 34px;
+      margin: 40px 0;
+    }
+
+    /* COURT */
+    #courtScreen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      color: white;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #courtMatch {
+      font-size: 72px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    #countdown {
+      font-size: 120px;
+      font-weight: 800;
+      color: orange;
+      margin-bottom: 20px;
+    }
+
+    #timer {
+      font-size: 280px;
+      font-weight: 900;
+      letter-spacing: 3px;
+    }
+
+    .green { color: #2ecc71; }
+    .orange { color: #f39c12; }
+    .red { color: #e74c3c; }
+  </style>
 </head>
 
 <body>
 
-<!-- SETUP -->
-<div id="setupScreen" class="screen active">
+<!-- START -->
+<div id="startScreen" class="screen active">
+  <h1>🎾 Padel Manager</h1>
 
-<h1>🎾 Setup Spielabend</h1>
+  <div class="players">
+    <button class="player">Werner</button>
+    <button class="player">Marco</button>
+    <button class="player">David</button>
+    <button class="player">Stefan</button>
+  </div>
 
-<h2>👥 Spieler</h2>
-
-<div class="grid">
-
-<button onclick="togglePlayer(this,'Werner')">Werner</button>
-<button onclick="togglePlayer(this,'Marco')">Marco</button>
-<button onclick="togglePlayer(this,'David')">David</button>
-<button onclick="togglePlayer(this,'Stefan')">Stefan</button>
-<button onclick="togglePlayer(this,'Christian')">Christian</button>
-<button onclick="togglePlayer(this,'Tobias')">Tobias</button>
-
+  <button id="startBtn" class="start-btn">START SPIELABEND</button>
 </div>
 
-<h3>➕ Extraspieler (frei)</h3>
-<input id="extraName" placeholder="Name eingeben">
-
-<button onclick="addExtra()">Hinzufügen</button>
-
-<div id="extraList"></div>
-
-<hr>
-
-<h3>⏱️ Matchdauer</h3>
-<button onclick="setMatchTime(15)">15 min</button>
-<button onclick="setMatchTime(18)">18 min</button>
-<button onclick="setMatchTime(20)">20 min</button>
-
-<h3>🏁 Gesamtspielzeit</h3>
-<button onclick="setTotalTime(120)">120 min</button>
-<button onclick="setTotalTime(180)">180 min</button>
-
-<br><br>
-
-<button style="background:#2ea043;color:white;font-size:26px"
-onclick="startGame()">START SPIELABEND</button>
-
-</div>
-
-<!-- GAME -->
+<!-- SPIELLEITER -->
 <div id="gameScreen" class="screen">
+  <h2>Spielleiter</h2>
 
-<h2>Spielleiter</h2>
-<div id="matchInfo"></div>
+  <div id="matchInfo"></div>
 
-<button onclick="nextMatch()">NEXT</button>
-<button onclick="startCourt()">START</button>
-
+  <button id="startMatchBtn">START MATCH</button>
+  <button id="nextBtn">NEXT MATCH</button>
 </div>
 
 <!-- COURT -->
 <div id="courtScreen">
-
-<div id="courtMatch"></div>
-<div id="countdown"></div>
-<div id="timer"></div>
-
+  <div id="courtMatch"></div>
+  <div id="countdown"></div>
+  <div id="timer"></div>
 </div>
 
 <script>
+const startBtn = document.getElementById("startBtn");
+const startMatchBtn = document.getElementById("startMatchBtn");
+const nextBtn = document.getElementById("nextBtn");
 
-let players = ["Werner","Marco","David","Stefan","Christian","Tobias"];
-let extraPlayers = [];
+const startScreen = document.getElementById("startScreen");
+const gameScreen = document.getElementById("gameScreen");
+const courtScreen = document.getElementById("courtScreen");
 
-let selectedPlayers = [];
-let matchTime = 20 * 60;
-let totalTime = 120 * 60;
+const STORAGE_KEY = "padel_state_v1";
 
-let matches = [];
-let current = 0;
-let seconds;
+const matches = [
+  ["Werner + Marco", "David + Stefan"],
+  ["Werner + David", "Marco + Stefan"],
+  ["Werner + Stefan", "Marco + David"]
+];
 
+let currentMatch = 0;
 let timer;
+let seconds = 1200;
 
-// TOGGLE FIX PLAYERS
-function togglePlayer(btn,name){
-
-  if(selectedPlayers.includes(name)){
-    selectedPlayers = selectedPlayers.filter(p=>p!==name);
-    btn.classList.remove("selected");
-  } else {
-    selectedPlayers.push(name);
-    btn.classList.add("selected");
-  }
+// 🔊 Sound
+function beep(freq = 800, duration = 200) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  osc.frequency.value = freq;
+  osc.connect(ctx.destination);
+  osc.start();
+  setTimeout(() => osc.stop(), duration);
 }
 
-// EXTRA PLAYER
-function addExtra(){
-  let name = document.getElementById("extraName").value;
-  if(!name) return;
-
-  extraPlayers.push(name);
-  selectedPlayers.push(name);
-
-  document.getElementById("extraList").innerHTML +=
-    "<div>➕ "+name+"</div>";
+// 💾 SAVE STATE
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    currentMatch,
+    seconds
+  }));
 }
 
-// SETTINGS
-function setMatchTime(m){
-  matchTime = m * 60;
+// 📥 LOAD STATE
+function loadState() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  if (!data) return;
+
+  const state = JSON.parse(data);
+  currentMatch = state.currentMatch ?? 0;
+  seconds = state.seconds ?? 1200;
 }
 
-function setTotalTime(m){
-  totalTime = m * 60;
-}
-
-// MATCH GENERATION
-function generateMatches(){
-
-  let pool = [...selectedPlayers];
-
-  matches = [];
-
-  for(let i=0;i<pool.length;i+=4){
-    if(pool[i+3]){
-      matches.push([
-        pool[i]+" + "+pool[i+1],
-        pool[i+2]+" + "+pool[i+3]
-      ]);
-    }
-  }
-
-  if(matches.length === 0){
-    matches = [["Nicht genug Spieler",""]];
-  }
+// MATCH ANZEIGE
+function showMatch() {
+  document.getElementById("matchInfo").innerHTML =
+    matches[currentMatch][0] + "<br>vs<br>" + matches[currentMatch][1];
 }
 
 // START
-function startGame(){
-
-  if(selectedPlayers.length < 4){
-    alert("Mindestens 4 Spieler nötig");
-    return;
-  }
-
-  generateMatches();
-
-  seconds = matchTime;
-
-  document.getElementById("setupScreen").classList.remove("active");
-  document.getElementById("gameScreen").classList.add("active");
-
+startBtn.addEventListener("click", () => {
+  startScreen.classList.remove("active");
+  gameScreen.classList.add("active");
   showMatch();
-}
+});
 
-// MATCH
-function showMatch(){
-  document.getElementById("matchInfo").innerHTML =
-    matches[current][0]+"<br>vs<br>"+matches[current][1];
-}
-
-function nextMatch(){
-  current = (current + 1) % matches.length;
+// NEXT
+nextBtn.addEventListener("click", () => {
+  currentMatch = (currentMatch + 1) % matches.length;
   showMatch();
-}
+  saveState();
+});
 
-// COURT
-function startCourt(){
+// START MATCH
+startMatchBtn.addEventListener("click", () => {
+  beep();
+  startCourt();
+});
 
-  document.getElementById("gameScreen").classList.remove("active");
-  document.getElementById("courtScreen").style.display="flex";
+// COURT MODE
+function startCourt() {
+  gameScreen.classList.remove("active");
+  courtScreen.style.display = "flex";
 
   document.getElementById("courtMatch").innerHTML =
-    matches[current][0]+" VS "+matches[current][1];
+    matches[currentMatch][0] + " VS " + matches[currentMatch][1];
 
   startCountdown(10);
 }
 
-function startCountdown(s){
-  let c = s;
-  const el = document.getElementById("countdown");
+function startCountdown(sec) {
+  let c = sec;
+  const cd = document.getElementById("countdown");
 
-  let i=setInterval(()=>{
-    el.innerText="Start in "+c;
+  const interval = setInterval(() => {
+    cd.innerText = "Start in " + c;
     c--;
-    if(c<0){
-      clearInterval(i);
-      el.innerText="";
+
+    if (c < 0) {
+      clearInterval(interval);
+      cd.innerText = "";
+      beep(1000);
       startTimer();
     }
-  },1000);
+  }, 1000);
 }
 
-function startTimer(){
+function startTimer() {
+  const t = document.getElementById("timer");
 
-  const el = document.getElementById("timer");
+  timer = setInterval(() => {
+    let min = Math.floor(seconds / 60);
+    let sec = seconds % 60;
 
-  timer = setInterval(()=>{
+    if (seconds === 600) beep(600, 400);
 
-    let m = Math.floor(seconds/60);
-    let s = seconds%60;
+    let colorClass = "green";
+    if (seconds < 300) colorClass = "orange";
+    if (seconds < 60) colorClass = "red";
 
-    el.innerText =
-      String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+    t.className = colorClass;
+
+    t.innerText =
+      String(min).padStart(2, "0") + ":" +
+      String(sec).padStart(2, "0");
 
     seconds--;
 
-    if(seconds<0){
+    saveState();
+
+    if (seconds < 0) {
       clearInterval(timer);
-      end();
+      endMatch();
     }
-
-  },1000);
+  }, 1000);
 }
 
-function end(){
-  document.getElementById("courtScreen").innerHTML =
-    "<h1 style='font-size:80px'>MATCH BEENDET</h1>";
+// END MATCH
+function endMatch() {
+  beep(400, 600);
+
+  courtScreen.innerHTML = "<h1 style='font-size:90px'>MATCH BEENDET</h1>";
+
+  currentMatch = (currentMatch + 1) % matches.length;
+  seconds = 1200;
+
+  saveState();
+
+  setTimeout(() => {
+    courtScreen.style.display = "none";
+    gameScreen.classList.add("active");
+    showMatch();
+  }, 3000);
 }
 
+// INIT
+loadState();
+showMatch();
 </script>
 
 </body>
