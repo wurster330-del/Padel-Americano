@@ -1,250 +1,184 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Padel Manager V4.8</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Padel Manager V5.0 Beta</title>
 
 <style>
 body {
-    margin:0;
-    font-family:Arial;
-    background:#0f0f0f;
-    color:white;
-    text-align:center;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f0f14;
+    color: #fff;
 }
 
-select, button {
-    width:90%;
-    padding:10px;
-    margin:5px;
-    font-size:18px;
+header {
+    padding: 15px;
+    text-align: center;
+    background: #1c1c25;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.screen {
+    display: none;
+    padding: 20px;
+}
+
+.active {
+    display: block;
+}
+
+.player {
+    font-size: 22px;
+    margin: 10px 0;
 }
 
 button {
-    background:#222;
-    color:white;
-    border:none;
-    border-radius:8px;
+    width: 100%;
+    padding: 20px;
+    margin-top: 10px;
+    font-size: 22px;
+    border: none;
+    border-radius: 10px;
 }
 
-button:disabled {
-    opacity:0.4;
+.primary { background: #2d7dff; color: white; }
+.danger { background: #ff4d4d; color: white; }
+.gray { background: #333; color: white; }
+
+.timer {
+    font-size: 80px;
+    text-align: center;
+    margin: 40px 0;
 }
 
-#matchTimer {
-    font-size:95px;
-    font-weight:bold;
-}
-
-.warn { color:orange; }
-.danger {
-    color:red;
-    animation:blink 0.8s infinite;
-}
-
-@keyframes blink {
-    50% {opacity:0.2;}
-}
-
-.box {
-    margin:10px;
-    padding:10px;
-    background:#1a1a1a;
-    border-radius:10px;
+.match {
+    font-size: 26px;
+    text-align: center;
+    margin: 20px 0;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Padel Manager V4.8</h2>
+<header>🎾 Padel Manager V5.0 Beta – Build 0001</header>
 
-<div id="setup">
+<!-- SETUP SCREEN -->
+<div id="setup" class="screen active">
+    <h2>Spielerauswahl</h2>
 
-<select id="p1"><option>Marco</option><option>Tobias</option><option>Werner</option><option>David</option><option>Christian</option><option>Stefan</option></select>
-<select id="p2"><option>Marco</option><option selected>Tobias</option><option>Werner</option><option>David</option><option>Christian</option><option>Stefan</option></select>
-<select id="p3"><option>Marco</option><option>Tobias</option><option selected>Werner</option><option>David</option><option>Christian</option><option>Stefan</option></select>
-<select id="p4"><option>Marco</option><option>Tobias</option><option>Werner</option><option selected>David</option><option>Christian</option><option>Stefan</option></select>
-<select id="p5"><option>Marco</option><option>Tobias</option><option>Werner</option><option>David</option><option selected>Christian</option><option>Stefan</option></select>
-<select id="p6"><option>Marco</option><option>Tobias</option><option>Werner</option><option>David</option><option>Christian</option><option selected>Stefan</option></select>
+    <label class="player"><input type="checkbox" value="Werner" checked> Werner</label>
+    <label class="player"><input type="checkbox" value="Marco" checked> Marco</label>
+    <label class="player"><input type="checkbox" value="David" checked> David</label>
+    <label class="player"><input type="checkbox" value="Stefan" checked> Stefan</label>
 
-<select id="mode">
-<option value="4">4 Spieler (2 aktiv)</option>
-<option value="6" selected>6 Spieler (Rotation)</option>
-</select>
-
-<select id="sessionTime">
-<option value="120">120 min</option>
-<option value="180">180 min</option>
-</select>
-
-<select id="matchTime">
-<option value="15">15</option>
-<option value="18">18</option>
-<option value="20" selected>20</option>
-<option value="25">25</option>
-</select>
-
-<button onclick="start()">Start</button>
-
+    <button class="primary" onclick="startGame()">Spiel starten</button>
 </div>
 
-<div id="game" style="display:none">
+<!-- GAME SCREEN -->
+<div id="game" class="screen">
 
-<div class="box">
-<div id="matchTimer">00:00</div>
-</div>
+    <div class="timer" id="timer">20:00</div>
 
-<div class="box">
-<b>Runde:</b> <span id="round">1</span>
-</div>
+    <div class="match" id="matchInfo">Match wird geladen...</div>
 
-<div class="box" id="current"></div>
-
-<button onclick="toggle()">Start / Pause</button>
-<button onclick="nextRound()" id="nextBtn" disabled>Nächste Runde</button>
-
+    <button class="primary" onclick="toggleTimer()">Start / Pause</button>
+    <button class="gray" onclick="nextMatch()">Nächste Runde</button>
 </div>
 
 <script>
+let players = [];
+let pairs = [];
+let matchIndex = 0;
 
-let players=[];
-let active=[];
-let bench=[];
-let schedule=[];
-let current=0;
-let round=1;
+let matchTime = 20 * 60;
+let timeLeft = matchTime;
+let timerRunning = false;
+let interval = null;
 
-let matchLeft=0;
-let matchDuration=0;
-
-let running=false;
-let matchInterval;
-
-function start(){
-
-players=[
-p1.value,p2.value,p3.value,p4.value,p5.value,p6.value
-];
-
-matchDuration=parseInt(matchTime.value)*60;
-
-let mode=parseInt(document.getElementById("mode").value);
-
-// ACTIVE / BENCH LOGIC
-if(mode===4){
-active=players.slice(0,4);
-bench=players.slice(4,6);
-}else{
-active=players;
-bench=[];
+// FIXED ROTATIONS FOR 4 PLAYERS
+function generateMatches(p) {
+    return [
+        [p[0], p[1], p[2], p[3]],
+        [p[0], p[2], p[1], p[3]],
+        [p[0], p[3], p[1], p[2]]
+    ];
 }
 
-buildSchedule();
+function startGame() {
+    players = Array.from(document.querySelectorAll('input[type=checkbox]:checked'))
+        .map(cb => cb.value);
 
-document.getElementById("setup").style.display="none";
-document.getElementById("game").style.display="block";
+    if (players.length !== 4) {
+        alert("Bitte genau 4 Spieler auswählen!");
+        return;
+    }
 
-render();
+    pairs = generateMatches(players);
+    matchIndex = 0;
+
+    document.getElementById("setup").classList.remove("active");
+    document.getElementById("game").classList.add("active");
+
+    loadMatch();
 }
 
-function buildSchedule(){
+function loadMatch() {
+    let m = pairs[matchIndex];
 
-schedule=[];
+    document.getElementById("matchInfo").innerHTML =
+        `<b>${m[0]} + ${m[1]}</b><br>vs<br><b>${m[2]} + ${m[3]}</b>`;
 
-for(let i=0;i<10;i++){
-
-let rot=[...active];
-
-for(let r=0;r<i;r++) rot.push(rot.shift());
-
-schedule.push({
-a:[rot[0],rot[1]],
-b:[rot[2],rot[3]]
-});
-}
+    resetTimer();
 }
 
-function toggle(){
-
-if(!running){
-
-running=true;
-startMatchTimer();
-
-}else{
-
-running=false;
-clearInterval(matchInterval);
+function resetTimer() {
+    timeLeft = matchTime;
+    updateTimer();
+    stopTimer();
 }
 
+function updateTimer() {
+    let min = Math.floor(timeLeft / 60);
+    let sec = timeLeft % 60;
+    document.getElementById("timer").innerText =
+        `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
 }
 
-function startMatchTimer(){
-
-clearInterval(matchInterval);
-
-matchLeft=matchDuration;
-
-document.getElementById("nextBtn").disabled=true;
-
-matchInterval=setInterval(()=>{
-
-if(!running) return;
-
-if(matchLeft>0){
-
-matchLeft--;
-
-document.getElementById("matchTimer").innerText=format(matchLeft);
-
-if(matchLeft<=0){
-document.getElementById("nextBtn").disabled=false;
-clearInterval(matchInterval);
+function toggleTimer() {
+    if (timerRunning) {
+        stopTimer();
+    } else {
+        startTimer();
+    }
 }
 
+function startTimer() {
+    timerRunning = true;
+    interval = setInterval(() => {
+        if (timeLeft > 0) {
+            timeLeft--;
+            updateTimer();
+        } else {
+            stopTimer();
+            alert("Match beendet!");
+        }
+    }, 1000);
 }
 
-},1000);
+function stopTimer() {
+    timerRunning = false;
+    clearInterval(interval);
 }
 
-function nextRound(){
-
-if(matchLeft>0) return;
-
-if(current < schedule.length-1){
-
-current++;
-round++;
-
-render();
-
-if(running){
-startMatchTimer();
+function nextMatch() {
+    matchIndex++;
+    if (matchIndex >= pairs.length) matchIndex = 0;
+    loadMatch();
 }
-
-}
-
-}
-
-function render(){
-
-let g=schedule[current];
-
-document.getElementById("round").innerText=round;
-
-document.getElementById("current").innerHTML=
-"A: "+g.a.join(" + ")+"<br>B: "+g.b.join(" + ");
-
-}
-
-function format(s){
-let m=String(Math.floor(s/60)).padStart(2,"0");
-let sec=String(s%60).padStart(2,"0");
-return m+":"+sec;
-}
-
 </script>
 
 </body>
