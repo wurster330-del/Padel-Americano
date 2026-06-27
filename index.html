@@ -3,7 +3,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Padel iPad FIX</title>
+<title>Padel CACHE SAFE v1.0.0</title>
+
+<script>
+/* 🔥 CACHE-BUST TRICK */
+(function(){
+  const key = "padel_cache_version_v1_0_0";
+  const last = localStorage.getItem(key);
+
+  if(!last){
+    localStorage.setItem(key, Date.now());
+  }
+})();
+</script>
 
 <style>
 body {
@@ -25,21 +37,30 @@ button {
   margin: 8px;
   border-radius: 14px;
   border: none;
-  min-width: 160px;
 }
 
 .selected { background:#2ea043 !important; }
 
+/* MATCH */
 #matchInfo {
   font-size: 46px;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
+/* DEBUG + VERSION */
 #debug {
   margin-top: 20px;
-  font-size: 18px;
+  font-size: 16px;
   opacity: 0.7;
   color: #58a6ff;
+}
+
+#version {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  font-size: 14px;
+  opacity: 0.6;
 }
 
 /* COURT */
@@ -57,11 +78,6 @@ button {
   align-items:center;
 }
 
-#courtMatch {
-  font-size: 80px;
-  margin-bottom: 20px;
-}
-
 #timer {
   font-size: 280px;
   font-weight: 900;
@@ -72,6 +88,7 @@ button {
   color: orange;
 }
 
+/* FLASH */
 .flash {
   animation: flash 0.25s ease;
 }
@@ -85,12 +102,15 @@ button {
 
 <body>
 
+<!-- VERSION MARKER -->
+<div id="version">CACHE SAFE v1.0.0</div>
+
 <!-- SETUP -->
 <div id="setupScreen" class="screen active">
 
-<h1>🎾 iPAD FIX BUILD</h1>
+<h1>🎾 CACHE SAFE BUILD</h1>
 
-<h3>👥 Spieler auswählen</h3>
+<h3>👥 Spieler</h3>
 
 <button onclick="togglePlayer(this,'Werner')">Werner</button>
 <button onclick="togglePlayer(this,'Marco')">Marco</button>
@@ -103,6 +123,12 @@ button {
 
 <button style="background:#2ea043;color:white;font-size:32px"
 onclick="startGame()">START</button>
+
+<br>
+
+<button onclick="forceReload()" style="background:#444;color:white;">
+🔄 FORCE RELOAD
+</button>
 
 </div>
 
@@ -135,22 +161,31 @@ NEXT ➜
 
 <script>
 
+/* 🔥 CACHE-SAFE INIT */
+console.log("CACHE SAFE BUILD LOADED:", Date.now());
+
 let selectedPlayers = [];
 let matches = [];
 let current = 0;
 let seconds = 1200;
 let timer;
 
-// 🔊 SOUND (iPad safe)
+// 🔊 SOUND
 function beep(freq=800,duration=150){
   try {
     const ctx = new (window.AudioContext||window.webkitAudioContext)();
     const osc = ctx.createOscillator();
-    osc.frequency.value = freq;
+    osc.frequency.value=freq;
     osc.connect(ctx.destination);
     osc.start();
     setTimeout(()=>osc.stop(),duration);
   } catch(e){}
+}
+
+// FORCE RELOAD (iPad safe)
+function forceReload(){
+  localStorage.clear();
+  location.reload(true);
 }
 
 // PLAYERS
@@ -164,25 +199,22 @@ function togglePlayer(btn,name){
   }
 }
 
-// 🔥 FIXED MATCH LOGIC (sehr wichtig)
+// MATCHES
 function generateMatches(){
+  let p=[...selectedPlayers];
+  matches=[];
 
-  let p = [...selectedPlayers];
-  matches = [];
-
-  // robuste 4er-Gruppen
-  for(let i=0; i < p.length; i+=4){
-
+  for(let i=0;i<p.length;i+=4){
     if(p[i+3]){
       matches.push([
-        p[i] + " + " + p[i+1],
-        p[i+2] + " + " + p[i+3]
+        p[i]+" + "+p[i+1],
+        p[i+2]+" + "+p[i+3]
       ]);
     }
   }
 
-  if(matches.length === 0){
-    matches = [["Nicht genug Spieler",""]];
+  if(matches.length===0){
+    matches=[["Nicht genug Spieler",""]];
   }
 
   console.log("MATCHES:", matches);
@@ -191,13 +223,12 @@ function generateMatches(){
 // START
 function startGame(){
 
-  if(selectedPlayers.length < 4){
+  if(selectedPlayers.length<4){
     alert("Mindestens 4 Spieler");
     return;
   }
 
   generateMatches();
-
   current = 0;
 
   document.getElementById("setupScreen").classList.remove("active");
@@ -209,20 +240,16 @@ function startGame(){
 // SHOW MATCH
 function showMatch(){
 
-  const el = document.getElementById("matchInfo");
-
-  el.innerHTML =
+  document.getElementById("matchInfo").innerHTML =
     "Match " + (current+1) + " / " + matches.length + "<br><br>" +
     matches[current][0] + "<br>VS<br>" +
     matches[current][1];
 
   document.getElementById("debug").innerText =
-    "DEBUG current = " + current + " | total = " + matches.length;
-
-  console.log("SHOW MATCH:", current);
+    "DEBUG current = " + current + " | matches = " + matches.length;
 }
 
-// 🔥 FIXED NEXT (iPad sicher)
+// NEXT
 function nextMatch(){
 
   if(matches.length <= 1){
@@ -231,15 +258,11 @@ function nextMatch(){
   }
 
   current++;
+  if(current >= matches.length) current = 0;
 
-  if(current >= matches.length){
-    current = 0;
-  }
-
-  beep(900,150);
+  beep(900,120);
 
   const el = document.getElementById("matchInfo");
-
   el.classList.remove("flash");
   void el.offsetWidth;
   el.classList.add("flash");
@@ -264,17 +287,17 @@ function startCourt(){
 // COUNTDOWN
 function startCountdown(s){
 
-  let c = s;
-  const el = document.getElementById("countdown");
+  let c=s;
+  const el=document.getElementById("countdown");
 
-  let i = setInterval(()=>{
+  let i=setInterval(()=>{
 
-    el.innerText = "Start in " + c;
+    el.innerText="Start in "+c;
     c--;
 
-    if(c < 0){
+    if(c<0){
       clearInterval(i);
-      el.innerText = "";
+      el.innerText="";
       startTimer();
     }
 
@@ -284,21 +307,20 @@ function startCountdown(s){
 // TIMER
 function startTimer(){
 
-  const el = document.getElementById("timer");
+  const el=document.getElementById("timer");
 
-  timer = setInterval(()=>{
+  timer=setInterval(()=>{
 
-    let m = Math.floor(seconds/60);
-    let s = seconds%60;
+    let m=Math.floor(seconds/60);
+    let s=seconds%60;
 
     el.innerText =
-      String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+      String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
 
     seconds--;
 
-    if(seconds < 0){
+    if(seconds<0){
       clearInterval(timer);
-
       document.getElementById("courtScreen").innerHTML =
         "<h1 style='font-size:90px'>MATCH BEENDET</h1>";
     }
