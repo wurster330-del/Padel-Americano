@@ -25,9 +25,7 @@ button {
   border: none;
 }
 
-.selected {
-  background:#2ea043 !important;
-}
+.selected { background:#2ea043 !important; }
 
 /* COURT */
 #courtScreen {
@@ -44,19 +42,12 @@ button {
   align-items:center;
 }
 
-#courtMatch {
-  font-size: 70px;
-  margin-bottom: 20px;
-}
-
-/* 🔥 FIX: TIMER WIEDER GROß */
+/* 🔥 FIX: TIMER GROSS */
 #timer {
   font-size: 260px;
   font-weight: 900;
-  letter-spacing: 2px;
 }
 
-/* COUNTDOWN */
 #countdown {
   font-size: 110px;
   color: orange;
@@ -69,7 +60,7 @@ button {
 <!-- SETUP -->
 <div id="setupScreen" class="screen active">
 
-<h1>🎾 Setup</h1>
+<h1>🎾 Setup Spielabend</h1>
 
 <h3>👥 Spieler</h3>
 
@@ -79,6 +70,21 @@ button {
 <button onclick="togglePlayer(this,'Stefan')">Stefan</button>
 <button onclick="togglePlayer(this,'Christian')">Christian</button>
 <button onclick="togglePlayer(this,'Tobias')">Tobias</button>
+
+<h3>➕ Extraspieler</h3>
+<input id="extraName" placeholder="Name">
+<button onclick="addExtra()">Hinzufügen</button>
+
+<div id="extraList"></div>
+
+<h3>⏱️ Matchzeit</h3>
+<button onclick="setMatchTime(15)">15 min</button>
+<button onclick="setMatchTime(18)">18 min</button>
+<button onclick="setMatchTime(20)">20 min</button>
+
+<h3>🏁 Gesamtzeit</h3>
+<button onclick="setTotalTime(120)">120 min</button>
+<button onclick="setTotalTime(180)">180 min</button>
 
 <br><br>
 
@@ -111,22 +117,27 @@ onclick="startGame()">START</button>
 <script>
 
 let selectedPlayers = [];
+let extraPlayers = [];
+
+let matchTime = 20 * 60;
+let totalTime = 120 * 60;
+
 let matches = [];
 let current = 0;
-let seconds = 1200;
+let seconds = 0;
 let timer;
 
 // 🔊 SOUND (FIXED)
-function beep(freq = 800, duration = 200) {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+function beep(freq=800,duration=200){
+  const ctx = new (window.AudioContext||window.webkitAudioContext)();
   const osc = ctx.createOscillator();
-  osc.frequency.value = freq;
+  osc.frequency.value=freq;
   osc.connect(ctx.destination);
   osc.start();
-  setTimeout(() => osc.stop(), duration);
+  setTimeout(()=>osc.stop(),duration);
 }
 
-// PLAYER TOGGLE
+// PLAYERS
 function togglePlayer(btn,name){
   if(selectedPlayers.includes(name)){
     selectedPlayers = selectedPlayers.filter(p=>p!==name);
@@ -137,10 +148,26 @@ function togglePlayer(btn,name){
   }
 }
 
+// EXTRA PLAYER
+function addExtra(){
+  let name = document.getElementById("extraName").value;
+  if(!name) return;
+
+  extraPlayers.push(name);
+  selectedPlayers.push(name);
+
+  document.getElementById("extraList").innerHTML +=
+    "<div>➕ "+name+"</div>";
+}
+
+// SETTINGS
+function setMatchTime(m){ matchTime = m*60; }
+function setTotalTime(m){ totalTime = m*60; }
+
 // MATCH GENERATION
 function generateMatches(){
-  let p = [...selectedPlayers];
-  matches = [];
+  let p=[...selectedPlayers];
+  matches=[];
 
   for(let i=0;i<p.length;i+=4){
     if(p[i+3]){
@@ -158,33 +185,38 @@ function generateMatches(){
 
 // START
 function startGame(){
+
   if(selectedPlayers.length<4){
     alert("Mindestens 4 Spieler");
     return;
   }
 
   generateMatches();
+
+  seconds = matchTime; // 🔥 FIX: Matchzeit korrekt gesetzt
+
   document.getElementById("setupScreen").classList.remove("active");
   document.getElementById("gameScreen").classList.add("active");
 
   showMatch();
 }
 
-// SHOW MATCH
+// SHOW
 function showMatch(){
   document.getElementById("matchInfo").innerHTML =
     matches[current][0]+"<br>vs<br>"+matches[current][1];
 }
 
-// NEXT FIXED
+// NEXT 🔥 FIX: wieder volle Funktion
 function nextMatch(){
   current = (current + 1) % matches.length;
   showMatch();
-  beep(900,150); // Feedback Sound
+  beep(900,150);
 }
 
-// START COURT
+// COURT
 function startCourt(){
+
   beep(1000,200);
 
   document.getElementById("gameScreen").classList.remove("active");
@@ -204,17 +236,15 @@ function startCountdown(s){
   let i=setInterval(()=>{
     el.innerText="Start in "+c;
     c--;
-
     if(c<0){
       clearInterval(i);
       el.innerText="";
-      beep(1200,200);
       startTimer();
     }
   },1000);
 }
 
-// TIMER FIXED
+// TIMER
 function startTimer(){
 
   const el=document.getElementById("timer");
@@ -232,7 +262,6 @@ function startTimer(){
     if(seconds<0){
       clearInterval(timer);
       beep(400,600);
-
       document.getElementById("courtScreen").innerHTML =
         "<h1 style='font-size:80px'>MATCH BEENDET</h1>";
     }
