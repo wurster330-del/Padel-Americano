@@ -14,13 +14,14 @@ body {
 }
 
 header {
-    padding: 15px;
+    padding: 14px;
     text-align: center;
     background: #1c1c25;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
 }
 
+/* SCREENS */
 .screen {
     display: none;
     padding: 20px;
@@ -30,6 +31,7 @@ header {
     display: block;
 }
 
+/* SETUP */
 .player {
     font-size: 22px;
     margin: 10px 0;
@@ -38,35 +40,64 @@ header {
 button {
     width: 100%;
     padding: 20px;
-    margin-top: 10px;
+    margin-top: 12px;
     font-size: 22px;
     border: none;
     border-radius: 10px;
 }
 
 .primary { background: #2d7dff; color: white; }
-.danger { background: #ff4d4d; color: white; }
 .gray { background: #333; color: white; }
 
+/* GAME LAYOUT */
 .timer {
-    font-size: 80px;
-    text-align: center;
-    margin: 40px 0;
-}
-
-.match {
-    font-size: 26px;
+    font-size: 120px; /* ⬅️ DEUTLICH GRÖSSER */
     text-align: center;
     margin: 20px 0;
+    font-weight: bold;
+}
+
+.matchBox {
+    text-align: center;
+    margin: 25px 0;
+    padding: 20px;
+    background: #1a1a22;
+    border-radius: 12px;
+}
+
+.team {
+    font-size: 34px;   /* ⬅️ GRÖSSER */
+    font-weight: bold;
+    margin: 8px 0;
+}
+
+.vs {
+    font-size: 26px;
+    margin: 10px 0;
+    color: #aaa;
+}
+
+.controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background: #12121a;
+}
+
+.controls button {
+    width: 32%;
+    font-size: 18px;
 }
 </style>
 </head>
 
 <body>
 
-<header>🎾 Padel Manager V5.0 Beta – Build 0001</header>
+<header>🎾 Padel Manager V5.0 Beta – Build 0002</header>
 
-<!-- SETUP SCREEN -->
+<!-- SETUP -->
 <div id="setup" class="screen active">
     <h2>Spielerauswahl</h2>
 
@@ -78,29 +109,38 @@ button {
     <button class="primary" onclick="startGame()">Spiel starten</button>
 </div>
 
-<!-- GAME SCREEN -->
+<!-- GAME -->
 <div id="game" class="screen">
 
     <div class="timer" id="timer">20:00</div>
 
-    <div class="match" id="matchInfo">Match wird geladen...</div>
+    <div class="matchBox" id="matchInfo">
+        <div class="team">Team 1</div>
+        <div class="vs">vs</div>
+        <div class="team">Team 2</div>
+    </div>
 
-    <button class="primary" onclick="toggleTimer()">Start / Pause</button>
-    <button class="gray" onclick="nextMatch()">Nächste Runde</button>
+    <div class="controls">
+        <button class="primary" onclick="toggleTimer()">Start / Pause</button>
+        <button class="gray" onclick="nextMatch()">Nächste</button>
+        <button class="gray" onclick="resetGame()">Reset</button>
+    </div>
+
 </div>
 
 <script>
+
 let players = [];
-let pairs = [];
-let matchIndex = 0;
+let matches = [];
+let index = 0;
 
-let matchTime = 20 * 60;
-let timeLeft = matchTime;
-let timerRunning = false;
-let interval = null;
+let time = 20 * 60;
+let remaining = time;
+let running = false;
+let interval;
 
-// FIXED ROTATIONS FOR 4 PLAYERS
-function generateMatches(p) {
+// FIX: rotation
+function generate(p) {
     return [
         [p[0], p[1], p[2], p[3]],
         [p[0], p[2], p[1], p[3]],
@@ -109,16 +149,16 @@ function generateMatches(p) {
 }
 
 function startGame() {
-    players = Array.from(document.querySelectorAll('input[type=checkbox]:checked'))
-        .map(cb => cb.value);
+    players = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+        .map(x => x.value);
 
     if (players.length !== 4) {
         alert("Bitte genau 4 Spieler auswählen!");
         return;
     }
 
-    pairs = generateMatches(players);
-    matchIndex = 0;
+    matches = generate(players);
+    index = 0;
 
     document.getElementById("setup").classList.remove("active");
     document.getElementById("game").classList.add("active");
@@ -127,29 +167,32 @@ function startGame() {
 }
 
 function loadMatch() {
-    let m = pairs[matchIndex];
+    let m = matches[index];
 
-    document.getElementById("matchInfo").innerHTML =
-        `<b>${m[0]} + ${m[1]}</b><br>vs<br><b>${m[2]} + ${m[3]}</b>`;
+    document.getElementById("matchInfo").innerHTML = `
+        <div class="team">${m[0]} + ${m[1]}</div>
+        <div class="vs">vs</div>
+        <div class="team">${m[2]} + ${m[3]}</div>
+    `;
 
     resetTimer();
 }
 
 function resetTimer() {
-    timeLeft = matchTime;
+    remaining = time;
     updateTimer();
     stopTimer();
 }
 
 function updateTimer() {
-    let min = Math.floor(timeLeft / 60);
-    let sec = timeLeft % 60;
+    let m = Math.floor(remaining / 60);
+    let s = remaining % 60;
     document.getElementById("timer").innerText =
-        `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+        `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
 function toggleTimer() {
-    if (timerRunning) {
+    if (running) {
         stopTimer();
     } else {
         startTimer();
@@ -157,10 +200,10 @@ function toggleTimer() {
 }
 
 function startTimer() {
-    timerRunning = true;
+    running = true;
     interval = setInterval(() => {
-        if (timeLeft > 0) {
-            timeLeft--;
+        if (remaining > 0) {
+            remaining--;
             updateTimer();
         } else {
             stopTimer();
@@ -170,15 +213,21 @@ function startTimer() {
 }
 
 function stopTimer() {
-    timerRunning = false;
+    running = false;
     clearInterval(interval);
 }
 
 function nextMatch() {
-    matchIndex++;
-    if (matchIndex >= pairs.length) matchIndex = 0;
+    index++;
+    if (index >= matches.length) index = 0;
     loadMatch();
 }
+
+function resetGame() {
+    index = 0;
+    loadMatch();
+}
+
 </script>
 
 </body>
