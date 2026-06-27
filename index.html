@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Padel Manager</title>
+<title>Padel Manager iPad BUILD</title>
 
 <style>
 body {
@@ -12,21 +12,40 @@ body {
   background: #0d1117;
   color: white;
   text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .screen { display:none; padding:30px; }
 .active { display:block; }
 
+/* 🔥 iPad Buttons groß */
 button {
-  font-size: 22px;
-  padding: 14px 18px;
-  margin: 6px;
-  border-radius: 10px;
+  font-size: 28px;
+  padding: 18px 24px;
+  margin: 10px;
+  border-radius: 14px;
   border: none;
+  min-width: 160px;
 }
 
+/* Player selection */
 .selected { background:#2ea043 !important; }
 
+/* GAME SCREEN */
+#matchInfo {
+  font-size: 44px;
+  margin-top: 30px;
+}
+
+/* 🔥 NEXT Button extra groß */
+#nextBtn {
+  font-size: 40px;
+  background: #1f6feb;
+  color: white;
+}
+
+/* COURT MODE */
 #courtScreen {
   display:none;
   position:fixed;
@@ -42,18 +61,37 @@ button {
 }
 
 #courtMatch {
-  font-size: 70px;
+  font-size: 80px;
   margin-bottom: 20px;
 }
 
+/* 🔥 TIMER iPad groß */
 #timer {
-  font-size: 260px;
+  font-size: 280px;
   font-weight: 900;
 }
 
 #countdown {
-  font-size: 110px;
+  font-size: 120px;
   color: orange;
+}
+
+/* DEBUG BAR */
+#debug {
+  margin-top: 20px;
+  font-size: 18px;
+  opacity: 0.7;
+  color: #58a6ff;
+}
+
+/* FLASH EFFECT */
+.flash {
+  animation: flash 0.2s ease;
+}
+
+@keyframes flash {
+  0% { opacity: 0.2; }
+  100% { opacity: 1; }
 }
 </style>
 </head>
@@ -63,9 +101,9 @@ button {
 <!-- SETUP -->
 <div id="setupScreen" class="screen active">
 
-<h1>🎾 Setup Spielabend</h1>
+<h1>🎾 iPAD BUILD</h1>
 
-<h3>👥 Spieler</h3>
+<h3>👥 Spieler auswählen</h3>
 
 <button onclick="togglePlayer(this,'Werner')">Werner</button>
 <button onclick="togglePlayer(this,'Marco')">Marco</button>
@@ -74,25 +112,10 @@ button {
 <button onclick="togglePlayer(this,'Christian')">Christian</button>
 <button onclick="togglePlayer(this,'Tobias')">Tobias</button>
 
-<h3>➕ Extraspieler</h3>
-<input id="extraName" placeholder="Name">
-<button onclick="addExtra()">Hinzufügen</button>
-
-<div id="extraList"></div>
-
-<h3>⏱️ Matchzeit</h3>
-<button onclick="setMatchTime(15)">15 min</button>
-<button onclick="setMatchTime(18)">18 min</button>
-<button onclick="setMatchTime(20)">20 min</button>
-
-<h3>🏁 Gesamtzeit</h3>
-<button onclick="setTotalTime(120)">120 min</button>
-<button onclick="setTotalTime(180)">180 min</button>
-
 <br><br>
 
-<button style="background:#2ea043;color:white;font-size:24px"
-onclick="startGame()">START SPIELABEND</button>
+<button style="background:#2ea043;color:white;font-size:30px"
+onclick="startGame()">START</button>
 
 </div>
 
@@ -103,8 +126,12 @@ onclick="startGame()">START SPIELABEND</button>
 
 <div id="matchInfo"></div>
 
-<button onclick="nextMatch()">NEXT</button>
-<button onclick="startCourt()">START</button>
+<div id="debug"></div>
+
+<br>
+
+<button id="nextBtn" onclick="nextMatch()">NEXT ➜</button>
+<button onclick="startCourt()">START COURT</button>
 
 </div>
 
@@ -120,27 +147,24 @@ onclick="startGame()">START SPIELABEND</button>
 <script>
 
 let selectedPlayers = [];
-let extraPlayers = [];
-
-let matchTime = 20 * 60;
-let totalTime = 120 * 60;
-
 let matches = [];
 let current = 0;
-let seconds = 0;
+let seconds = 1200;
 let timer;
 
-// 🔊 SOUND
-function beep(freq=800,duration=200){
-  const ctx = new (window.AudioContext||window.webkitAudioContext)();
-  const osc = ctx.createOscillator();
-  osc.frequency.value=freq;
-  osc.connect(ctx.destination);
-  osc.start();
-  setTimeout(()=>osc.stop(),duration);
+// 🔊 Sound (iPad safe)
+function beep(freq=800,duration=150){
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    osc.frequency.value = freq;
+    osc.connect(ctx.destination);
+    osc.start();
+    setTimeout(()=>osc.stop(),duration);
+  } catch(e){}
 }
 
-// PLAYERS
+// PLAYER TOGGLE
 function togglePlayer(btn,name){
   if(selectedPlayers.includes(name)){
     selectedPlayers = selectedPlayers.filter(p=>p!==name);
@@ -151,26 +175,10 @@ function togglePlayer(btn,name){
   }
 }
 
-// EXTRA PLAYER
-function addExtra(){
-  let name = document.getElementById("extraName").value;
-  if(!name) return;
-
-  extraPlayers.push(name);
-  selectedPlayers.push(name);
-
-  document.getElementById("extraList").innerHTML +=
-    "<div>➕ "+name+"</div>";
-}
-
-// SETTINGS
-function setMatchTime(m){ matchTime = m * 60; }
-function setTotalTime(m){ totalTime = m * 60; }
-
 // MATCH GENERATION
 function generateMatches(){
-  let p = [...selectedPlayers];
-  matches = [];
+  let p=[...selectedPlayers];
+  matches=[];
 
   for(let i=0;i<p.length;i+=4){
     if(p[i+3]){
@@ -189,14 +197,14 @@ function generateMatches(){
 // START GAME
 function startGame(){
 
-  if(selectedPlayers.length < 4){
-    alert("Mindestens 4 Spieler nötig");
+  if(selectedPlayers.length<4){
+    alert("Mindestens 4 Spieler");
     return;
   }
 
   generateMatches();
 
-  seconds = matchTime;
+  current = 0;
 
   document.getElementById("setupScreen").classList.remove("active");
   document.getElementById("gameScreen").classList.add("active");
@@ -209,26 +217,38 @@ function showMatch(){
   const el = document.getElementById("matchInfo");
 
   el.innerHTML =
-    "<div style='opacity:0.6;font-size:18px'>Match "+(current+1)+"</div>" +
-    matches[current][0] +
-    "<br>vs<br>" +
+    "Match " + (current+1) + " / " + matches.length + "<br><br>" +
+    matches[current][0] + "<br>VS<br>" +
     matches[current][1];
+
+  document.getElementById("debug").innerText =
+    "DEBUG: current = " + current;
 }
 
-// NEXT FIX (sichtbar!)
+// NEXT (iPad SAFE + VISUAL FEEDBACK)
 function nextMatch(){
 
-  current = (current + 1) % matches.length;
+  if(matches.length <= 1){
+    beep(500,200);
+    return;
+  }
+
+  current++;
+
+  if(current >= matches.length){
+    current = 0;
+  }
+
+  beep(900,120);
 
   const el = document.getElementById("matchInfo");
-  el.style.opacity = "0.3";
 
-  setTimeout(()=>{
-    showMatch();
-    el.style.opacity = "1";
-  },120);
+  // 🔥 FLASH EFFECT (wichtig auf iPad!)
+  el.classList.remove("flash");
+  void el.offsetWidth;
+  el.classList.add("flash");
 
-  beep(900,150);
+  showMatch();
 }
 
 // COURT
@@ -240,9 +260,9 @@ function startCourt(){
   document.getElementById("courtScreen").style.display="flex";
 
   document.getElementById("courtMatch").innerHTML =
-    matches[current][0]+" VS "+matches[current][1];
+    matches[current][0] + " VS " + matches[current][1];
 
-  startCountdown(10);
+  startCountdown(5);
 }
 
 // COUNTDOWN
@@ -257,7 +277,6 @@ function startCountdown(s){
     if(c<0){
       clearInterval(i);
       el.innerText="";
-      beep(1200,200);
       startTimer();
     }
   },1000);
@@ -283,7 +302,7 @@ function startTimer(){
       beep(400,600);
 
       document.getElementById("courtScreen").innerHTML =
-        "<h1 style='font-size:80px'>MATCH BEENDET</h1>";
+        "<h1 style='font-size:90px'>MATCH BEENDET</h1>";
     }
 
   },1000);
