@@ -2,268 +2,69 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padel Timer</title>
-
 <style>
-
-body{
-    margin:0;
-    background:#184b2f;
-    color:white;
-    font-family:Arial,Helvetica,sans-serif;
-    text-align:center;
-}
-
-.container{
-    max-width:900px;
-    margin:auto;
-    padding:20px;
-}
-
-h1{
-    margin:10px;
-    font-size:32px;
-}
-
-#timer{
-    font-size:110px;
-    font-weight:bold;
-    margin:20px 0;
-}
-
-.buttonRow{
-    display:flex;
-    justify-content:center;
-    gap:15px;
-    margin:15px 0;
-    flex-wrap:wrap;
-}
-
-button{
-    font-size:24px;
-    padding:15px 30px;
-    border:none;
-    border-radius:12px;
-    background:#2e8b57;
-    color:white;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#3ca66c;
-}
-
-.section{
-    margin-top:30px;
-}
-
-.card{
-    background:#255d3d;
-    border-radius:15px;
-    padding:15px;
-    margin-top:15px;
-}
-
-.teamContainer{
-    display:flex;
-    justify-content:space-around;
-    margin-top:15px;
-}
-
-.team{
-    width:40%;
-    font-size:28px;
-}
-
-.pause{
-    margin-top:20px;
-    font-size:28px;
-}
-
-.small{
-    font-size:22px;
-}
-
+body{margin:0;background:#184b2f;color:#fff;font-family:Arial,sans-serif}
+.wrap{max-width:1000px;margin:auto;padding:20px;text-align:center}
+h1{margin:5px 0}
+#round,#rest{font-size:28px;margin:4px}
+#timer{font-size:180px;font-weight:bold;line-height:1;margin:10px 0 20px}
+.row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:12px 0}
+button{font-size:24px;padding:14px 24px;border:none;border-radius:10px;background:#2e8b57;color:#fff}
+.panel{background:#255d3d;border-radius:12px;padding:16px;margin-top:18px}
+.teams{display:flex;justify-content:space-around}
+.team{font-size:30px}
+.pause{font-size:28px;margin-top:18px}
 </style>
-
 </head>
-
 <body>
-
-<div class="container">
-
+<div class="wrap">
 <h1>🎾 Padel Timer</h1>
-
+<div id="round">Runde 1</div>
+<div id="rest">Restabend: 180 Minuten</div>
 <div id="timer">18:00</div>
-
-<div class="buttonRow">
-<button id="startBtn">▶ Start</button>
-<button id="pauseBtn">⏸ Pause</button>
-<button id="resetBtn">⏹ Reset</button>
+<div class="row">
+<button onclick="start()">▶ Start</button>
+<button onclick="pauseT()">⏸ Pause</button>
+<button onclick="resetT()">⏹ Reset</button>
 </div>
-
-<div class="section">
-
-<h2>Spielzeit</h2>
-
-<div class="buttonRow">
-<button onclick="setTime(15)">15 Min</button>
-<button onclick="setTime(18)">18 Min</button>
-<button onclick="setTime(20)">20 Min</button>
-<button onclick="customTime()">Eigene Zeit</button>
+<div class="row">
+<button onclick="setGame(15)">15</button>
+<button onclick="setGame(18)">18</button>
+<button onclick="setGame(20)">20</button>
+<button onclick="customGame()">Eigene Zeit</button>
 </div>
-
+<div class="row">
+<button onclick="setPlayers(4)">4 Spieler</button>
+<button onclick="setPlayers(5)">5 Spieler</button>
+<button onclick="setPlayers(6)">6 Spieler</button>
 </div>
-
-<div class="section">
-
-<h2>Spieler</h2>
-
-<div class="buttonRow">
-<button onclick="setPlayers(4)">4</button>
-<button onclick="setPlayers(5)">5</button>
-<button onclick="setPlayers(6)">6</button>
+<div class="panel">
+<div class="teams">
+<div class="team"><b>TEAM A</b><br><br>Tobias<br>Werner</div>
+<div class="team"><b>TEAM B</b><br><br>Christian<br>Stefan</div>
 </div>
-
+<div class="pause"><b>Pause</b><br><br>David<br>Marco</div>
 </div>
-
-<div class="section card">
-
-<h2 id="round">Runde 1</h2>
-
-<div class="teamContainer">
-
-<div class="team">
-
-<b>TEAM A</b><br><br>
-
-Tobias<br>
-Werner
-
+<div class="row">
+<button disabled>🎲 Neue Paarung (Teil 2)</button>
+<button disabled>🔄 Spieler tauschen</button>
+<button disabled>✏ Namen bearbeiten</button>
 </div>
-
-<div class="team">
-
-<b>TEAM B</b><br><br>
-
-Christian<br>
-Stefan
-
 </div>
-
-</div>
-
-<div class="pause">
-
-<b>Pause</b><br><br>
-
-David<br>
-Marco
-
-</div>
-
-</div>
-
-<div class="buttonRow" style="margin-top:30px;">
-
-<button id="drawBtn">🎲 Neue Paarung</button>
-
-<button id="swapBtn">🔄 Spieler tauschen</button>
-
-<button id="editBtn">✏ Namen bearbeiten</button>
-
-</div>
-
-</div>
-
 <script>
-
-let totalSeconds=18*60;
-let remainingSeconds=totalSeconds;
-let timer=null;
-
-function updateTimer(){
-
-let m=Math.floor(remainingSeconds/60);
-let s=remainingSeconds%60;
-
-document.getElementById("timer").innerHTML=
-String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
-
-}
-
-function startTimer(){
-
-if(timer) return;
-
-timer=setInterval(function(){
-
-if(remainingSeconds>0){
-
-remainingSeconds--;
-updateTimer();
-
-}else{
-
-clearInterval(timer);
-timer=null;
-alert("Spielzeit beendet");
-
-}
-
-},1000);
-
-}
-
-function pauseTimer(){
-
-clearInterval(timer);
-timer=null;
-
-}
-
-function resetTimer(){
-
-pauseTimer();
-remainingSeconds=totalSeconds;
-updateTimer();
-
-}
-
-function setTime(min){
-
-totalSeconds=min*60;
-remainingSeconds=totalSeconds;
-updateTimer();
-
-}
-
-function customTime(){
-
-let m=prompt("Spielzeit in Minuten");
-
-if(m && !isNaN(m)){
-
-setTime(parseInt(m));
-
-}
-
-}
-
-function setPlayers(n){
-
-alert(n+" Spieler gewählt");
-
-}
-
-document.getElementById("startBtn").onclick=startTimer;
-document.getElementById("pauseBtn").onclick=pauseTimer;
-document.getElementById("resetBtn").onclick=resetTimer;
-
-updateTimer();
-
+let gameMin=18,total=1080,remain=1080,t=null,players=6,restEvening=180;
+function draw(){let m=Math.floor(remain/60),s=remain%60;
+timer.textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+rest.textContent="Restabend: "+restEvening+" Minuten";}
+function tick(){if(remain>0){remain--;draw();}else{pauseT();alert("Zeit abgelaufen");}}
+function start(){if(!t)t=setInterval(tick,1000);}
+function pauseT(){if(t){clearInterval(t);t=null;}}
+function resetT(){pauseT();remain=total;draw();}
+function setGame(m){gameMin=m;total=m*60;remain=total;draw();}
+function customGame(){let m=parseInt(prompt("Minuten"));if(m>0)setGame(m);}
+function setPlayers(n){players=n;restEvening=(n==4)?120:180;draw();}
+draw();
 </script>
-
-</body>
-</html>
+</body></html>
