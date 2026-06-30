@@ -3,33 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Timer V2</title>
+<title>Padel Timer Dual</title>
 
 <style>
 body{
   margin:0;
-  font-family:Arial,sans-serif;
+  font-family:Arial;
   background:#184b2f;
   color:white;
   text-align:center;
 }
 
-.wrap{
-  max-width:900px;
-  margin:auto;
-  padding:20px;
-}
+.wrap{max-width:900px;margin:auto;padding:20px}
 
 h1{margin:10px 0}
 
-#timer{
-  font-size:120px;
+.timerBig{
+  font-size:80px;
   font-weight:bold;
-  margin:10px 0;
 }
 
-#info{
-  font-size:22px;
+.timerSmall{
+  font-size:30px;
+  margin:5px;
 }
 
 .row{
@@ -37,17 +33,16 @@ h1{margin:10px 0}
   justify-content:center;
   flex-wrap:wrap;
   gap:10px;
-  margin:10px 0;
+  margin:10px;
 }
 
 button{
-  padding:12px 16px;
-  font-size:16px;
-  border:none;
+  padding:10px 14px;
   border-radius:10px;
-  cursor:pointer;
+  border:none;
   background:#2e8b57;
   color:white;
+  cursor:pointer;
 }
 
 .panel{
@@ -56,161 +51,165 @@ button{
   padding:15px;
   border-radius:12px;
 }
-
-.teams{
-  display:flex;
-  justify-content:space-around;
-  flex-wrap:wrap;
-}
-
-.team{
-  min-width:120px;
-  font-size:20px;
-}
 </style>
 </head>
 
 <body>
 
 <div class="wrap">
-  <h1>🎾 Padel Timer</h1>
 
-  <div id="info">Runde 1</div>
-  <div id="timer">00:00</div>
+<h1>🎾 Padel Dual Timer</h1>
 
-  <div class="row">
-    <button onclick="start()">▶ Start</button>
-    <button onclick="pause()">⏸ Pause</button>
-    <button onclick="reset()">⏹ Reset</button>
-    <button onclick="nextRound()">🔄 Runde</button>
-  </div>
+<div class="timerSmall">
+Spielabend: <span id="eventTime">120:00</span>
+</div>
 
-  <div class="row">
-    <button onclick="setPlayers(4)">4 Spieler</button>
-    <button onclick="setPlayers(5)">5 Spieler</button>
-    <button onclick="setPlayers(6)">6 Spieler</button>
-  </div>
+<div class="timerBig">
+Match: <span id="matchTime">18:00</span>
+</div>
 
-  <div class="panel">
-    <div class="teams">
-      <div>
-        <b>TEAM A</b>
-        <div id="teamA"></div>
-      </div>
+<div class="row">
+<button onclick="startMatch()">▶ Match Start</button>
+<button onclick="pauseMatch()">⏸ Match Pause</button>
+<button onclick="resetMatch()">🔄 Match Reset</button>
+</div>
 
-      <div>
-        <b>TEAM B</b>
-        <div id="teamB"></div>
-      </div>
-    </div>
+<div class="row">
+<button onclick="setMatch(15)">15</button>
+<button onclick="setMatch(18)">18</button>
+<button onclick="setMatch(20)">20</button>
+<button onclick="customMatch()">Custom</button>
+</div>
 
-    <div id="bench" style="margin-top:10px;"></div>
-  </div>
+<div class="panel">
+<div><b>Teams</b></div>
+<div id="teams"></div>
+</div>
+
 </div>
 
 <audio id="beep"
-src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-preload="auto"></audio>
+src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
-let state = {
-  players:["Tobias","Werner","Christian","Stefan","David","Marco"],
-  rotation:0,
-  round:1,
-  remain:0,
-  total:0,
-  interval:null
+
+// ================= TIMER STATE =================
+let event = {
+  total: 120*60,
+  remain: 120*60,
+  interval: null
 };
 
-const timerEl = document.getElementById("timer");
-const infoEl = document.getElementById("info");
-const teamAEl = document.getElementById("teamA");
-const teamBEl = document.getElementById("teamB");
-const benchEl = document.getElementById("bench");
+let match = {
+  total: 18*60,
+  remain: 18*60,
+  interval: null
+};
 
-function setGameTime(){
-  const n = state.players.length;
-  state.total = (n <= 4 ? 120 : 180) * 60;
-  state.remain = state.total;
+// ================= PLAYERS =================
+let players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+let rotation = 0;
+
+// ================= DOM =================
+const eventEl = document.getElementById("eventTime");
+const matchEl = document.getElementById("matchTime");
+const teamsEl = document.getElementById("teams");
+
+// ================= EVENT TIMER =================
+function tickEvent(){
+  if(event.remain > 0){
+    event.remain--;
+  }
+  render();
 }
 
-function setPlayers(n){
-  state.players = state.players.slice(0,n);
-  state.rotation = 0;
-  state.round = 1;
-  setGameTime();
-  draw();
+// läuft IMMER
+setInterval(tickEvent, 1000);
+
+// ================= MATCH TIMER =================
+function startMatch(){
+  if(match.interval) return;
+
+  match.interval = setInterval(()=>{
+    if(match.remain > 0){
+      match.remain--;
+    } else {
+      pauseMatch();
+      document.getElementById("beep").play();
+      alert("Match vorbei!");
+    }
+    render();
+  },1000);
 }
 
+function pauseMatch(){
+  clearInterval(match.interval);
+  match.interval = null;
+}
+
+function resetMatch(){
+  pauseMatch();
+  match.remain = match.total;
+  render();
+}
+
+// ================= MATCH SETTINGS =================
+function setMatch(min){
+  match.total = min*60;
+  match.remain = match.total;
+  render();
+}
+
+function customMatch(){
+  let m = parseInt(prompt("Minuten?"));
+  if(m>0) setMatch(m);
+}
+
+// ================= TEAMS =================
 function getTeams(){
-  const p = state.players;
-  const a = [];
-  const b = [];
-  const bench = [];
+  let a=[],b=[],bench=[];
 
-  for(let i=0;i<p.length;i++){
-    const idx = (i + state.rotation) % p.length;
+  for(let i=0;i<players.length;i++){
+    let idx = (i+rotation)%players.length;
 
-    if(i < 2) a.push(p[idx]);
-    else if(i < 4) b.push(p[idx]);
-    else bench.push(p[idx]);
+    if(i<2) a.push(players[idx]);
+    else if(i<4) b.push(players[idx]);
+    else bench.push(players[idx]);
   }
 
   return {a,b,bench};
 }
 
-function draw(){
-  let m = Math.floor(state.remain/60);
-  let s = state.remain%60;
-
-  timerEl.textContent =
-    String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
-
-  infoEl.textContent = "Runde " + state.round;
-
-  const {a,b,bench} = getTeams();
-
-  teamAEl.innerHTML = a.join("<br>") || "-";
-  teamBEl.innerHTML = b.join("<br>") || "-";
-  benchEl.textContent = "Bank: " + bench.join(", ");
-}
-
-function tick(){
-  if(state.remain <= 0){
-    pause();
-    document.getElementById("beep").play();
-    alert("Zeit vorbei!");
-    return;
-  }
-  state.remain--;
-  draw();
-}
-
-function start(){
-  if(state.interval) return;
-  state.interval = setInterval(tick,1000);
-}
-
-function pause(){
-  clearInterval(state.interval);
-  state.interval = null;
-}
-
-function reset(){
-  pause();
-  setGameTime();
-  draw();
-}
-
 function nextRound(){
-  state.rotation = (state.rotation + 1) % state.players.length;
-  state.round++;
-  draw();
+  rotation = (rotation+1)%players.length;
+  render();
 }
 
-// INIT
-setGameTime();
-draw();
+// ================= RENDER =================
+function render(){
+
+  let em = Math.floor(event.remain/60);
+  let es = event.remain%60;
+
+  let mm = Math.floor(match.remain/60);
+  let ms = match.remain%60;
+
+  eventEl.textContent =
+    String(em).padStart(2,"0")+":"+String(es).padStart(2,"0");
+
+  matchEl.textContent =
+    String(mm).padStart(2,"0")+":"+String(ms).padStart(2,"0");
+
+  let {a,b,bench} = getTeams();
+
+  teamsEl.innerHTML =
+    "<b>Team A:</b> "+a.join(", ")+"<br>"+
+    "<b>Team B:</b> "+b.join(", ")+"<br>"+
+    "<b>Bank:</b> "+bench.join(", ");
+}
+
+render();
+
 </script>
 
 </body>
