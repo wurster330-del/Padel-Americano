@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel System Pro</title>
+<title>Padel Ultra Court</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#0f3d26;
+  background:#0b2f1d;
   color:white;
   text-align:center;
+  overflow:hidden;
 }
 
 /* ================= ADMIN ================= */
-
 #admin{
   padding:20px;
 }
@@ -28,25 +28,6 @@ body{
   max-width:800px;
 }
 
-.playerBox{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:10px;
-}
-
-.player{
-  background:#1f6b42;
-  padding:8px 10px;
-  border-radius:8px;
-}
-
-input, select{
-  padding:8px;
-  border-radius:6px;
-  border:none;
-}
-
 /* ================= COURT ================= */
 
 #court{
@@ -54,88 +35,96 @@ input, select{
   height:100vh;
   flex-direction:column;
   justify-content:space-between;
-  padding:10px;
+  padding:15px;
 }
 
-#matchTime{
-  font-size:18vh;
-  font-weight:bold;
-}
-
-#teams{
-  font-size:5vh;
-  font-weight:bold;
-}
-
+/* 🔥 TOP TIMER (größer) */
 .top{
   display:flex;
   justify-content:space-between;
-  opacity:0.8;
+  font-size:26px;
+  opacity:0.9;
 }
 
+/* 🔥 SPIELABEND TIMER */
+#eventTime{
+  font-size:4vh;
+  font-weight:bold;
+}
+
+/* 🔥 MATCH TIMER (EXTREM GROSS) */
+#matchTime{
+  font-size:28vh;
+  font-weight:bold;
+  line-height:1;
+}
+
+/* 🔥 TEAMS */
+#teams{
+  font-size:6vh;
+  font-weight:bold;
+  line-height:1.4;
+}
+
+/* ================= BUTTON BAR ================= */
+
+.bar{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  padding-bottom:10px;
+}
+
+/* 🔥 GROßE BUTTONS */
 button{
-  padding:12px 16px;
+  padding:18px 26px;
+  font-size:18px;
   border:none;
-  border-radius:10px;
+  border-radius:14px;
   background:#2e8b57;
   color:white;
   cursor:pointer;
+  min-width:140px;
 }
+
+button:hover{
+  background:#36a66a;
+}
+
+/* EXIT EXTRA PROMINENT */
+.exit{
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:#b33a3a;
+}
+
+.exit:hover{
+  background:#d14b4b;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- ================= ADMIN ================= -->
-<div id="admin">
-
-<h1>🎾 Padel Admin</h1>
-
-<div class="panel">
-
-<h3>Spieler</h3>
-<div id="playerBox" class="playerBox"></div>
-
-</div>
-
-<div class="panel">
-<h3>Match Zeit</h3>
-<select id="matchSelect">
-<option value="15">15 min</option>
-<option value="18" selected>18 min</option>
-<option value="20">20 min</option>
-</select>
-</div>
-
-<div class="panel">
-<h3>Spielabend</h3>
-<select id="eventSelect">
-<option value="120">120 min</option>
-<option value="180" selected>180 min</option>
-</select>
-</div>
-
-<div class="panel">
-<button onclick="startCourt()">▶ Start Court Mode</button>
-</div>
-
-</div>
-
 <!-- ================= COURT ================= -->
 <div id="court">
 
+<button class="exit" onclick="exitCourt()">❌ EXIT</button>
+
 <div class="top">
-<div id="eventTime">120:00</div>
-<div>COURT 1</div>
+  <div id="eventTime">120:00</div>
+  <div>COURT 1</div>
 </div>
 
 <div id="matchTime">18:00</div>
 
 <div id="teams"></div>
 
-<div>
-<button onclick="nextMatch()">➡ Next</button>
-<button onclick="exitCourt()">❌ Exit</button>
+<div class="bar">
+  <button onclick="nextMatch()">➡ NEXT MATCH</button>
+  <button onclick="pause()">⏸ PAUSE</button>
 </div>
 
 </div>
@@ -147,77 +136,42 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 /* ================= DATA ================= */
 
-const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
-let active = new Set(allPlayers);
+const players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+
+let active = new Set(players);
 let rotation = 0;
 
 let event = { total:120*60, remain:120*60 };
 let match = { total:18*60, remain:18*60, interval:null };
 
-/* ================= ADMIN ================= */
-
-function renderPlayers(){
-  const box = document.getElementById("playerBox");
-  box.innerHTML = "";
-
-  allPlayers.forEach(p=>{
-    box.innerHTML += `
-      <label class="player">
-        <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
-        ${p}
-      </label>
-    `;
-  });
-}
-
-function toggle(name,checked){
-  if(checked) active.add(name);
-  else active.delete(name);
-}
-
 /* ================= START ================= */
 
 function startCourt(){
-
-  match.total = parseInt(document.getElementById("matchSelect").value) * 60;
-  match.remain = match.total;
-
-  event.total = parseInt(document.getElementById("eventSelect").value) * 60;
-  event.remain = event.total;
-
-  document.getElementById("admin").style.display="none";
+  document.getElementById("admin")?.remove();
   document.getElementById("court").style.display="flex";
-
-  goFullscreen();
-  startMatch();
-}
-
-/* ================= FULLSCREEN ================= */
-
-function goFullscreen(){
   document.documentElement.requestFullscreen?.();
+  startMatch();
 }
 
 /* ================= TEAMS ================= */
 
 function getTeams(){
-
-  const players = [...active];
+  const list = [...active];
 
   let a=[], b=[], bench=[];
 
-  for(let i=0;i<players.length;i++){
-    let idx = (i + rotation) % players.length;
+  for(let i=0;i<list.length;i++){
+    let idx = (i + rotation) % list.length;
 
-    if(i < 2) a.push(players[idx]);
-    else if(i < 4) b.push(players[idx]);
-    else bench.push(players[idx]);
+    if(i < 2) a.push(list[idx]);
+    else if(i < 4) b.push(list[idx]);
+    else bench.push(list[idx]);
   }
 
   return {a,b,bench};
 }
 
-/* ================= MATCH FLOW ================= */
+/* ================= MATCH ================= */
 
 function startMatch(){
   if(match.interval) return;
@@ -236,6 +190,11 @@ function startMatch(){
   },1000);
 }
 
+function pause(){
+  clearInterval(match.interval);
+  match.interval = null;
+}
+
 function nextMatch(){
   rotation = (rotation + 2) % active.size;
   match.remain = match.total;
@@ -247,14 +206,7 @@ function nextMatch(){
 function exitCourt(){
   pause();
   document.getElementById("court").style.display="none";
-  document.getElementById("admin").style.display="block";
-
   document.exitFullscreen?.();
-}
-
-function pause(){
-  clearInterval(match.interval);
-  match.interval = null;
 }
 
 /* ================= RENDER ================= */
@@ -268,21 +220,19 @@ function render(){
   let ms = match.remain%60;
 
   document.getElementById("eventTime").textContent =
-    em+":"+String(es).padStart(2,"0");
+    "SPIEL " + em + ":" + String(es).padStart(2,"0");
 
   document.getElementById("matchTime").textContent =
-    mm+":"+String(ms).padStart(2,"0");
+    mm + ":" + String(ms).padStart(2,"0");
 
   const {a,b,bench} = getTeams();
 
   document.getElementById("teams").innerHTML =
-    "A: "+a.join(" | ")+"<br>"+
-    "B: "+b.join(" | ")+"<br>"+
-    "Bank: "+bench.join(" | ");
+    "A: " + a.join(" | ") + "<br>" +
+    "B: " + b.join(" | ") + "<br>" +
+    "BANK: " + bench.join(" | ");
 }
 
-/* INIT */
-renderPlayers();
 render();
 
 </script>
