@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V2.3.1</title>
+<title>Padel Terminal V2.4 Turniermodus</title>
 
 <style>
 body{
@@ -53,30 +53,23 @@ body{
 }
 
 #matchTime{
-  font-size:26vh;
+  font-size:24vh;
   font-weight:bold;
 }
 
-#eventTime{
+#eventInfo{
   font-size:5vh;
 }
 
 #teams{
   font-size:5vh;
   font-weight:bold;
-  line-height:1.3;
 }
 
-#nextBox{
+#plan{
   font-size:3vh;
   color:#ffd966;
-}
-
-#warning{
-  display:none;
-  font-size:3vh;
-  color:#ff4d4d;
-  font-weight:bold;
+  margin-top:10px;
 }
 
 button{
@@ -94,16 +87,6 @@ button{
   right:10px;
   background:#b33a3a;
 }
-
-@keyframes blink{
-  0%{opacity:1;}
-  50%{opacity:0.3;}
-  100%{opacity:1;}
-}
-
-.blink{
-  animation:blink 1s infinite;
-}
 </style>
 </head>
 
@@ -112,10 +95,10 @@ button{
 <!-- ================= ADMIN ================= -->
 <div id="admin">
 
-<h1>🎾 Padel Terminal V2.3.1</h1>
+<h1>🎾 Padel Terminal V2.4</h1>
 
 <div class="panel">
-<h3>Spieler</h3>
+<h3>Spieler (4–6 auswählen)</h3>
 <div id="playerBox" class="playerBox"></div>
 </div>
 
@@ -137,7 +120,7 @@ button{
 </div>
 
 <div class="panel">
-<button onclick="start()">▶ START COURT</button>
+<button onclick="startTournament()">▶ TURNIER STARTEN</button>
 </div>
 
 </div>
@@ -154,42 +137,27 @@ button{
 
 <div id="matchTime">18:00</div>
 
-<div id="warning">⚠ WECHSEL IN 30s</div>
-
 <div id="teams"></div>
 
-<div id="nextBox"></div>
+<div id="plan"></div>
 
 <div>
-<button onclick="startMatch()">▶ START MATCH</button>
+<button onclick="startMatch()">▶ START</button>
 <button onclick="pauseMatch()">⏸ PAUSE</button>
-<button onclick="next()">➡ NEXT</button>
+<button onclick="nextRound()">➡ NEXT</button>
 </div>
 
 </div>
-
-<audio id="beep"
-src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
-
-/* ================= STATE ENGINE ================= */
-
-const STATE = {
-  STOPPED: "stopped",
-  RUNNING: "running",
-  PAUSED: "paused",
-  FINISHED: "finished"
-};
-
-let state = STATE.STOPPED;
 
 /* ================= DATA ================= */
 
 const allPlayers=["Tobias","Werner","Christian","Stefan","David","Marco"];
 
 let active=[];
-let rotation=0;
+let schedule=[];
+let currentIndex=0;
 
 /* TIMER */
 let event={total:0,remain:0};
@@ -219,11 +187,47 @@ function toggle(name,checked){
   }
 }
 
+/* ================= TOURNAMENT GENERATION ================= */
+
+function shuffle(arr){
+  return arr.sort(()=>Math.random()-0.5);
+}
+
+function createSchedule(players){
+
+  let list=shuffle([...players]);
+  let rounds=[];
+
+  let matchTime=parseInt(matchSelect.value)*60;
+  let eventTime=parseInt(eventSelect.value)*60;
+
+  let maxRounds=Math.floor(eventTime / matchTime);
+
+  for(let r=0;r<maxRounds;r++){
+
+    let rotated=[...list.slice(r%list.length),...list.slice(0,r%list.length)];
+
+    let a=[rotated[0],rotated[1]];
+    let b=[rotated[2],rotated[3]];
+    let bank=rotated.slice(4);
+
+    rounds.push({
+      a,b,bank,
+      label:"Runde "+(r+1)
+    });
+  }
+
+  return rounds;
+}
+
 /* ================= START ================= */
 
-function start(){
+function startTournament(){
 
   active=[...allPlayers];
+
+  schedule=createSchedule(active);
+  currentIndex=0;
 
   match.total=parseInt(matchSelect.value)*60;
   match.remain=match.total;
@@ -234,9 +238,6 @@ function start(){
   admin.style.display="none";
   court.style.display="flex";
 
-  state = STATE.STOPPED;
-
-  generateNext();
   render();
 }
 
@@ -244,28 +245,15 @@ function start(){
 
 function startMatch(){
 
-  if(state === STATE.RUNNING) return;
-  if(state === STATE.FINISHED) return;
-
-  state = STATE.RUNNING;
+  if(match.interval) return;
 
   match.interval=setInterval(()=>{
-
-    if(state !== STATE.RUNNING) return;
 
     match.remain--;
     event.remain--;
 
-    if(match.remain <= 30 && match.remain > 0){
-      warning.style.display="block";
-      warning.classList.add("blink");
-    } else {
-      warning.style.display="none";
-      warning.classList.remove("blink");
-    }
-
-    if(match.remain <= 0){
-      finishMatch();
+    if(match.remain<=0){
+      nextRound();
       return;
     }
 
@@ -275,35 +263,19 @@ function startMatch(){
 }
 
 function pauseMatch(){
-  if(state !== STATE.RUNNING) return;
-  state = STATE.PAUSED;
-}
-
-function finishMatch(){
-
   clearInterval(match.interval);
-  match.interval = null;
-
-  state = STATE.STOPPED;
-
-  beep();
-
-  match.remain = 0;
-
-  render();
+  match.interval=null;
 }
 
 /* ================= NEXT ================= */
 
-function next(){
+function nextRound(){
 
-  if(state === STATE.RUNNING) return;
-
-  rotation=(rotation+2)%active.length;
+  if(currentIndex < schedule.length-1){
+    currentIndex++;
+  }
 
   match.remain=match.total;
-
-  generateNext();
 
   render();
 }
@@ -311,37 +283,9 @@ function next(){
 /* ================= EXIT ================= */
 
 function exit(){
-  clearInterval(match.interval);
-  match.interval=null;
-
-  state = STATE.STOPPED;
-
+  pauseMatch();
   court.style.display="none";
   admin.style.display="block";
-}
-
-/* ================= MATCH GENERATION ================= */
-
-function getTeams(offset=0){
-
-  const list=[...active];
-  let a=[],b=[],bank=[];
-
-  for(let i=0;i<list.length;i++){
-    let idx=(i+rotation+offset)%list.length;
-
-    if(i<2)a.push(list[idx]);
-    else if(i<4)b.push(list[idx]);
-    else bank.push(list[idx]);
-  }
-
-  return {a,b,bank};
-}
-
-let nextMatchData=null;
-
-function generateNext(){
-  nextMatchData=getTeams(2);
 }
 
 /* ================= RENDER ================= */
@@ -357,25 +301,17 @@ function render(){
   eventTime.textContent=em+":"+String(es).padStart(2,"0");
   matchTime.textContent=mm+":"+String(ms).padStart(2,"0");
 
-  let current=getTeams();
+  let m=schedule[currentIndex];
+
+  if(!m) return;
 
   teams.innerHTML=
-    "TEAM A: "+current.a.join(" | ")+"<br>"+
-    "TEAM B: "+current.b.join(" | ")+"<br>"+
-    "BANK: "+current.bank.join(" | ");
+    "TEAM A: "+m.a.join(" | ")+"<br>"+
+    "TEAM B: "+m.b.join(" | ")+"<br>"+
+    "BANK: "+m.bank.join(" | ");
 
-  nextBox.innerHTML=
-    "➡ NEXT MATCH<br>"+
-    nextMatchData.a.join(" | ")+" vs "+nextMatchData.b.join(" | ")+"<br>"+
-    "Bank: "+nextMatchData.bank.join(" | ");
-}
-
-/* ================= SOUND ================= */
-
-function beep(){
-  let b=document.getElementById("beep");
-  b.currentTime=0;
-  b.play();
+  plan.innerHTML=
+    m.label+" / "+schedule.length;
 }
 
 /* INIT */
