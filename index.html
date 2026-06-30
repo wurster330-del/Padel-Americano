@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Timer Pro Fix</title>
+<title>Padel Smart Timer</title>
 
 <style>
 body{
@@ -22,7 +22,7 @@ body{
 
 h1{margin:10px 0}
 
-/* 🔥 TIMERS WIEDER GROß */
+/* TIMER */
 #eventTime{
   font-size:40px;
   font-weight:bold;
@@ -33,7 +33,7 @@ h1{margin:10px 0}
   font-weight:bold;
 }
 
-/* ROWS */
+/* LAYOUT */
 .row{
   display:flex;
   justify-content:center;
@@ -42,15 +42,14 @@ h1{margin:10px 0}
   margin:10px 0;
 }
 
-/* BUTTONS WIEDER GROSS */
 button{
-  padding:12px 18px;
-  font-size:16px;
-  border:none;
+  padding:12px 16px;
   border-radius:10px;
+  border:none;
   background:#2e8b57;
   color:white;
   cursor:pointer;
+  font-size:14px;
 }
 
 button:hover{
@@ -65,7 +64,7 @@ button:hover{
   border-radius:12px;
 }
 
-/* PLAYER UI */
+/* PLAYER BOX */
 .playerBox{
   display:flex;
   justify-content:center;
@@ -85,11 +84,12 @@ button:hover{
 
 <div class="wrap">
 
-<h1>🎾 Padel Timer Pro</h1>
+<h1>🎾 Padel Smart System</h1>
 
 <!-- PLAYERS -->
 <div class="panel">
 <h3>Spieler Auswahl</h3>
+
 <div class="playerBox" id="playerBox"></div>
 
 <div class="row">
@@ -160,7 +160,7 @@ let match = { total:18*60, remain:18*60, interval:null };
 const box = document.getElementById("playerBox");
 const teamsEl = document.getElementById("teams");
 
-/* ================= PLAYERS UI ================= */
+/* ================= PLAYERS ================= */
 
 function renderPlayers(){
   box.innerHTML = "";
@@ -217,8 +217,9 @@ function startEvent(){
   if(event.interval) return;
 
   event.interval = setInterval(()=>{
-    if(event.remain > 0) event.remain--;
-    else {
+    if(event.remain > 0){
+      event.remain--;
+    } else {
       pauseEvent();
       beep();
       alert("Spielabend vorbei!");
@@ -241,14 +242,28 @@ function resetEvent(){
 /* ================= MATCH TIMER ================= */
 
 function startMatch(){
+
+  const left = event.remain;
+
+  if(left < match.total){
+    if(left > 0){
+      alert("⚠️ Letzte Spielpaarung nur noch " + Math.floor(left/60) + " Minuten möglich!");
+    } else {
+      alert("❌ Spielabend vorbei!");
+    }
+    return;
+  }
+
   if(match.interval) return;
 
   match.interval = setInterval(()=>{
-    if(match.remain > 0) match.remain--;
-    else {
+    if(match.remain > 0){
+      match.remain--;
+    } else {
       pauseMatch();
       beep();
       alert("Match vorbei!");
+      event.remain = Math.max(0, event.remain - match.total);
     }
     render();
   },1000);
@@ -280,7 +295,7 @@ function customMatch(){
 
 function getTeams(){
 
-  let players = activePlayers;
+  const players = activePlayers;
 
   let a=[], b=[], bench=[];
 
@@ -320,13 +335,16 @@ function render(){
   document.getElementById("matchTime").textContent =
     String(mm).padStart(2,"0")+":"+String(ms).padStart(2,"0");
 
-  // TEAMS
-  let {a,b,bench} = getTeams();
+  // POSSIBLE MATCHES
+  let possible = Math.floor(event.remain / match.total);
+
+  const {a,b,bench} = getTeams();
 
   teamsEl.innerHTML =
-    "<b>Team A:</b> "+(a.join(", ")||"-")+"<br>"+
-    "<b>Team B:</b> "+(b.join(", ")||"-")+"<br>"+
-    "<b>Bank:</b> "+(bench.join(", ")||"-");
+    "<b>Team A:</b> " + (a.join(", ")||"-") + "<br>" +
+    "<b>Team B:</b> " + (b.join(", ")||"-") + "<br>" +
+    "<b>Bank:</b> " + (bench.join(", ")||"-") + "<br><br>" +
+    "<b>Mögliche Matches:</b> " + possible;
 }
 
 /* BEEP */
