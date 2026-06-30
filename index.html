@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Full System Stable</title>
+<title>Padel Club Terminal</title>
 
 <style>
 body{
@@ -24,7 +24,7 @@ body{
   padding:15px;
   border-radius:12px;
   margin:10px auto;
-  max-width:800px;
+  max-width:850px;
 }
 
 .playerBox{
@@ -52,23 +52,24 @@ body{
 .top{
   display:flex;
   justify-content:space-between;
-  font-size:20px;
+  font-size:22px;
   opacity:0.9;
 }
 
-/* 🔥 TIMER */
+/* EVENT TIMER */
 #eventTime{
   font-size:5vh;
   font-weight:bold;
 }
 
+/* MATCH TIMER */
 #matchTime{
-  font-size:22vh;
+  font-size:24vh;
   font-weight:bold;
   line-height:1;
 }
 
-/* 🔥 TEAMS */
+/* TEAMS */
 #teams{
   font-size:6vh;
   font-weight:bold;
@@ -89,6 +90,7 @@ button{
   border-radius:12px;
   background:#2e8b57;
   color:white;
+  cursor:pointer;
 }
 
 .exit{
@@ -105,30 +107,55 @@ button{
 <!-- ================= ADMIN ================= -->
 <div id="admin">
 
-<h1>🎾 Padel Admin</h1>
+<h1>🎾 Padel Club Terminal</h1>
 
+<!-- PLAYERS -->
 <div class="panel">
 <h3>Spieler Auswahl</h3>
 <div id="playerBox" class="playerBox"></div>
 </div>
 
+<!-- MATCH TIME -->
 <div class="panel">
 <h3>Match Zeit</h3>
+
 <select id="matchSelect">
-<option value="15">15 min</option>
-<option value="18" selected>18 min</option>
-<option value="20">20 min</option>
+  <option value="10">10 min</option>
+  <option value="12">12 min</option>
+  <option value="15">15 min</option>
+  <option value="18" selected>18 min</option>
+  <option value="20">20 min</option>
+  <option value="25">25 min</option>
+  <option value="30">30 min</option>
 </select>
+
+<br><br>
+
+<input id="matchCustom" type="number" placeholder="eigene Minuten (z.B. 22)">
+<button onclick="setMatchCustom()">Setzen</button>
 </div>
 
+<!-- EVENT TIME -->
 <div class="panel">
 <h3>Spielabend</h3>
+
 <select id="eventSelect">
-<option value="120">120 min</option>
-<option value="180" selected>180 min</option>
+  <option value="60">60 min</option>
+  <option value="90">90 min</option>
+  <option value="120" selected>120 min</option>
+  <option value="150">150 min</option>
+  <option value="180">180 min</option>
+  <option value="210">210 min</option>
+  <option value="240">240 min</option>
 </select>
+
+<br><br>
+
+<input id="eventCustom" type="number" placeholder="eigene Minuten (z.B. 135)">
+<button onclick="setEventCustom()">Setzen</button>
 </div>
 
+<!-- START -->
 <div class="panel">
 <button onclick="startCourt()">▶ START COURT</button>
 </div>
@@ -168,11 +195,11 @@ const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 let active = new Set(allPlayers);
 let rotation = 0;
 
-/* TIMER (wichtig: echte Sekunde stabil) */
+/* TIMER */
 let event = { total:120*60, remain:120*60 };
 let match = { total:18*60, remain:18*60, interval:null };
 
-/* ================= ADMIN ================= */
+/* ================= PLAYERS ================= */
 
 function renderPlayers(){
   const box = document.getElementById("playerBox");
@@ -193,7 +220,25 @@ function toggle(name,checked){
   else active.delete(name);
 }
 
-/* ================= START COURT ================= */
+/* ================= CUSTOM TIMES ================= */
+
+function setMatchCustom(){
+  let v = parseInt(document.getElementById("matchCustom").value);
+  if(v >= 10 && v <= 60){
+    match.total = v * 60;
+    match.remain = match.total;
+  }
+}
+
+function setEventCustom(){
+  let v = parseInt(document.getElementById("eventCustom").value);
+  if(v >= 60 && v <= 600){
+    event.total = v * 60;
+    event.remain = event.total;
+  }
+}
+
+/* ================= START ================= */
 
 function startCourt(){
 
@@ -206,17 +251,12 @@ function startCourt(){
   document.getElementById("admin").style.display="none";
   document.getElementById("court").style.display="flex";
 
-  goFullscreen();
+  document.documentElement.requestFullscreen?.();
+
   startLoop();
 }
 
-/* ================= FULLSCREEN ================= */
-
-function goFullscreen(){
-  document.documentElement.requestFullscreen?.();
-}
-
-/* ================= TIMER LOOP (STABIL!) ================= */
+/* ================= LOOP (STABIL) ================= */
 
 let last = Date.now();
 
@@ -226,8 +266,8 @@ function startLoop(){
 
   match.interval = setInterval(()=>{
 
-    const now = Date.now();
-    const diff = Math.floor((now - last) / 1000);
+    let now = Date.now();
+    let diff = Math.floor((now - last) / 1000);
 
     if(diff <= 0) return;
 
@@ -311,7 +351,7 @@ function render(){
   let ms = match.remain%60;
 
   document.getElementById("eventTime").textContent =
-    "EVENT " + em + ":" + String(es).padStart(2,"0");
+    em + ":" + String(es).padStart(2,"0");
 
   document.getElementById("matchTime").textContent =
     mm + ":" + String(ms).padStart(2,"0");
