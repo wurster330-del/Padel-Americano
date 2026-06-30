@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Court Mode</title>
+<title>Padel Court System</title>
 
 <style>
 body{
@@ -12,75 +12,107 @@ body{
   background:#0f3d26;
   color:white;
   text-align:center;
+  overflow:hidden;
 }
 
-/* 🔥 FULLSCREEN COURT */
-.court{
+/* START SCREEN */
+#startScreen{
   height:100vh;
   display:flex;
   flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:20px;
+}
+
+#startScreen h1{
+  font-size:40px;
+}
+
+button{
+  padding:14px 20px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  background:#2e8b57;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#36a66a;
+}
+
+/* COURT MODE */
+#court{
+  display:none;
+  height:100vh;
+  flex-direction:column;
   justify-content:space-between;
-  padding:20px;
+  padding:10px;
 }
 
-/* MATCH TIMER EXTREM GROSS */
-#matchTime{
-  font-size:22vh;
-  font-weight:bold;
-  margin:0;
-}
-
-/* EVENT TIMER klein oben */
-#eventTime{
+.top{
+  display:flex;
+  justify-content:space-between;
   font-size:18px;
   opacity:0.8;
 }
 
-/* TEAMS RIESIG */
-.teams{
-  font-size:5vh;
-  line-height:1.5;
+/* TIMER */
+#matchTime{
+  font-size:22vh;
   font-weight:bold;
 }
 
-/* BUTTON BAR (optional klein) */
+/* TEAMS */
+#teams{
+  font-size:5vh;
+  font-weight:bold;
+  line-height:1.4;
+}
+
+/* CONTROL BAR */
 .bar{
   display:flex;
   justify-content:center;
   gap:10px;
 }
 
-button{
-  padding:10px 14px;
-  border:none;
-  border-radius:10px;
-  background:#2e8b57;
-  color:white;
+.exit{
+  position:absolute;
+  top:10px;
+  right:10px;
 }
-button:hover{background:#36a66a}
-
 </style>
 </head>
 
 <body>
 
-<div class="court">
-
-<!-- TOP -->
-<div id="eventTime">Spielabend 120:00</div>
-
-<!-- CENTER TIMER -->
-<div id="matchTime">18:00</div>
-
-<!-- TEAMS -->
-<div class="teams" id="teams"></div>
-
-<!-- CONTROLS -->
-<div class="bar">
-<button onclick="startMatch()">▶ Start</button>
-<button onclick="pauseMatch()">⏸ Pause</button>
-<button onclick="resetMatch()">🔄 Reset</button>
+<!-- START SCREEN -->
+<div id="startScreen">
+  <h1>🎾 Padel Court System</h1>
+  <button onclick="startGame()">▶ One Tap Start Game</button>
 </div>
+
+<!-- COURT -->
+<div id="court">
+
+  <button class="exit" onclick="exitCourt()">❌ Exit</button>
+
+  <div class="top">
+    <div id="eventTime">120:00</div>
+    <div>COURT 1</div>
+  </div>
+
+  <div id="matchTime">18:00</div>
+
+  <div id="teams"></div>
+
+  <div class="bar">
+    <button onclick="pauseMatch()">⏸ Pause</button>
+    <button onclick="nextMatch()">➡ Next Match</button>
+  </div>
 
 </div>
 
@@ -100,9 +132,30 @@ let rotation = 0;
 let event = { total:120*60, remain:120*60 };
 let match = { total:18*60, remain:18*60, interval:null };
 
+/* ================= FULLSCREEN ================= */
+
+function goFullScreen(){
+  const el = document.documentElement;
+  if(el.requestFullscreen){
+    el.requestFullscreen();
+  }
+}
+
+/* ================= START GAME ================= */
+
+function startGame(){
+  document.getElementById("startScreen").style.display = "none";
+  document.getElementById("court").style.display = "flex";
+
+  goFullScreen();
+
+  startMatch();
+}
+
 /* ================= TEAMS ================= */
 
 function getTeams(){
+
   let a=[], b=[], bench=[];
 
   for(let i=0;i<active.length;i++){
@@ -116,19 +169,22 @@ function getTeams(){
   return {a,b,bench};
 }
 
-/* ================= MATCH ================= */
+/* ================= MATCH FLOW ================= */
 
 function startMatch(){
   if(match.interval) return;
 
   match.interval = setInterval(()=>{
+
     if(match.remain > 0){
       match.remain--;
       event.remain--;
     } else {
       nextMatch();
     }
+
     render();
+
   },1000);
 }
 
@@ -137,28 +193,27 @@ function pauseMatch(){
   match.interval = null;
 }
 
-function resetMatch(){
-  pauseMatch();
-  match.remain = match.total;
-  render();
-}
-
-/* ================= AUTO ROTATION ================= */
-
 function nextMatch(){
 
   pauseMatch();
   document.getElementById("beep").play();
 
-  // Rotation weiter
   rotation = (rotation + 2) % active.length;
-
-  // neuer Match-Timer
   match.remain = match.total;
 
-  alert("➡️ Nächste Spielpaarung");
-
   startMatch();
+}
+
+/* ================= EXIT ================= */
+
+function exitCourt(){
+  pauseMatch();
+  document.getElementById("court").style.display = "none";
+  document.getElementById("startScreen").style.display = "flex";
+
+  if(document.fullscreenElement){
+    document.exitFullscreen();
+  }
 }
 
 /* ================= RENDER ================= */
@@ -172,7 +227,7 @@ function render(){
   let ms = match.remain%60;
 
   document.getElementById("eventTime").textContent =
-    "Spielabend " + String(em).padStart(2,"0")+":"+String(es).padStart(2,"0");
+    "Spiel " + String(em).padStart(2,"0")+":"+String(es).padStart(2,"0");
 
   document.getElementById("matchTime").textContent =
     String(mm).padStart(2,"0")+":"+String(ms).padStart(2,"0");
@@ -185,6 +240,7 @@ function render(){
     "Bank: " + bench.join(" | ");
 }
 
+/* INIT */
 render();
 
 </script>
