@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal</title>
+<title>Padel Terminal Final</title>
 
 <style>
 body{
@@ -12,9 +12,21 @@ body{
   background:#0b2f1d;
   color:white;
   text-align:center;
+  transition:0.3s;
 }
 
-/* ADMIN */
+/* 🔴 WARNING BLINK */
+@keyframes blink {
+  0% { background:#0b2f1d; }
+  50% { background:#7a1c1c; }
+  100% { background:#0b2f1d; }
+}
+
+.warning {
+  animation: blink 1s infinite;
+}
+
+/* ================= ADMIN ================= */
 #admin{
   padding:20px;
 }
@@ -40,7 +52,7 @@ body{
   border-radius:8px;
 }
 
-/* COURT */
+/* ================= COURT ================= */
 #court{
   display:none;
   height:100vh;
@@ -67,9 +79,11 @@ body{
   line-height:1;
 }
 
+/* TEAMS */
 #teams{
   font-size:6vh;
   font-weight:bold;
+  line-height:1.4;
 }
 
 /* BUTTONS */
@@ -95,8 +109,8 @@ button{
   background:#b33a3a;
 }
 
-.startMatchBtn{
-  font-size:20px;
+.startBtn{
+  font-size:18px;
   padding:16px 26px;
   background:#3a9d5d;
 }
@@ -111,7 +125,7 @@ button{
 <h1>🎾 Padel Terminal</h1>
 
 <div class="panel">
-<h3>Spieler</h3>
+<h3>Spieler Auswahl</h3>
 <div id="playerBox" class="playerBox"></div>
 </div>
 
@@ -123,6 +137,7 @@ button{
   <option value="18" selected>18</option>
   <option value="20">20</option>
   <option value="25">25</option>
+  <option value="30">30</option>
 </select>
 </div>
 
@@ -135,7 +150,7 @@ button{
 </div>
 
 <div class="panel">
-<button onclick="startCourt()">▶ START COURT</button>
+<button class="startBtn" onclick="startCourt()">▶ START COURT</button>
 </div>
 
 </div>
@@ -154,9 +169,8 @@ button{
 
 <div id="teams"></div>
 
-<!-- 🔥 NEU: START BUTTON IM COURT -->
-<div>
-  <button class="startMatchBtn" onclick="startMatch()">▶ START MATCH</button>
+<div class="bar">
+  <button onclick="startMatch()">▶ START MATCH</button>
   <button onclick="pause()">⏸ PAUSE</button>
   <button onclick="nextMatch()">➡ NEXT</button>
 </div>
@@ -168,39 +182,50 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-/* DATA */
-const players=["Tobias","Werner","Christian","Stefan","David","Marco"];
-let active=new Set(players);
-let rotation=0;
+/* ================= DATA ================= */
 
-let event={total:120*60,remain:120*60};
-let match={total:18*60,remain:18*60,interval:null};
+const players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 
-/* ADMIN */
+let active = new Set(players);
+let rotation = 0;
+
+/* TIMER */
+let event = { total:120*60, remain:120*60 };
+let match = { total:18*60, remain:18*60, interval:null };
+
+/* WARNING STATE */
+let warningActive = false;
+
+/* ================= ADMIN ================= */
+
 function renderPlayers(){
-  const box=document.getElementById("playerBox");
-  box.innerHTML="";
+  const box = document.getElementById("playerBox");
+  box.innerHTML = "";
+
   players.forEach(p=>{
-    box.innerHTML+=`
+    box.innerHTML += `
       <label class="player">
-      <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
-      ${p}
-      </label>`;
+        <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
+        ${p}
+      </label>
+    `;
   });
 }
 
-function toggle(p,checked){
-  if(checked) active.add(p);
-  else active.delete(p);
+function toggle(name,checked){
+  if(checked) active.add(name);
+  else active.delete(name);
 }
 
-/* START COURT */
-function startCourt(){
-  match.total=parseInt(matchSelect.value)*60;
-  match.remain=match.total;
+/* ================= START COURT ================= */
 
-  event.total=parseInt(eventSelect.value)*60;
-  event.remain=event.total;
+function startCourt(){
+
+  match.total = parseInt(matchSelect.value)*60;
+  match.remain = match.total;
+
+  event.total = parseInt(eventSelect.value)*60;
+  event.remain = event.total;
 
   admin.style.display="none";
   court.style.display="flex";
@@ -210,16 +235,17 @@ function startCourt(){
   render();
 }
 
-/* MATCH CONTROL */
+/* ================= MATCH CONTROL ================= */
+
 function startMatch(){
   if(match.interval) return;
 
-  match.interval=setInterval(()=>{
+  match.interval = setInterval(()=>{
 
     if(match.remain>0){
       match.remain--;
       event.remain--;
-    }else{
+    } else {
       nextMatch();
     }
 
@@ -233,23 +259,38 @@ function pause(){
   match.interval=null;
 }
 
+/* ================= NEXT MATCH ================= */
+
 function nextMatch(){
-  document.getElementById("beep").play();
+
+  beep.currentTime=0;
+  beep.play();
+
   rotation=(rotation+2)%active.size;
   match.remain=match.total;
+
+  warningActive=false;
+  document.body.classList.remove("warning");
 }
 
-/* EXIT */
+/* ================= EXIT ================= */
+
 function exitCourt(){
+
   pause();
+
   court.style.display="none";
   admin.style.display="block";
+
   document.exitFullscreen?.();
 }
 
-/* TEAMS */
+/* ================= TEAMS ================= */
+
 function getTeams(){
-  let list=[...active];
+
+  const list=[...active];
+
   let a=[],b=[],c=[];
 
   for(let i=0;i<list.length;i++){
@@ -260,10 +301,34 @@ function getTeams(){
     else c.push(list[idx]);
   }
 
-  return{a,b,c};
+  return {a,b,c};
 }
 
-/* RENDER */
+/* ================= WARNING ================= */
+
+function checkWarning(){
+
+  if(match.remain<=30 && match.remain>0){
+
+    if(!warningActive){
+      warningActive=true;
+      document.body.classList.add("warning");
+    }
+
+    beep.currentTime=0;
+    beep.play();
+
+  } else {
+
+    if(warningActive){
+      warningActive=false;
+      document.body.classList.remove("warning");
+    }
+  }
+}
+
+/* ================= RENDER ================= */
+
 function render(){
 
   let em=Math.floor(event.remain/60);
@@ -281,8 +346,11 @@ function render(){
     "A: "+t.a.join(" | ")+"<br>"+
     "B: "+t.b.join(" | ")+"<br>"+
     "BANK: "+t.c.join(" | ");
+
+  checkWarning();
 }
 
+/* INIT */
 renderPlayers();
 render();
 
