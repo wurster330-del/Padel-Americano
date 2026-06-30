@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal Stable</title>
+<title>Padel Terminal Full Restore</title>
 
 <style>
 body{
@@ -14,7 +14,7 @@ body{
   text-align:center;
 }
 
-/* ADMIN */
+/* ================= ADMIN ================= */
 #admin{
   padding:20px;
 }
@@ -27,7 +27,20 @@ body{
   max-width:850px;
 }
 
-/* COURT */
+.playerBox{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+}
+
+.player{
+  background:#1f6b42;
+  padding:8px 10px;
+  border-radius:8px;
+}
+
+/* ================= COURT ================= */
 #court{
   display:none;
   height:100vh;
@@ -43,7 +56,6 @@ body{
   opacity:0.9;
 }
 
-/* TIMER */
 #eventTime{
   font-size:5vh;
   font-weight:bold;
@@ -54,13 +66,11 @@ body{
   font-weight:bold;
 }
 
-/* TEAMS */
 #teams{
   font-size:6vh;
   font-weight:bold;
 }
 
-/* BUTTONS */
 button{
   padding:14px 20px;
   border:none;
@@ -68,6 +78,7 @@ button{
   background:#2e8b57;
   color:white;
 }
+
 .exit{
   position:absolute;
   top:10px;
@@ -84,25 +95,41 @@ button{
 
 <h1>🎾 Padel Terminal</h1>
 
+<!-- PLAYERS -->
+<div class="panel">
+<h3>Spieler Auswahl</h3>
+<div id="playerBox" class="playerBox"></div>
+</div>
+
+<!-- MATCH TIME -->
 <div class="panel">
 <h3>Match Zeit</h3>
 <select id="matchSelect">
-  <option value="15">15</option>
-  <option value="18" selected>18</option>
-  <option value="20">20</option>
+  <option value="10">10 min</option>
+  <option value="15">15 min</option>
+  <option value="18" selected>18 min</option>
+  <option value="20">20 min</option>
+  <option value="25">25 min</option>
+  <option value="30">30 min</option>
 </select>
 </div>
 
+<!-- EVENT TIME -->
 <div class="panel">
 <h3>Spielabend</h3>
 <select id="eventSelect">
-  <option value="120" selected>120</option>
-  <option value="180">180</option>
+  <option value="60">60 min</option>
+  <option value="90">90 min</option>
+  <option value="120" selected>120 min</option>
+  <option value="150">150 min</option>
+  <option value="180">180 min</option>
+  <option value="210">210 min</option>
+  <option value="240">240 min</option>
 </select>
 </div>
 
 <div class="panel">
-<button onclick="start()">▶ START</button>
+<button onclick="start()">▶ START COURT</button>
 </div>
 
 </div>
@@ -133,14 +160,35 @@ button{
 
 /* ================= DATA ================= */
 
-const players=["Tobias","Werner","Christian","Stefan","David","Marco"];
+const allPlayers=["Tobias","Werner","Christian","Stefan","David","Marco"];
 
-let active=[...players];
+let active=new Set(allPlayers);
 let rotation=0;
 
 /* TIMERS */
-let event={total:120*60,remain:120*60,started:false};
+let event={total:120*60,remain:120*60};
 let match={total:18*60,remain:18*60,interval:null};
+
+/* ================= PLAYERS ================= */
+
+function renderPlayers(){
+  const box=document.getElementById("playerBox");
+  box.innerHTML="";
+
+  allPlayers.forEach(p=>{
+    box.innerHTML+=`
+      <label class="player">
+        <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
+        ${p}
+      </label>
+    `;
+  });
+}
+
+function toggle(name,checked){
+  if(checked) active.add(name);
+  else active.delete(name);
+}
 
 /* ================= START ================= */
 
@@ -166,11 +214,6 @@ function startMatch(){
 
   if(match.interval) return;
 
-  // Event startet NUR beim ersten Match
-  if(!event.started){
-    event.started=true;
-  }
-
   match.interval=setInterval(()=>{
 
     match.remain--;
@@ -189,10 +232,8 @@ function startMatch(){
 
 function next(){
 
-  rotation=(rotation+2)%active.length;
+  rotation=(rotation+2)%active.size;
   match.remain=match.total;
-
-  render();
 }
 
 /* ================= PAUSE ================= */
@@ -205,9 +246,12 @@ function pause(){
 /* ================= EXIT ================= */
 
 function exit(){
+
   pause();
+
   court.style.display="none";
   admin.style.display="block";
+
   document.exitFullscreen?.();
 }
 
@@ -215,14 +259,16 @@ function exit(){
 
 function getTeams(){
 
+  const list=[...active];
+
   let a=[],b=[],c=[];
 
-  for(let i=0;i<active.length;i++){
-    let idx=(i+rotation)%active.length;
+  for(let i=0;i<list.length;i++){
+    let idx=(i+rotation)%list.length;
 
-    if(i<2)a.push(active[idx]);
-    else if(i<4)b.push(active[idx]);
-    else c.push(active[idx]);
+    if(i<2)a.push(list[idx]);
+    else if(i<4)b.push(list[idx]);
+    else c.push(list[idx]);
   }
 
   return{a,b,c};
@@ -249,6 +295,8 @@ function render(){
     "BANK: "+t.c.join(" | ");
 }
 
+/* INIT */
+renderPlayers();
 render();
 
 </script>
