@@ -3,137 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Smart Timer</title>
+<title>Padel Court Mode</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#184b2f;
+  background:#0f3d26;
   color:white;
   text-align:center;
 }
 
-.wrap{
-  max-width:1000px;
-  margin:auto;
+/* 🔥 FULLSCREEN COURT */
+.court{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
   padding:20px;
 }
 
-h1{margin:10px 0}
-
-/* TIMER */
-#eventTime{
-  font-size:40px;
-  font-weight:bold;
-}
-
+/* MATCH TIMER EXTREM GROSS */
 #matchTime{
-  font-size:90px;
+  font-size:22vh;
+  font-weight:bold;
+  margin:0;
+}
+
+/* EVENT TIMER klein oben */
+#eventTime{
+  font-size:18px;
+  opacity:0.8;
+}
+
+/* TEAMS RIESIG */
+.teams{
+  font-size:5vh;
+  line-height:1.5;
   font-weight:bold;
 }
 
-/* LAYOUT */
-.row{
+/* BUTTON BAR (optional klein) */
+.bar{
   display:flex;
   justify-content:center;
-  flex-wrap:wrap;
   gap:10px;
-  margin:10px 0;
 }
 
 button{
-  padding:12px 16px;
-  border-radius:10px;
+  padding:10px 14px;
   border:none;
+  border-radius:10px;
   background:#2e8b57;
   color:white;
-  cursor:pointer;
-  font-size:14px;
 }
+button:hover{background:#36a66a}
 
-button:hover{
-  background:#36a66a;
-}
-
-/* PANELS */
-.panel{
-  margin-top:20px;
-  background:#255d3d;
-  padding:15px;
-  border-radius:12px;
-}
-
-/* PLAYER BOX */
-.playerBox{
-  display:flex;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:10px;
-}
-
-.player{
-  background:#1f6b42;
-  padding:8px 10px;
-  border-radius:8px;
-}
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<div class="court">
 
-<h1>🎾 Padel Smart System</h1>
+<!-- TOP -->
+<div id="eventTime">Spielabend 120:00</div>
 
-<!-- PLAYERS -->
-<div class="panel">
-<h3>Spieler Auswahl</h3>
-
-<div class="playerBox" id="playerBox"></div>
-
-<div class="row">
-<button onclick="applySelection()">✔ Übernehmen</button>
-<button onclick="selectAll()">Alle</button>
-<button onclick="clearSelection()">Reset</button>
-</div>
-</div>
-
-<!-- EVENT TIMER -->
-<div class="panel">
-<h3>Spielabend</h3>
-<div id="eventTime">120:00</div>
-
-<div class="row">
-<button onclick="startEvent()">▶ Start</button>
-<button onclick="pauseEvent()">⏸ Pause</button>
-<button onclick="resetEvent()">🔄 Reset</button>
-</div>
-</div>
-
-<!-- MATCH TIMER -->
-<div class="panel">
-<h3>Match</h3>
+<!-- CENTER TIMER -->
 <div id="matchTime">18:00</div>
 
-<div class="row">
+<!-- TEAMS -->
+<div class="teams" id="teams"></div>
+
+<!-- CONTROLS -->
+<div class="bar">
 <button onclick="startMatch()">▶ Start</button>
 <button onclick="pauseMatch()">⏸ Pause</button>
 <button onclick="resetMatch()">🔄 Reset</button>
-</div>
-
-<div class="row">
-<button onclick="setMatch(15)">15</button>
-<button onclick="setMatch(18)">18</button>
-<button onclick="setMatch(20)">20</button>
-<button onclick="customMatch()">Custom</button>
-</div>
-</div>
-
-<!-- TEAMS -->
-<div class="panel">
-<h3>Teams</h3>
-<div id="teams"></div>
 </div>
 
 </div>
@@ -145,125 +91,42 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 /* ================= DATA ================= */
 
-const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+const players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 
-let selected = new Set(allPlayers);
-let activePlayers = [...allPlayers];
-
+let active = [...players];
 let rotation = 0;
 
 /* TIMERS */
-let event = { total:120*60, remain:120*60, interval:null };
+let event = { total:120*60, remain:120*60 };
 let match = { total:18*60, remain:18*60, interval:null };
 
-/* DOM */
-const box = document.getElementById("playerBox");
-const teamsEl = document.getElementById("teams");
+/* ================= TEAMS ================= */
 
-/* ================= PLAYERS ================= */
+function getTeams(){
+  let a=[], b=[], bench=[];
 
-function renderPlayers(){
-  box.innerHTML = "";
+  for(let i=0;i<active.length;i++){
+    let idx = (i + rotation) % active.length;
 
-  allPlayers.forEach(p=>{
-    const checked = selected.has(p) ? "checked" : "";
-
-    box.innerHTML += `
-      <label class="player">
-        <input type="checkbox" ${checked}
-        onchange="togglePlayer('${p}',this.checked)">
-        ${p}
-      </label>
-    `;
-  });
-}
-
-function togglePlayer(name, checked){
-  if(checked) selected.add(name);
-  else selected.delete(name);
-}
-
-function applySelection(){
-  activePlayers = [...selected];
-
-  if(activePlayers.length < 4){
-    alert("Mindestens 4 Spieler!");
-    return;
+    if(i < 2) a.push(active[idx]);
+    else if(i < 4) b.push(active[idx]);
+    else bench.push(active[idx]);
   }
 
-  rotation = 0;
-  setEventTime();
-  render();
+  return {a,b,bench};
 }
 
-function selectAll(){
-  selected = new Set(allPlayers);
-  renderPlayers();
-}
-
-function clearSelection(){
-  selected.clear();
-  renderPlayers();
-}
-
-/* ================= EVENT TIMER ================= */
-
-function setEventTime(){
-  event.total = (activePlayers.length === 4 ? 120 : 180) * 60;
-  event.remain = event.total;
-}
-
-function startEvent(){
-  if(event.interval) return;
-
-  event.interval = setInterval(()=>{
-    if(event.remain > 0){
-      event.remain--;
-    } else {
-      pauseEvent();
-      beep();
-      alert("Spielabend vorbei!");
-    }
-    render();
-  },1000);
-}
-
-function pauseEvent(){
-  clearInterval(event.interval);
-  event.interval = null;
-}
-
-function resetEvent(){
-  pauseEvent();
-  event.remain = event.total;
-  render();
-}
-
-/* ================= MATCH TIMER ================= */
+/* ================= MATCH ================= */
 
 function startMatch(){
-
-  const left = event.remain;
-
-  if(left < match.total){
-    if(left > 0){
-      alert("⚠️ Letzte Spielpaarung nur noch " + Math.floor(left/60) + " Minuten möglich!");
-    } else {
-      alert("❌ Spielabend vorbei!");
-    }
-    return;
-  }
-
   if(match.interval) return;
 
   match.interval = setInterval(()=>{
     if(match.remain > 0){
       match.remain--;
+      event.remain--;
     } else {
-      pauseMatch();
-      beep();
-      alert("Match vorbei!");
-      event.remain = Math.max(0, event.remain - match.total);
+      nextMatch();
     }
     render();
   },1000);
@@ -280,81 +143,48 @@ function resetMatch(){
   render();
 }
 
-function setMatch(min){
-  match.total = min * 60;
+/* ================= AUTO ROTATION ================= */
+
+function nextMatch(){
+
+  pauseMatch();
+  document.getElementById("beep").play();
+
+  // Rotation weiter
+  rotation = (rotation + 2) % active.length;
+
+  // neuer Match-Timer
   match.remain = match.total;
-  render();
-}
 
-function customMatch(){
-  let m = parseInt(prompt("Minuten?"));
-  if(m > 0) setMatch(m);
-}
+  alert("➡️ Nächste Spielpaarung");
 
-/* ================= TEAMS ================= */
-
-function getTeams(){
-
-  const players = activePlayers;
-
-  let a=[], b=[], bench=[];
-
-  for(let i=0;i<players.length;i++){
-    let idx = (i + rotation) % players.length;
-
-    if(i < 2) a.push(players[idx]);
-    else if(i < 4) b.push(players[idx]);
-    else bench.push(players[idx]);
-  }
-
-  return {a,b,bench};
-}
-
-/* ================= ROTATION ================= */
-
-function nextRound(){
-  rotation = (rotation + 1) % activePlayers.length;
-  render();
+  startMatch();
 }
 
 /* ================= RENDER ================= */
 
 function render(){
 
-  // EVENT
   let em = Math.floor(event.remain/60);
   let es = event.remain%60;
 
-  document.getElementById("eventTime").textContent =
-    String(em).padStart(2,"0")+":"+String(es).padStart(2,"0");
-
-  // MATCH
   let mm = Math.floor(match.remain/60);
   let ms = match.remain%60;
+
+  document.getElementById("eventTime").textContent =
+    "Spielabend " + String(em).padStart(2,"0")+":"+String(es).padStart(2,"0");
 
   document.getElementById("matchTime").textContent =
     String(mm).padStart(2,"0")+":"+String(ms).padStart(2,"0");
 
-  // POSSIBLE MATCHES
-  let possible = Math.floor(event.remain / match.total);
-
   const {a,b,bench} = getTeams();
 
-  teamsEl.innerHTML =
-    "<b>Team A:</b> " + (a.join(", ")||"-") + "<br>" +
-    "<b>Team B:</b> " + (b.join(", ")||"-") + "<br>" +
-    "<b>Bank:</b> " + (bench.join(", ")||"-") + "<br><br>" +
-    "<b>Mögliche Matches:</b> " + possible;
+  document.getElementById("teams").innerHTML =
+    "A: " + a.join(" | ") + "<br>" +
+    "B: " + b.join(" | ") + "<br>" +
+    "Bank: " + bench.join(" | ");
 }
 
-/* BEEP */
-function beep(){
-  document.getElementById("beep").play();
-}
-
-/* INIT */
-renderPlayers();
-setEventTime();
 render();
 
 </script>
