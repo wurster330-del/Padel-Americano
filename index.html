@@ -3,37 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Fix Court</title>
+<title>Padel Full System Stable</title>
 
 <style>
 body{
   margin:0;
+  font-family:Arial;
   background:#0b2f1d;
   color:white;
-  font-family:Arial;
   text-align:center;
 }
 
-/* START */
-#start{
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:20px;
+/* ================= ADMIN ================= */
+#admin{
+  padding:20px;
 }
 
-button{
-  padding:16px 22px;
-  font-size:18px;
-  border:none;
+.panel{
+  background:#255d3d;
+  padding:15px;
   border-radius:12px;
-  background:#2e8b57;
-  color:white;
+  margin:10px auto;
+  max-width:800px;
 }
 
-/* COURT */
+.playerBox{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+}
+
+.player{
+  background:#1f6b42;
+  padding:8px 10px;
+  border-radius:8px;
+}
+
+/* ================= COURT ================= */
 #court{
   display:none;
   height:100vh;
@@ -42,35 +49,96 @@ button{
   padding:15px;
 }
 
-#matchTime{
-  font-size:20vh;
-  font-weight:bold;
+.top{
+  display:flex;
+  justify-content:space-between;
+  font-size:20px;
+  opacity:0.9;
 }
 
-#teams{
+/* 🔥 TIMER */
+#eventTime{
   font-size:5vh;
   font-weight:bold;
 }
 
-.top{
+#matchTime{
+  font-size:22vh;
+  font-weight:bold;
+  line-height:1;
+}
+
+/* 🔥 TEAMS */
+#teams{
+  font-size:6vh;
+  font-weight:bold;
+  line-height:1.4;
+}
+
+/* BUTTONS */
+.bar{
   display:flex;
-  justify-content:space-between;
-  font-size:18px;
-  opacity:0.8;
+  justify-content:center;
+  gap:15px;
+}
+
+button{
+  padding:14px 20px;
+  font-size:16px;
+  border:none;
+  border-radius:12px;
+  background:#2e8b57;
+  color:white;
+}
+
+.exit{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#b33a3a;
 }
 </style>
 </head>
 
 <body>
 
-<!-- START SCREEN -->
-<div id="start">
-  <h1>🎾 Padel Court</h1>
-  <button onclick="start()">▶ Start Game</button>
+<!-- ================= ADMIN ================= -->
+<div id="admin">
+
+<h1>🎾 Padel Admin</h1>
+
+<div class="panel">
+<h3>Spieler Auswahl</h3>
+<div id="playerBox" class="playerBox"></div>
 </div>
 
-<!-- COURT -->
+<div class="panel">
+<h3>Match Zeit</h3>
+<select id="matchSelect">
+<option value="15">15 min</option>
+<option value="18" selected>18 min</option>
+<option value="20">20 min</option>
+</select>
+</div>
+
+<div class="panel">
+<h3>Spielabend</h3>
+<select id="eventSelect">
+<option value="120">120 min</option>
+<option value="180" selected>180 min</option>
+</select>
+</div>
+
+<div class="panel">
+<button onclick="startCourt()">▶ START COURT</button>
+</div>
+
+</div>
+
+<!-- ================= COURT ================= -->
 <div id="court">
+
+<button class="exit" onclick="exitCourt()">❌ EXIT</button>
 
 <div class="top">
   <div id="eventTime">120:00</div>
@@ -81,97 +149,184 @@ button{
 
 <div id="teams"></div>
 
-<div>
-<button onclick="next()">NEXT</button>
-<button onclick="exit()">EXIT</button>
+<div class="bar">
+  <button onclick="nextMatch()">➡ NEXT</button>
+  <button onclick="pause()">⏸ PAUSE</button>
 </div>
 
 </div>
+
+<audio id="beep"
+src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-const players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+/* ================= DATA ================= */
 
+const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+
+let active = new Set(allPlayers);
 let rotation = 0;
 
-let event = 120*60;
-let match = 18*60;
+/* TIMER (wichtig: echte Sekunde stabil) */
+let event = { total:120*60, remain:120*60 };
+let match = { total:18*60, remain:18*60, interval:null };
 
-/* START */
-function start(){
+/* ================= ADMIN ================= */
 
-  document.getElementById("start").style.display="none";
+function renderPlayers(){
+  const box = document.getElementById("playerBox");
+  box.innerHTML = "";
+
+  allPlayers.forEach(p=>{
+    box.innerHTML += `
+      <label class="player">
+        <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
+        ${p}
+      </label>
+    `;
+  });
+}
+
+function toggle(name,checked){
+  if(checked) active.add(name);
+  else active.delete(name);
+}
+
+/* ================= START COURT ================= */
+
+function startCourt(){
+
+  match.total = parseInt(document.getElementById("matchSelect").value) * 60;
+  match.remain = match.total;
+
+  event.total = parseInt(document.getElementById("eventSelect").value) * 60;
+  event.remain = event.total;
+
+  document.getElementById("admin").style.display="none";
   document.getElementById("court").style.display="flex";
 
-  if(document.documentElement.requestFullscreen){
-    document.documentElement.requestFullscreen();
-  }
+  goFullscreen();
+  startLoop();
+}
 
-  render();
+/* ================= FULLSCREEN ================= */
 
-  setInterval(()=>{
-    if(match>0) match--;
-    else next();
+function goFullscreen(){
+  document.documentElement.requestFullscreen?.();
+}
 
-    if(event>0) event--;
+/* ================= TIMER LOOP (STABIL!) ================= */
+
+let last = Date.now();
+
+function startLoop(){
+
+  if(match.interval) return;
+
+  match.interval = setInterval(()=>{
+
+    const now = Date.now();
+    const diff = Math.floor((now - last) / 1000);
+
+    if(diff <= 0) return;
+
+    last = now;
+
+    match.remain -= diff;
+    event.remain -= diff;
+
+    if(match.remain <= 0){
+      nextMatch();
+    }
+
+    if(event.remain < 0){
+      event.remain = 0;
+    }
 
     render();
-  },1000);
+
+  },250);
 }
 
-/* TEAMS */
+/* ================= TEAMS ================= */
+
 function getTeams(){
-  let a=[], b=[], c=[];
 
-  for(let i=0;i<players.length;i++){
-    let idx=(i+rotation)%players.length;
+  const list = [...active];
 
-    if(i<2)a.push(players[idx]);
-    else if(i<4)b.push(players[idx]);
-    else c.push(players[idx]);
+  let a=[], b=[], bench=[];
+
+  for(let i=0;i<list.length;i++){
+    let idx = (i + rotation) % list.length;
+
+    if(i < 2) a.push(list[idx]);
+    else if(i < 4) b.push(list[idx]);
+    else bench.push(list[idx]);
   }
 
-  return {a,b,c};
+  return {a,b,bench};
 }
 
-/* NEXT */
-function next(){
-  rotation = (rotation + 2) % players.length;
-  match = 18*60;
+/* ================= MATCH FLOW ================= */
+
+function nextMatch(){
+
+  document.getElementById("beep").play();
+
+  rotation = (rotation + 2) % active.size;
+
+  match.remain = match.total;
+
+  last = Date.now();
 }
 
-/* EXIT */
-function exit(){
+/* ================= PAUSE ================= */
+
+function pause(){
+  clearInterval(match.interval);
+  match.interval = null;
+}
+
+/* ================= EXIT ================= */
+
+function exitCourt(){
+
+  pause();
+
   document.getElementById("court").style.display="none";
-  document.getElementById("start").style.display="flex";
+  document.getElementById("admin").style.display="block";
 
-  if(document.exitFullscreen){
-    document.exitFullscreen();
-  }
+  document.exitFullscreen?.();
 }
 
-/* RENDER */
+/* ================= RENDER ================= */
+
 function render(){
 
-  let em=Math.floor(event/60);
-  let es=event%60;
+  let em = Math.floor(event.remain/60);
+  let es = event.remain%60;
 
-  let mm=Math.floor(match/60);
-  let ms=match%60;
+  let mm = Math.floor(match.remain/60);
+  let ms = match.remain%60;
 
-  document.getElementById("eventTime").textContent=
-    em+":"+String(es).padStart(2,"0");
+  document.getElementById("eventTime").textContent =
+    "EVENT " + em + ":" + String(es).padStart(2,"0");
 
-  document.getElementById("matchTime").textContent=
-    mm+":"+String(ms).padStart(2,"0");
+  document.getElementById("matchTime").textContent =
+    mm + ":" + String(ms).padStart(2,"0");
 
-  const t=getTeams();
+  const {a,b,bench} = getTeams();
 
-  document.getElementById("teams").innerHTML=
-    "A: "+t.a.join(" | ")+"<br>"+
-    "B: "+t.b.join(" | ")+"<br>"+
-    "BANK: "+t.c.join(" | ");
+  document.getElementById("teams").innerHTML =
+    "A: " + a.join(" | ") + "<br>" +
+    "B: " + b.join(" | ") + "<br>" +
+    "BANK: " + bench.join(" | ");
 }
+
+/* INIT */
+renderPlayers();
+render();
 
 </script>
 
