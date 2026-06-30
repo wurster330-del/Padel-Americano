@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V2.3</title>
+<title>Padel Terminal V2.3.1</title>
 
 <style>
 body{
@@ -14,8 +14,8 @@ body{
   text-align:center;
 }
 
-/* ================= ADMIN ================= */
 #admin{padding:20px;}
+
 .panel{
   background:#255d3d;
   padding:15px;
@@ -23,19 +23,21 @@ body{
   margin:10px auto;
   max-width:800px;
 }
+
 .playerBox{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
   gap:10px;
 }
+
 .player{
   background:#1f6b42;
   padding:8px;
   border-radius:8px;
 }
 
-/* ================= COURT ================= */
+/* COURT */
 #court{
   display:none;
   height:100vh;
@@ -44,47 +46,39 @@ body{
   padding:15px;
 }
 
-/* TOP */
 .top{
   display:flex;
   justify-content:space-between;
   font-size:22px;
-  opacity:0.9;
 }
 
-/* TIMER */
 #matchTime{
   font-size:26vh;
   font-weight:bold;
-  line-height:1;
 }
 
 #eventTime{
   font-size:5vh;
 }
 
-/* TEAMS */
 #teams{
   font-size:5vh;
   font-weight:bold;
   line-height:1.3;
 }
 
-/* NEXT */
 #nextBox{
   font-size:3vh;
   color:#ffd966;
-  margin-top:10px;
 }
 
 #warning{
+  display:none;
   font-size:3vh;
   color:#ff4d4d;
   font-weight:bold;
-  display:none;
 }
 
-/* BUTTONS */
 button{
   padding:16px 22px;
   border:none;
@@ -101,15 +95,14 @@ button{
   background:#b33a3a;
 }
 
-/* WARNING BLINK */
-@keyframes blink {
-  0% { opacity:1; }
-  50% { opacity:0.3; }
-  100% { opacity:1; }
+@keyframes blink{
+  0%{opacity:1;}
+  50%{opacity:0.3;}
+  100%{opacity:1;}
 }
 
-.blink {
-  animation: blink 1s infinite;
+.blink{
+  animation:blink 1s infinite;
 }
 </style>
 </head>
@@ -119,7 +112,7 @@ button{
 <!-- ================= ADMIN ================= -->
 <div id="admin">
 
-<h1>🎾 Padel Terminal V2.3</h1>
+<h1>🎾 Padel Terminal V2.3.1</h1>
 
 <div class="panel">
 <h3>Spieler</h3>
@@ -161,7 +154,7 @@ button{
 
 <div id="matchTime">18:00</div>
 
-<div id="warning">⚠ WECHSEL IN KÜRZE</div>
+<div id="warning">⚠ WECHSEL IN 30s</div>
 
 <div id="teams"></div>
 
@@ -169,8 +162,8 @@ button{
 
 <div>
 <button onclick="startMatch()">▶ START MATCH</button>
-<button onclick="pause()">⏸ PAUSE</button>
-<button onclick="next()">➡ NEXT MATCH</button>
+<button onclick="pauseMatch()">⏸ PAUSE</button>
+<button onclick="next()">➡ NEXT</button>
 </div>
 
 </div>
@@ -179,6 +172,17 @@ button{
 src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
+
+/* ================= STATE ENGINE ================= */
+
+const STATE = {
+  STOPPED: "stopped",
+  RUNNING: "running",
+  PAUSED: "paused",
+  FINISHED: "finished"
+};
+
+let state = STATE.STOPPED;
 
 /* ================= DATA ================= */
 
@@ -190,10 +194,6 @@ let rotation=0;
 /* TIMER */
 let event={total:0,remain:0};
 let match={total:0,remain:0,interval:null};
-
-/* MATCH STATE */
-let currentMatch=null;
-let nextMatchData=null;
 
 /* ================= PLAYERS ================= */
 
@@ -234,11 +234,93 @@ function start(){
   admin.style.display="none";
   court.style.display="flex";
 
+  state = STATE.STOPPED;
+
   generateNext();
   render();
 }
 
-/* ================= FAIR MATCH ================= */
+/* ================= MATCH CONTROL ================= */
+
+function startMatch(){
+
+  if(state === STATE.RUNNING) return;
+  if(state === STATE.FINISHED) return;
+
+  state = STATE.RUNNING;
+
+  match.interval=setInterval(()=>{
+
+    if(state !== STATE.RUNNING) return;
+
+    match.remain--;
+    event.remain--;
+
+    if(match.remain <= 30 && match.remain > 0){
+      warning.style.display="block";
+      warning.classList.add("blink");
+    } else {
+      warning.style.display="none";
+      warning.classList.remove("blink");
+    }
+
+    if(match.remain <= 0){
+      finishMatch();
+      return;
+    }
+
+    render();
+
+  },1000);
+}
+
+function pauseMatch(){
+  if(state !== STATE.RUNNING) return;
+  state = STATE.PAUSED;
+}
+
+function finishMatch(){
+
+  clearInterval(match.interval);
+  match.interval = null;
+
+  state = STATE.STOPPED;
+
+  beep();
+
+  match.remain = 0;
+
+  render();
+}
+
+/* ================= NEXT ================= */
+
+function next(){
+
+  if(state === STATE.RUNNING) return;
+
+  rotation=(rotation+2)%active.length;
+
+  match.remain=match.total;
+
+  generateNext();
+
+  render();
+}
+
+/* ================= EXIT ================= */
+
+function exit(){
+  clearInterval(match.interval);
+  match.interval=null;
+
+  state = STATE.STOPPED;
+
+  court.style.display="none";
+  admin.style.display="block";
+}
+
+/* ================= MATCH GENERATION ================= */
 
 function getTeams(offset=0){
 
@@ -253,74 +335,13 @@ function getTeams(offset=0){
     else bank.push(list[idx]);
   }
 
-  return{a,b,bank};
+  return {a,b,bank};
 }
 
-/* ================= NEXT PREVIEW ================= */
+let nextMatchData=null;
 
 function generateNext(){
   nextMatchData=getTeams(2);
-}
-
-/* ================= MATCH ================= */
-
-function startMatch(){
-
-  if(match.interval) return;
-
-  match.interval=setInterval(()=>{
-
-    match.remain--;
-    event.remain--;
-
-    if(match.remain<=0){
-      next();
-    }
-
-    render();
-
-  },1000);
-}
-
-function pause(){
-  clearInterval(match.interval);
-  match.interval=null;
-}
-
-/* ================= NEXT ================= */
-
-function next(){
-
-  beep();
-
-  rotation=(rotation+2)%active.length;
-
-  match.remain=match.total;
-
-  generateNext();
-  render();
-}
-
-/* ================= EXIT ================= */
-
-function exit(){
-  pause();
-  court.style.display="none";
-  admin.style.display="block";
-}
-
-/* ================= WARNING ================= */
-
-function checkWarning(){
-
-  if(match.remain<=30 && match.remain>0){
-    warning.style.display="block";
-    warning.classList.add("blink");
-    beepSoft();
-  } else {
-    warning.style.display="none";
-    warning.classList.remove("blink");
-  }
 }
 
 /* ================= RENDER ================= */
@@ -336,19 +357,17 @@ function render(){
   eventTime.textContent=em+":"+String(es).padStart(2,"0");
   matchTime.textContent=mm+":"+String(ms).padStart(2,"0");
 
-  currentMatch=getTeams();
+  let current=getTeams();
 
   teams.innerHTML=
-    "TEAM A: "+currentMatch.a.join(" | ")+"<br>"+
-    "TEAM B: "+currentMatch.b.join(" | ")+"<br>"+
-    "BANK: "+currentMatch.bank.join(" | ");
+    "TEAM A: "+current.a.join(" | ")+"<br>"+
+    "TEAM B: "+current.b.join(" | ")+"<br>"+
+    "BANK: "+current.bank.join(" | ");
 
   nextBox.innerHTML=
     "➡ NEXT MATCH<br>"+
     nextMatchData.a.join(" | ")+" vs "+nextMatchData.b.join(" | ")+"<br>"+
     "Bank: "+nextMatchData.bank.join(" | ");
-
-  checkWarning();
 }
 
 /* ================= SOUND ================= */
@@ -357,10 +376,6 @@ function beep(){
   let b=document.getElementById("beep");
   b.currentTime=0;
   b.play();
-}
-
-function beepSoft(){
-  if(match.remain%10===0) beep();
 }
 
 /* INIT */
