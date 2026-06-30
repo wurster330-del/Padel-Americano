@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Timer Dual</title>
+<title>Padel Timer Dual System</title>
 
 <style>
 body{
@@ -14,7 +14,11 @@ body{
   text-align:center;
 }
 
-.wrap{max-width:900px;margin:auto;padding:20px}
+.wrap{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
 
 h1{margin:10px 0}
 
@@ -24,7 +28,7 @@ h1{margin:10px 0}
 }
 
 .timerSmall{
-  font-size:30px;
+  font-size:28px;
   margin:5px;
 }
 
@@ -58,20 +62,28 @@ button{
 
 <div class="wrap">
 
-<h1>🎾 Padel Dual Timer</h1>
+<h1>🎾 Padel Timer</h1>
 
+<!-- SPIELABEND TIMER -->
 <div class="timerSmall">
 Spielabend: <span id="eventTime">120:00</span>
 </div>
 
+<div class="row">
+<button onclick="startEvent()">▶ Spielabend Start</button>
+<button onclick="pauseEvent()">⏸ Pause</button>
+<button onclick="resetEvent()">🔄 Reset</button>
+</div>
+
+<!-- MATCH TIMER -->
 <div class="timerBig">
 Match: <span id="matchTime">18:00</span>
 </div>
 
 <div class="row">
 <button onclick="startMatch()">▶ Match Start</button>
-<button onclick="pauseMatch()">⏸ Match Pause</button>
-<button onclick="resetMatch()">🔄 Match Reset</button>
+<button onclick="pauseMatch()">⏸ Pause</button>
+<button onclick="resetMatch()">🔄 Reset</button>
 </div>
 
 <div class="row">
@@ -81,8 +93,8 @@ Match: <span id="matchTime">18:00</span>
 <button onclick="customMatch()">Custom</button>
 </div>
 
+<!-- TEAMS -->
 <div class="panel">
-<div><b>Teams</b></div>
 <div id="teams"></div>
 </div>
 
@@ -93,7 +105,7 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-// ================= TIMER STATE =================
+// ================= STATE =================
 let event = {
   total: 120*60,
   remain: 120*60,
@@ -106,7 +118,6 @@ let match = {
   interval: null
 };
 
-// ================= PLAYERS =================
 let players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 let rotation = 0;
 
@@ -116,15 +127,31 @@ const matchEl = document.getElementById("matchTime");
 const teamsEl = document.getElementById("teams");
 
 // ================= EVENT TIMER =================
-function tickEvent(){
-  if(event.remain > 0){
-    event.remain--;
-  }
-  render();
+function startEvent(){
+  if(event.interval) return;
+
+  event.interval = setInterval(()=>{
+    if(event.remain > 0){
+      event.remain--;
+    } else {
+      pauseEvent();
+      document.getElementById("beep").play();
+      alert("Spielabend vorbei!");
+    }
+    render();
+  },1000);
 }
 
-// läuft IMMER
-setInterval(tickEvent, 1000);
+function pauseEvent(){
+  clearInterval(event.interval);
+  event.interval = null;
+}
+
+function resetEvent(){
+  pauseEvent();
+  event.remain = event.total;
+  render();
+}
 
 // ================= MATCH TIMER =================
 function startMatch(){
@@ -153,7 +180,6 @@ function resetMatch(){
   render();
 }
 
-// ================= MATCH SETTINGS =================
 function setMatch(min){
   match.total = min*60;
   match.remain = match.total;
@@ -188,18 +214,21 @@ function nextRound(){
 // ================= RENDER =================
 function render(){
 
+  // Event Timer
   let em = Math.floor(event.remain/60);
   let es = event.remain%60;
-
-  let mm = Math.floor(match.remain/60);
-  let ms = match.remain%60;
 
   eventEl.textContent =
     String(em).padStart(2,"0")+":"+String(es).padStart(2,"0");
 
+  // Match Timer
+  let mm = Math.floor(match.remain/60);
+  let ms = match.remain%60;
+
   matchEl.textContent =
     String(mm).padStart(2,"0")+":"+String(ms).padStart(2,"0");
 
+  // Teams
   let {a,b,bench} = getTeams();
 
   teamsEl.innerHTML =
