@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Court System</title>
+<title>Padel System Pro</title>
 
 <style>
 body{
@@ -12,38 +12,43 @@ body{
   background:#0f3d26;
   color:white;
   text-align:center;
-  overflow:hidden;
 }
 
-/* START SCREEN */
-#startScreen{
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:20px;
+/* ================= ADMIN ================= */
+
+#admin{
+  padding:20px;
 }
 
-#startScreen h1{
-  font-size:40px;
-}
-
-button{
-  padding:14px 20px;
-  font-size:18px;
-  border:none;
+.panel{
+  background:#255d3d;
+  padding:15px;
   border-radius:12px;
-  background:#2e8b57;
-  color:white;
-  cursor:pointer;
+  margin:10px auto;
+  max-width:800px;
 }
 
-button:hover{
-  background:#36a66a;
+.playerBox{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
 }
 
-/* COURT MODE */
+.player{
+  background:#1f6b42;
+  padding:8px 10px;
+  border-radius:8px;
+}
+
+input, select{
+  padding:8px;
+  border-radius:6px;
+  border:none;
+}
+
+/* ================= COURT ================= */
+
 #court{
   display:none;
   height:100vh;
@@ -52,67 +57,86 @@ button:hover{
   padding:10px;
 }
 
-.top{
-  display:flex;
-  justify-content:space-between;
-  font-size:18px;
-  opacity:0.8;
-}
-
-/* TIMER */
 #matchTime{
-  font-size:22vh;
+  font-size:18vh;
   font-weight:bold;
 }
 
-/* TEAMS */
 #teams{
   font-size:5vh;
   font-weight:bold;
-  line-height:1.4;
 }
 
-/* CONTROL BAR */
-.bar{
+.top{
   display:flex;
-  justify-content:center;
-  gap:10px;
+  justify-content:space-between;
+  opacity:0.8;
 }
 
-.exit{
-  position:absolute;
-  top:10px;
-  right:10px;
+button{
+  padding:12px 16px;
+  border:none;
+  border-radius:10px;
+  background:#2e8b57;
+  color:white;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<!-- START SCREEN -->
-<div id="startScreen">
-  <h1>🎾 Padel Court System</h1>
-  <button onclick="startGame()">▶ One Tap Start Game</button>
+<!-- ================= ADMIN ================= -->
+<div id="admin">
+
+<h1>🎾 Padel Admin</h1>
+
+<div class="panel">
+
+<h3>Spieler</h3>
+<div id="playerBox" class="playerBox"></div>
+
 </div>
 
-<!-- COURT -->
+<div class="panel">
+<h3>Match Zeit</h3>
+<select id="matchSelect">
+<option value="15">15 min</option>
+<option value="18" selected>18 min</option>
+<option value="20">20 min</option>
+</select>
+</div>
+
+<div class="panel">
+<h3>Spielabend</h3>
+<select id="eventSelect">
+<option value="120">120 min</option>
+<option value="180" selected>180 min</option>
+</select>
+</div>
+
+<div class="panel">
+<button onclick="startCourt()">▶ Start Court Mode</button>
+</div>
+
+</div>
+
+<!-- ================= COURT ================= -->
 <div id="court">
 
-  <button class="exit" onclick="exitCourt()">❌ Exit</button>
+<div class="top">
+<div id="eventTime">120:00</div>
+<div>COURT 1</div>
+</div>
 
-  <div class="top">
-    <div id="eventTime">120:00</div>
-    <div>COURT 1</div>
-  </div>
+<div id="matchTime">18:00</div>
 
-  <div id="matchTime">18:00</div>
+<div id="teams"></div>
 
-  <div id="teams"></div>
-
-  <div class="bar">
-    <button onclick="pauseMatch()">⏸ Pause</button>
-    <button onclick="nextMatch()">➡ Next Match</button>
-  </div>
+<div>
+<button onclick="nextMatch()">➡ Next</button>
+<button onclick="exitCourt()">❌ Exit</button>
+</div>
 
 </div>
 
@@ -123,47 +147,71 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 /* ================= DATA ================= */
 
-const players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
-
-let active = [...players];
+const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+let active = new Set(allPlayers);
 let rotation = 0;
 
-/* TIMERS */
 let event = { total:120*60, remain:120*60 };
 let match = { total:18*60, remain:18*60, interval:null };
 
-/* ================= FULLSCREEN ================= */
+/* ================= ADMIN ================= */
 
-function goFullScreen(){
-  const el = document.documentElement;
-  if(el.requestFullscreen){
-    el.requestFullscreen();
-  }
+function renderPlayers(){
+  const box = document.getElementById("playerBox");
+  box.innerHTML = "";
+
+  allPlayers.forEach(p=>{
+    box.innerHTML += `
+      <label class="player">
+        <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
+        ${p}
+      </label>
+    `;
+  });
 }
 
-/* ================= START GAME ================= */
+function toggle(name,checked){
+  if(checked) active.add(name);
+  else active.delete(name);
+}
 
-function startGame(){
-  document.getElementById("startScreen").style.display = "none";
-  document.getElementById("court").style.display = "flex";
+/* ================= START ================= */
 
-  goFullScreen();
+function startCourt(){
 
+  match.total = parseInt(document.getElementById("matchSelect").value) * 60;
+  match.remain = match.total;
+
+  event.total = parseInt(document.getElementById("eventSelect").value) * 60;
+  event.remain = event.total;
+
+  document.getElementById("admin").style.display="none";
+  document.getElementById("court").style.display="flex";
+
+  goFullscreen();
   startMatch();
+}
+
+/* ================= FULLSCREEN ================= */
+
+function goFullscreen(){
+  document.documentElement.requestFullscreen?.();
 }
 
 /* ================= TEAMS ================= */
 
 function getTeams(){
 
+  const players = [...active];
+
   let a=[], b=[], bench=[];
 
-  for(let i=0;i<active.length;i++){
-    let idx = (i + rotation) % active.length;
+  for(let i=0;i<players.length;i++){
+    let idx = (i + rotation) % players.length;
 
-    if(i < 2) a.push(active[idx]);
-    else if(i < 4) b.push(active[idx]);
-    else bench.push(active[idx]);
+    if(i < 2) a.push(players[idx]);
+    else if(i < 4) b.push(players[idx]);
+    else bench.push(players[idx]);
   }
 
   return {a,b,bench};
@@ -188,32 +236,25 @@ function startMatch(){
   },1000);
 }
 
-function pauseMatch(){
-  clearInterval(match.interval);
-  match.interval = null;
-}
-
 function nextMatch(){
-
-  pauseMatch();
-  document.getElementById("beep").play();
-
-  rotation = (rotation + 2) % active.length;
+  rotation = (rotation + 2) % active.size;
   match.remain = match.total;
-
-  startMatch();
+  document.getElementById("beep").play();
 }
 
 /* ================= EXIT ================= */
 
 function exitCourt(){
-  pauseMatch();
-  document.getElementById("court").style.display = "none";
-  document.getElementById("startScreen").style.display = "flex";
+  pause();
+  document.getElementById("court").style.display="none";
+  document.getElementById("admin").style.display="block";
 
-  if(document.fullscreenElement){
-    document.exitFullscreen();
-  }
+  document.exitFullscreen?.();
+}
+
+function pause(){
+  clearInterval(match.interval);
+  match.interval = null;
 }
 
 /* ================= RENDER ================= */
@@ -227,20 +268,21 @@ function render(){
   let ms = match.remain%60;
 
   document.getElementById("eventTime").textContent =
-    "Spiel " + String(em).padStart(2,"0")+":"+String(es).padStart(2,"0");
+    em+":"+String(es).padStart(2,"0");
 
   document.getElementById("matchTime").textContent =
-    String(mm).padStart(2,"0")+":"+String(ms).padStart(2,"0");
+    mm+":"+String(ms).padStart(2,"0");
 
   const {a,b,bench} = getTeams();
 
   document.getElementById("teams").innerHTML =
-    "A: " + a.join(" | ") + "<br>" +
-    "B: " + b.join(" | ") + "<br>" +
-    "Bank: " + bench.join(" | ");
+    "A: "+a.join(" | ")+"<br>"+
+    "B: "+b.join(" | ")+"<br>"+
+    "Bank: "+bench.join(" | ");
 }
 
 /* INIT */
+renderPlayers();
 render();
 
 </script>
