@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V2.4 Turniermodus</title>
+<title>Padel Terminal V2.4.1 Fix</title>
 
 <style>
 body{
@@ -57,10 +57,6 @@ body{
   font-weight:bold;
 }
 
-#eventInfo{
-  font-size:5vh;
-}
-
 #teams{
   font-size:5vh;
   font-weight:bold;
@@ -69,7 +65,11 @@ body{
 #plan{
   font-size:3vh;
   color:#ffd966;
-  margin-top:10px;
+}
+
+#next{
+  font-size:3vh;
+  color:#66d9ff;
 }
 
 button{
@@ -78,7 +78,6 @@ button{
   border-radius:12px;
   background:#2e8b57;
   color:white;
-  font-size:16px;
 }
 
 .exit{
@@ -95,10 +94,10 @@ button{
 <!-- ================= ADMIN ================= -->
 <div id="admin">
 
-<h1>🎾 Padel Terminal V2.4</h1>
+<h1>🎾 Padel Terminal V2.4.1 FIX</h1>
 
 <div class="panel">
-<h3>Spieler (4–6 auswählen)</h3>
+<h3>Spieler Auswahl</h3>
 <div id="playerBox" class="playerBox"></div>
 </div>
 
@@ -120,7 +119,7 @@ button{
 </div>
 
 <div class="panel">
-<button onclick="startTournament()">▶ TURNIER STARTEN</button>
+<button onclick="startTournament()">▶ START</button>
 </div>
 
 </div>
@@ -131,13 +130,15 @@ button{
 <button class="exit" onclick="exit()">❌ EXIT</button>
 
 <div class="top">
-  <div id="eventTime">120:00</div>
+  <div id="eventTime"></div>
   <div>COURT 1</div>
 </div>
 
 <div id="matchTime">18:00</div>
 
 <div id="teams"></div>
+
+<div id="next"></div>
 
 <div id="plan"></div>
 
@@ -160,8 +161,8 @@ let schedule=[];
 let currentIndex=0;
 
 /* TIMER */
-let event={total:0,remain:0};
 let match={total:0,remain:0,interval:null};
+let event={total:0,remain:0};
 
 /* ================= PLAYERS ================= */
 
@@ -172,32 +173,30 @@ function renderPlayers(){
   allPlayers.forEach(p=>{
     box.innerHTML+=`
       <label class="player">
-        <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
+        <input type="checkbox" checked>
         ${p}
       </label>
     `;
   });
 }
 
-function toggle(name,checked){
-  if(checked){
-    if(!active.includes(name)) active.push(name);
-  } else {
-    active=active.filter(x=>x!==name);
-  }
+function getSelectedPlayers(){
+  let boxes=document.querySelectorAll("input[type=checkbox]");
+  let result=[];
+
+  boxes.forEach((b,i)=>{
+    if(b.checked) result.push(allPlayers[i]);
+  });
+
+  return result;
 }
 
-/* ================= TOURNAMENT GENERATION ================= */
-
-function shuffle(arr){
-  return arr.sort(()=>Math.random()-0.5);
-}
+/* ================= SCHEDULE ================= */
 
 function createSchedule(players){
 
-  let list=shuffle([...players]);
+  let list=[...players];
   let rounds=[];
-
   let matchTime=parseInt(matchSelect.value)*60;
   let eventTime=parseInt(eventSelect.value)*60;
 
@@ -205,14 +204,16 @@ function createSchedule(players){
 
   for(let r=0;r<maxRounds;r++){
 
-    let rotated=[...list.slice(r%list.length),...list.slice(0,r%list.length)];
+    let rot=[...list.slice(r%list.length),...list.slice(0,r%list.length)];
 
-    let a=[rotated[0],rotated[1]];
-    let b=[rotated[2],rotated[3]];
-    let bank=rotated.slice(4);
+    let teamA=rot.slice(0,2);
+    let teamB=rot.slice(2,4);
+    let bank=rot.slice(4);
 
     rounds.push({
-      a,b,bank,
+      a:teamA,
+      b:teamB,
+      bank:bank,
       label:"Runde "+(r+1)
     });
   }
@@ -224,7 +225,12 @@ function createSchedule(players){
 
 function startTournament(){
 
-  active=[...allPlayers];
+  active=getSelectedPlayers();
+
+  if(active.length < 4){
+    alert("Mindestens 4 Spieler nötig");
+    return;
+  }
 
   schedule=createSchedule(active);
   currentIndex=0;
@@ -241,7 +247,7 @@ function startTournament(){
   render();
 }
 
-/* ================= MATCH CONTROL ================= */
+/* ================= CONTROL ================= */
 
 function startMatch(){
 
@@ -292,26 +298,21 @@ function exit(){
 
 function render(){
 
-  let em=Math.floor(event.remain/60);
-  let es=event.remain%60;
-
-  let mm=Math.floor(match.remain/60);
-  let ms=match.remain%60;
-
-  eventTime.textContent=em+":"+String(es).padStart(2,"0");
-  matchTime.textContent=mm+":"+String(ms).padStart(2,"0");
-
   let m=schedule[currentIndex];
-
   if(!m) return;
 
   teams.innerHTML=
     "TEAM A: "+m.a.join(" | ")+"<br>"+
     "TEAM B: "+m.b.join(" | ")+"<br>"+
-    "BANK: "+m.bank.join(" | ");
+    "BANK: "+(m.bank.length ? m.bank.join(" | ") : "-");
 
-  plan.innerHTML=
-    m.label+" / "+schedule.length;
+  let nextM=schedule[currentIndex+1];
+
+  next.innerHTML= nextM
+    ? "➡ NEXT: "+nextM.a.join(" | ")+" vs "+nextM.b.join(" | ")
+    : "➡ LETZTE RUNDE";
+
+  plan.innerHTML=m.label+" / "+schedule.length;
 }
 
 /* INIT */
