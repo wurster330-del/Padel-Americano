@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Terminal</title>
+<title>Padel Terminal</title>
 
 <style>
 body{
@@ -14,7 +14,7 @@ body{
   text-align:center;
 }
 
-/* ================= ADMIN ================= */
+/* ADMIN */
 #admin{
   padding:20px;
 }
@@ -40,7 +40,7 @@ body{
   border-radius:8px;
 }
 
-/* ================= COURT ================= */
+/* COURT */
 #court{
   display:none;
   height:100vh;
@@ -56,24 +56,20 @@ body{
   opacity:0.9;
 }
 
-/* EVENT TIMER */
 #eventTime{
   font-size:5vh;
   font-weight:bold;
 }
 
-/* MATCH TIMER */
 #matchTime{
   font-size:24vh;
   font-weight:bold;
   line-height:1;
 }
 
-/* TEAMS */
 #teams{
   font-size:6vh;
   font-weight:bold;
-  line-height:1.4;
 }
 
 /* BUTTONS */
@@ -90,7 +86,6 @@ button{
   border-radius:12px;
   background:#2e8b57;
   color:white;
-  cursor:pointer;
 }
 
 .exit{
@@ -98,6 +93,12 @@ button{
   top:10px;
   right:10px;
   background:#b33a3a;
+}
+
+.startMatchBtn{
+  font-size:20px;
+  padding:16px 26px;
+  background:#3a9d5d;
 }
 </style>
 </head>
@@ -107,55 +108,32 @@ button{
 <!-- ================= ADMIN ================= -->
 <div id="admin">
 
-<h1>🎾 Padel Club Terminal</h1>
+<h1>🎾 Padel Terminal</h1>
 
-<!-- PLAYERS -->
 <div class="panel">
-<h3>Spieler Auswahl</h3>
+<h3>Spieler</h3>
 <div id="playerBox" class="playerBox"></div>
 </div>
 
-<!-- MATCH TIME -->
 <div class="panel">
 <h3>Match Zeit</h3>
-
 <select id="matchSelect">
-  <option value="10">10 min</option>
-  <option value="12">12 min</option>
-  <option value="15">15 min</option>
-  <option value="18" selected>18 min</option>
-  <option value="20">20 min</option>
-  <option value="25">25 min</option>
-  <option value="30">30 min</option>
+  <option value="10">10</option>
+  <option value="15">15</option>
+  <option value="18" selected>18</option>
+  <option value="20">20</option>
+  <option value="25">25</option>
 </select>
-
-<br><br>
-
-<input id="matchCustom" type="number" placeholder="eigene Minuten (z.B. 22)">
-<button onclick="setMatchCustom()">Setzen</button>
 </div>
 
-<!-- EVENT TIME -->
 <div class="panel">
 <h3>Spielabend</h3>
-
 <select id="eventSelect">
-  <option value="60">60 min</option>
-  <option value="90">90 min</option>
-  <option value="120" selected>120 min</option>
-  <option value="150">150 min</option>
-  <option value="180">180 min</option>
-  <option value="210">210 min</option>
-  <option value="240">240 min</option>
+  <option value="120" selected>120</option>
+  <option value="180">180</option>
 </select>
-
-<br><br>
-
-<input id="eventCustom" type="number" placeholder="eigene Minuten (z.B. 135)">
-<button onclick="setEventCustom()">Setzen</button>
 </div>
 
-<!-- START -->
 <div class="panel">
 <button onclick="startCourt()">▶ START COURT</button>
 </div>
@@ -176,9 +154,11 @@ button{
 
 <div id="teams"></div>
 
-<div class="bar">
-  <button onclick="nextMatch()">➡ NEXT</button>
+<!-- 🔥 NEU: START BUTTON IM COURT -->
+<div>
+  <button class="startMatchBtn" onclick="startMatch()">▶ START MATCH</button>
   <button onclick="pause()">⏸ PAUSE</button>
+  <button onclick="nextMatch()">➡ NEXT</button>
 </div>
 
 </div>
@@ -188,183 +168,121 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-/* ================= DATA ================= */
+/* DATA */
+const players=["Tobias","Werner","Christian","Stefan","David","Marco"];
+let active=new Set(players);
+let rotation=0;
 
-const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+let event={total:120*60,remain:120*60};
+let match={total:18*60,remain:18*60,interval:null};
 
-let active = new Set(allPlayers);
-let rotation = 0;
-
-/* TIMER */
-let event = { total:120*60, remain:120*60 };
-let match = { total:18*60, remain:18*60, interval:null };
-
-/* ================= PLAYERS ================= */
-
+/* ADMIN */
 function renderPlayers(){
-  const box = document.getElementById("playerBox");
-  box.innerHTML = "";
-
-  allPlayers.forEach(p=>{
-    box.innerHTML += `
+  const box=document.getElementById("playerBox");
+  box.innerHTML="";
+  players.forEach(p=>{
+    box.innerHTML+=`
       <label class="player">
-        <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
-        ${p}
-      </label>
-    `;
+      <input type="checkbox" checked onchange="toggle('${p}',this.checked)">
+      ${p}
+      </label>`;
   });
 }
 
-function toggle(name,checked){
-  if(checked) active.add(name);
-  else active.delete(name);
+function toggle(p,checked){
+  if(checked) active.add(p);
+  else active.delete(p);
 }
 
-/* ================= CUSTOM TIMES ================= */
-
-function setMatchCustom(){
-  let v = parseInt(document.getElementById("matchCustom").value);
-  if(v >= 10 && v <= 60){
-    match.total = v * 60;
-    match.remain = match.total;
-  }
-}
-
-function setEventCustom(){
-  let v = parseInt(document.getElementById("eventCustom").value);
-  if(v >= 60 && v <= 600){
-    event.total = v * 60;
-    event.remain = event.total;
-  }
-}
-
-/* ================= START ================= */
-
+/* START COURT */
 function startCourt(){
+  match.total=parseInt(matchSelect.value)*60;
+  match.remain=match.total;
 
-  match.total = parseInt(document.getElementById("matchSelect").value) * 60;
-  match.remain = match.total;
+  event.total=parseInt(eventSelect.value)*60;
+  event.remain=event.total;
 
-  event.total = parseInt(document.getElementById("eventSelect").value) * 60;
-  event.remain = event.total;
-
-  document.getElementById("admin").style.display="none";
-  document.getElementById("court").style.display="flex";
+  admin.style.display="none";
+  court.style.display="flex";
 
   document.documentElement.requestFullscreen?.();
 
-  startLoop();
+  render();
 }
 
-/* ================= LOOP (STABIL) ================= */
-
-let last = Date.now();
-
-function startLoop(){
-
+/* MATCH CONTROL */
+function startMatch(){
   if(match.interval) return;
 
-  match.interval = setInterval(()=>{
+  match.interval=setInterval(()=>{
 
-    let now = Date.now();
-    let diff = Math.floor((now - last) / 1000);
-
-    if(diff <= 0) return;
-
-    last = now;
-
-    match.remain -= diff;
-    event.remain -= diff;
-
-    if(match.remain <= 0){
+    if(match.remain>0){
+      match.remain--;
+      event.remain--;
+    }else{
       nextMatch();
-    }
-
-    if(event.remain < 0){
-      event.remain = 0;
     }
 
     render();
 
-  },250);
+  },1000);
 }
-
-/* ================= TEAMS ================= */
-
-function getTeams(){
-
-  const list = [...active];
-
-  let a=[], b=[], bench=[];
-
-  for(let i=0;i<list.length;i++){
-    let idx = (i + rotation) % list.length;
-
-    if(i < 2) a.push(list[idx]);
-    else if(i < 4) b.push(list[idx]);
-    else bench.push(list[idx]);
-  }
-
-  return {a,b,bench};
-}
-
-/* ================= MATCH FLOW ================= */
-
-function nextMatch(){
-
-  document.getElementById("beep").play();
-
-  rotation = (rotation + 2) % active.size;
-
-  match.remain = match.total;
-
-  last = Date.now();
-}
-
-/* ================= PAUSE ================= */
 
 function pause(){
   clearInterval(match.interval);
-  match.interval = null;
+  match.interval=null;
 }
 
-/* ================= EXIT ================= */
+function nextMatch(){
+  document.getElementById("beep").play();
+  rotation=(rotation+2)%active.size;
+  match.remain=match.total;
+}
 
+/* EXIT */
 function exitCourt(){
-
   pause();
-
-  document.getElementById("court").style.display="none";
-  document.getElementById("admin").style.display="block";
-
+  court.style.display="none";
+  admin.style.display="block";
   document.exitFullscreen?.();
 }
 
-/* ================= RENDER ================= */
+/* TEAMS */
+function getTeams(){
+  let list=[...active];
+  let a=[],b=[],c=[];
 
-function render(){
+  for(let i=0;i<list.length;i++){
+    let idx=(i+rotation)%list.length;
 
-  let em = Math.floor(event.remain/60);
-  let es = event.remain%60;
+    if(i<2)a.push(list[idx]);
+    else if(i<4)b.push(list[idx]);
+    else c.push(list[idx]);
+  }
 
-  let mm = Math.floor(match.remain/60);
-  let ms = match.remain%60;
-
-  document.getElementById("eventTime").textContent =
-    em + ":" + String(es).padStart(2,"0");
-
-  document.getElementById("matchTime").textContent =
-    mm + ":" + String(ms).padStart(2,"0");
-
-  const {a,b,bench} = getTeams();
-
-  document.getElementById("teams").innerHTML =
-    "A: " + a.join(" | ") + "<br>" +
-    "B: " + b.join(" | ") + "<br>" +
-    "BANK: " + bench.join(" | ");
+  return{a,b,c};
 }
 
-/* INIT */
+/* RENDER */
+function render(){
+
+  let em=Math.floor(event.remain/60);
+  let es=event.remain%60;
+
+  let mm=Math.floor(match.remain/60);
+  let ms=match.remain%60;
+
+  eventTime.textContent=em+":"+String(es).padStart(2,"0");
+  matchTime.textContent=mm+":"+String(ms).padStart(2,"0");
+
+  let t=getTeams();
+
+  teams.innerHTML=
+    "A: "+t.a.join(" | ")+"<br>"+
+    "B: "+t.b.join(" | ")+"<br>"+
+    "BANK: "+t.c.join(" | ");
+}
+
 renderPlayers();
 render();
 
