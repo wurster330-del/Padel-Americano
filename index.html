@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Timer Pro</title>
+<title>Padel Timer Selection</title>
 
 <style>
 body{
@@ -14,35 +14,22 @@ body{
   text-align:center;
 }
 
-.wrap{
-  max-width:900px;
-  margin:auto;
-  padding:20px;
-}
+.wrap{max-width:900px;margin:auto;padding:20px}
 
 h1{margin:10px 0}
-
-.timerBig{
-  font-size:70px;
-  font-weight:bold;
-}
-
-.timerSmall{
-  font-size:26px;
-}
 
 .row{
   display:flex;
   justify-content:center;
   flex-wrap:wrap;
   gap:10px;
-  margin:10px 0;
+  margin:10px;
 }
 
 button{
   padding:10px 14px;
-  border-radius:10px;
   border:none;
+  border-radius:10px;
   background:#2e8b57;
   color:white;
   cursor:pointer;
@@ -54,6 +41,20 @@ button{
   padding:15px;
   border-radius:12px;
 }
+
+.playerBox{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:10px;
+}
+
+.player{
+  padding:10px;
+  background:#1f6b42;
+  border-radius:10px;
+}
 </style>
 </head>
 
@@ -61,42 +62,21 @@ button{
 
 <div class="wrap">
 
-<h1>🎾 Padel Timer System</h1>
+<h1>🎾 Padel Auswahl System</h1>
 
-<!-- MODE -->
-<div class="row">
-<button onclick="setMode(4)">4 Spieler</button>
-<button onclick="setMode(5)">5 Spieler</button>
-<button onclick="setMode(6)">6 Spieler</button>
-</div>
-
-<!-- SPIELABEND TIMER -->
-<div class="timerSmall">
-Spielabend: <span id="eventTime">00:00</span>
-</div>
+<!-- PLAYERS -->
+<div class="playerBox" id="playerBox"></div>
 
 <div class="row">
-<button onclick="startEvent()">▶ Start</button>
-<button onclick="pauseEvent()">⏸ Pause</button>
-<button onclick="resetEvent()">🔄 Reset</button>
+<button onclick="applySelection()">✔ Auswahl übernehmen</button>
+<button onclick="selectAll()">Alle wählen</button>
+<button onclick="clearSelection()">Reset Auswahl</button>
 </div>
 
-<!-- MATCH TIMER -->
-<div class="timerBig">
-Match: <span id="matchTime">18:00</span>
-</div>
-
-<div class="row">
-<button onclick="startMatch()">▶ Match</button>
-<button onclick="pauseMatch()">⏸ Pause</button>
-<button onclick="resetMatch()">🔄 Reset</button>
-</div>
-
-<div class="row">
-<button onclick="setMatch(15)">15</button>
-<button onclick="setMatch(18)">18</button>
-<button onclick="setMatch(20)">20</button>
-<button onclick="customMatch()">Custom</button>
+<!-- TIMER -->
+<div class="panel">
+<div><b>Spielabend:</b> <span id="eventTime">120:00</span></div>
+<div><b>Match:</b> <span id="matchTime">18:00</span></div>
 </div>
 
 <!-- TEAMS -->
@@ -111,159 +91,122 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-// ================= STATE =================
-let mode = 4;
+// ================= DATA =================
+const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+let activePlayers = [...allPlayers];
+let selected = new Set(allPlayers);
 
-let event = {
-  total: 0,
-  remain: 0,
-  interval: null
-};
-
-let match = {
-  total: 18 * 60,
-  remain: 18 * 60,
-  interval: null
-};
-
-let basePlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 let rotation = 0;
 
+let event = { total:120*60, remain:120*60, interval:null };
+let match = { total:18*60, remain:18*60, interval:null };
+
 // ================= DOM =================
+const box = document.getElementById("playerBox");
+const teamsEl = document.getElementById("teams");
 const eventEl = document.getElementById("eventTime");
 const matchEl = document.getElementById("matchTime");
-const teamsEl = document.getElementById("teams");
 
-// ================= MODE =================
-function setMode(n){
-  mode = n;
+// ================= UI =================
+function renderPlayers(){
+  box.innerHTML = "";
 
-  if(mode === 4){
+  allPlayers.forEach(p=>{
+    box.innerHTML += `
+      <label class="player">
+        <input type="checkbox" checked onchange="togglePlayer('${p}',this.checked)">
+        ${p}
+      </label>
+    `;
+  });
+}
+
+function togglePlayer(name, checked){
+  if(checked) selected.add(name);
+  else selected.delete(name);
+}
+
+// ================= APPLY =================
+function applySelection(){
+  activePlayers = [...selected];
+
+  if(activePlayers.length < 4){
+    alert("Mindestens 4 Spieler!");
+    return;
+  }
+
+  rotation = 0;
+  setEventTime();
+  render();
+}
+
+function selectAll(){
+  selected = new Set(allPlayers);
+  renderPlayers();
+}
+
+function clearSelection(){
+  selected.clear();
+  renderPlayers();
+}
+
+// ================= TIME =================
+function setEventTime(){
+  if(activePlayers.length === 4){
     event.total = 120 * 60;
   } else {
     event.total = 180 * 60;
   }
-
   event.remain = event.total;
-  rotation = 0;
-
-  render();
-}
-
-// ================= EVENT TIMER =================
-function startEvent(){
-  if(event.interval) return;
-
-  event.interval = setInterval(()=>{
-    if(event.remain > 0){
-      event.remain--;
-    } else {
-      pauseEvent();
-      document.getElementById("beep").play();
-      alert("Spielabend vorbei!");
-    }
-    render();
-  },1000);
-}
-
-function pauseEvent(){
-  clearInterval(event.interval);
-  event.interval = null;
-}
-
-function resetEvent(){
-  pauseEvent();
-  event.remain = event.total;
-  render();
-}
-
-// ================= MATCH TIMER =================
-function startMatch(){
-  if(match.interval) return;
-
-  match.interval = setInterval(()=>{
-    if(match.remain > 0){
-      match.remain--;
-    } else {
-      pauseMatch();
-      document.getElementById("beep").play();
-      alert("Match vorbei!");
-    }
-    render();
-  },1000);
-}
-
-function pauseMatch(){
-  clearInterval(match.interval);
-  match.interval = null;
-}
-
-function resetMatch(){
-  pauseMatch();
-  match.remain = match.total;
-  render();
-}
-
-function setMatch(min){
-  match.total = min * 60;
-  match.remain = match.total;
-  render();
-}
-
-function customMatch(){
-  let m = parseInt(prompt("Minuten?"));
-  if(m > 0) setMatch(m);
 }
 
 // ================= TEAMS =================
 function getTeams(){
+  let a=[],b=[],bench=[];
 
-  const players = basePlayers.slice(0, mode);
+  for(let i=0;i<activePlayers.length;i++){
+    let idx = (i + rotation) % activePlayers.length;
 
-  let a = [];
-  let b = [];
-  let bench = [];
-
-  for(let i = 0; i < players.length; i++){
-    let idx = (i + rotation) % players.length;
-
-    if(i < 2) a.push(players[idx]);
-    else if(i < 4) b.push(players[idx]);
-    else bench.push(players[idx]);
+    if(i < 2) a.push(activePlayers[idx]);
+    else if(i < 4) b.push(activePlayers[idx]);
+    else bench.push(activePlayers[idx]);
   }
 
   return {a,b,bench};
 }
 
-function nextRound(){
-  rotation = (rotation + 1) % mode;
+// ================= TIMER =================
+setInterval(()=>{
+  if(event.remain > 0) event.remain--;
+  if(match.remain > 0) match.remain--;
   render();
-}
+},1000);
 
 // ================= RENDER =================
 function render(){
 
-  let em = Math.floor(event.remain / 60);
-  let es = event.remain % 60;
+  let em = Math.floor(event.remain/60);
+  let es = event.remain%60;
 
-  let mm = Math.floor(match.remain / 60);
-  let ms = match.remain % 60;
+  let mm = Math.floor(match.remain/60);
+  let ms = match.remain%60;
 
   eventEl.textContent =
-    String(em).padStart(2,"0") + ":" + String(es).padStart(2,"0");
+    String(em).padStart(2,"0")+":"+String(es).padStart(2,"0");
 
   matchEl.textContent =
-    String(mm).padStart(2,"0") + ":" + String(ms).padStart(2,"0");
+    String(mm).padStart(2,"0")+":"+String(ms).padStart(2,"0");
 
-  const {a,b,bench} = getTeams();
+  let {a,b,bench} = getTeams();
 
   teamsEl.innerHTML =
-    "<b>Team A:</b> " + (a.join(", ") || "-") + "<br>" +
-    "<b>Team B:</b> " + (b.join(", ") || "-") + "<br>" +
-    "<b>Bank:</b> " + (bench.join(", ") || "-");
+    "<b>Team A:</b> "+a.join(", ")+"<br>"+
+    "<b>Team B:</b> "+b.join(", ")+"<br>"+
+    "<b>Bank:</b> "+bench.join(", ");
 }
 
-setMode(4);
+// INIT
+renderPlayers();
 render();
 
 </script>
