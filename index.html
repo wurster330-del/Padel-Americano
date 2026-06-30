@@ -3,33 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Ultra Court</title>
+<title>Padel Fix Court</title>
 
 <style>
 body{
   margin:0;
-  font-family:Arial;
   background:#0b2f1d;
   color:white;
+  font-family:Arial;
   text-align:center;
-  overflow:hidden;
 }
 
-/* ================= ADMIN ================= */
-#admin{
-  padding:20px;
+/* START */
+#start{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:20px;
 }
 
-.panel{
-  background:#255d3d;
-  padding:15px;
+button{
+  padding:16px 22px;
+  font-size:18px;
+  border:none;
   border-radius:12px;
-  margin:10px auto;
-  max-width:800px;
+  background:#2e8b57;
+  color:white;
 }
 
-/* ================= COURT ================= */
-
+/* COURT */
 #court{
   display:none;
   height:100vh;
@@ -38,80 +42,35 @@ body{
   padding:15px;
 }
 
-/* 🔥 TOP TIMER (größer) */
+#matchTime{
+  font-size:20vh;
+  font-weight:bold;
+}
+
+#teams{
+  font-size:5vh;
+  font-weight:bold;
+}
+
 .top{
   display:flex;
   justify-content:space-between;
-  font-size:26px;
-  opacity:0.9;
-}
-
-/* 🔥 SPIELABEND TIMER */
-#eventTime{
-  font-size:4vh;
-  font-weight:bold;
-}
-
-/* 🔥 MATCH TIMER (EXTREM GROSS) */
-#matchTime{
-  font-size:28vh;
-  font-weight:bold;
-  line-height:1;
-}
-
-/* 🔥 TEAMS */
-#teams{
-  font-size:6vh;
-  font-weight:bold;
-  line-height:1.4;
-}
-
-/* ================= BUTTON BAR ================= */
-
-.bar{
-  display:flex;
-  justify-content:center;
-  gap:20px;
-  padding-bottom:10px;
-}
-
-/* 🔥 GROßE BUTTONS */
-button{
-  padding:18px 26px;
   font-size:18px;
-  border:none;
-  border-radius:14px;
-  background:#2e8b57;
-  color:white;
-  cursor:pointer;
-  min-width:140px;
+  opacity:0.8;
 }
-
-button:hover{
-  background:#36a66a;
-}
-
-/* EXIT EXTRA PROMINENT */
-.exit{
-  position:absolute;
-  top:12px;
-  right:12px;
-  background:#b33a3a;
-}
-
-.exit:hover{
-  background:#d14b4b;
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- ================= COURT ================= -->
-<div id="court">
+<!-- START SCREEN -->
+<div id="start">
+  <h1>🎾 Padel Court</h1>
+  <button onclick="start()">▶ Start Game</button>
+</div>
 
-<button class="exit" onclick="exitCourt()">❌ EXIT</button>
+<!-- COURT -->
+<div id="court">
 
 <div class="top">
   <div id="eventTime">120:00</div>
@@ -122,118 +81,97 @@ button:hover{
 
 <div id="teams"></div>
 
-<div class="bar">
-  <button onclick="nextMatch()">➡ NEXT MATCH</button>
-  <button onclick="pause()">⏸ PAUSE</button>
+<div>
+<button onclick="next()">NEXT</button>
+<button onclick="exit()">EXIT</button>
 </div>
 
 </div>
-
-<audio id="beep"
-src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-/* ================= DATA ================= */
-
 const players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 
-let active = new Set(players);
 let rotation = 0;
 
-let event = { total:120*60, remain:120*60 };
-let match = { total:18*60, remain:18*60, interval:null };
+let event = 120*60;
+let match = 18*60;
 
-/* ================= START ================= */
+/* START */
+function start(){
 
-function startCourt(){
-  document.getElementById("admin")?.remove();
+  document.getElementById("start").style.display="none";
   document.getElementById("court").style.display="flex";
-  document.documentElement.requestFullscreen?.();
-  startMatch();
-}
 
-/* ================= TEAMS ================= */
-
-function getTeams(){
-  const list = [...active];
-
-  let a=[], b=[], bench=[];
-
-  for(let i=0;i<list.length;i++){
-    let idx = (i + rotation) % list.length;
-
-    if(i < 2) a.push(list[idx]);
-    else if(i < 4) b.push(list[idx]);
-    else bench.push(list[idx]);
+  if(document.documentElement.requestFullscreen){
+    document.documentElement.requestFullscreen();
   }
 
-  return {a,b,bench};
-}
+  render();
 
-/* ================= MATCH ================= */
+  setInterval(()=>{
+    if(match>0) match--;
+    else next();
 
-function startMatch(){
-  if(match.interval) return;
-
-  match.interval = setInterval(()=>{
-
-    if(match.remain > 0){
-      match.remain--;
-      event.remain--;
-    } else {
-      nextMatch();
-    }
+    if(event>0) event--;
 
     render();
-
   },1000);
 }
 
-function pause(){
-  clearInterval(match.interval);
-  match.interval = null;
+/* TEAMS */
+function getTeams(){
+  let a=[], b=[], c=[];
+
+  for(let i=0;i<players.length;i++){
+    let idx=(i+rotation)%players.length;
+
+    if(i<2)a.push(players[idx]);
+    else if(i<4)b.push(players[idx]);
+    else c.push(players[idx]);
+  }
+
+  return {a,b,c};
 }
 
-function nextMatch(){
-  rotation = (rotation + 2) % active.size;
-  match.remain = match.total;
-  document.getElementById("beep").play();
+/* NEXT */
+function next(){
+  rotation = (rotation + 2) % players.length;
+  match = 18*60;
 }
 
-/* ================= EXIT ================= */
-
-function exitCourt(){
-  pause();
+/* EXIT */
+function exit(){
   document.getElementById("court").style.display="none";
-  document.exitFullscreen?.();
+  document.getElementById("start").style.display="flex";
+
+  if(document.exitFullscreen){
+    document.exitFullscreen();
+  }
 }
 
-/* ================= RENDER ================= */
-
+/* RENDER */
 function render(){
 
-  let em = Math.floor(event.remain/60);
-  let es = event.remain%60;
+  let em=Math.floor(event/60);
+  let es=event%60;
 
-  let mm = Math.floor(match.remain/60);
-  let ms = match.remain%60;
+  let mm=Math.floor(match/60);
+  let ms=match%60;
 
-  document.getElementById("eventTime").textContent =
-    "SPIEL " + em + ":" + String(es).padStart(2,"0");
+  document.getElementById("eventTime").textContent=
+    em+":"+String(es).padStart(2,"0");
 
-  document.getElementById("matchTime").textContent =
-    mm + ":" + String(ms).padStart(2,"0");
+  document.getElementById("matchTime").textContent=
+    mm+":"+String(ms).padStart(2,"0");
 
-  const {a,b,bench} = getTeams();
+  const t=getTeams();
 
-  document.getElementById("teams").innerHTML =
-    "A: " + a.join(" | ") + "<br>" +
-    "B: " + b.join(" | ") + "<br>" +
-    "BANK: " + bench.join(" | ");
+  document.getElementById("teams").innerHTML=
+    "A: "+t.a.join(" | ")+"<br>"+
+    "B: "+t.b.join(" | ")+"<br>"+
+    "BANK: "+t.c.join(" | ");
 }
-
-render();
 
 </script>
 
