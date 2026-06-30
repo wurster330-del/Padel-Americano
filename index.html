@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V2.2</title>
+<title>Padel Terminal V2.3</title>
 
 <style>
 body{
@@ -14,7 +14,7 @@ body{
   text-align:center;
 }
 
-/* ADMIN */
+/* ================= ADMIN ================= */
 #admin{padding:20px;}
 .panel{
   background:#255d3d;
@@ -35,7 +35,7 @@ body{
   border-radius:8px;
 }
 
-/* COURT */
+/* ================= COURT ================= */
 #court{
   display:none;
   height:100vh;
@@ -44,43 +44,54 @@ body{
   padding:15px;
 }
 
+/* TOP */
 .top{
   display:flex;
   justify-content:space-between;
   font-size:22px;
+  opacity:0.9;
 }
 
+/* TIMER */
 #matchTime{
-  font-size:22vh;
+  font-size:26vh;
   font-weight:bold;
+  line-height:1;
 }
 
 #eventTime{
   font-size:5vh;
 }
 
+/* TEAMS */
 #teams{
   font-size:5vh;
   font-weight:bold;
+  line-height:1.3;
 }
 
+/* NEXT */
 #nextBox{
   font-size:3vh;
   color:#ffd966;
+  margin-top:10px;
 }
 
-#stats{
-  font-size:2.5vh;
-  opacity:0.8;
-  margin-top:5px;
+#warning{
+  font-size:3vh;
+  color:#ff4d4d;
+  font-weight:bold;
+  display:none;
 }
 
+/* BUTTONS */
 button{
-  padding:14px 20px;
+  padding:16px 22px;
   border:none;
   border-radius:12px;
   background:#2e8b57;
   color:white;
+  font-size:16px;
 }
 
 .exit{
@@ -88,6 +99,17 @@ button{
   top:10px;
   right:10px;
   background:#b33a3a;
+}
+
+/* WARNING BLINK */
+@keyframes blink {
+  0% { opacity:1; }
+  50% { opacity:0.3; }
+  100% { opacity:1; }
+}
+
+.blink {
+  animation: blink 1s infinite;
 }
 </style>
 </head>
@@ -97,10 +119,10 @@ button{
 <!-- ================= ADMIN ================= -->
 <div id="admin">
 
-<h1>🎾 Padel Terminal V2.2</h1>
+<h1>🎾 Padel Terminal V2.3</h1>
 
 <div class="panel">
-<h3>Spieler Auswahl</h3>
+<h3>Spieler</h3>
 <div id="playerBox" class="playerBox"></div>
 </div>
 
@@ -122,7 +144,7 @@ button{
 </div>
 
 <div class="panel">
-<button onclick="start()">▶ START</button>
+<button onclick="start()">▶ START COURT</button>
 </div>
 
 </div>
@@ -139,18 +161,22 @@ button{
 
 <div id="matchTime">18:00</div>
 
+<div id="warning">⚠ WECHSEL IN KÜRZE</div>
+
 <div id="teams"></div>
 
 <div id="nextBox"></div>
-<div id="stats"></div>
 
 <div>
-<button onclick="startMatch()">▶ START</button>
+<button onclick="startMatch()">▶ START MATCH</button>
 <button onclick="pause()">⏸ PAUSE</button>
-<button onclick="next()">➡ NEXT</button>
+<button onclick="next()">➡ NEXT MATCH</button>
 </div>
 
 </div>
+
+<audio id="beep"
+src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
@@ -165,10 +191,11 @@ let rotation=0;
 let event={total:0,remain:0};
 let match={total:0,remain:0,interval:null};
 
-/* STATS */
-let stats={};
+/* MATCH STATE */
+let currentMatch=null;
+let nextMatchData=null;
 
-/* ================= INIT PLAYERS ================= */
+/* ================= PLAYERS ================= */
 
 function renderPlayers(){
   const box=document.getElementById("playerBox");
@@ -186,8 +213,8 @@ function renderPlayers(){
 
 function toggle(name,checked){
   if(checked){
-    active.push(name);
-  }else{
+    if(!active.includes(name)) active.push(name);
+  } else {
     active=active.filter(x=>x!==name);
   }
 }
@@ -204,59 +231,35 @@ function start(){
   event.total=parseInt(eventSelect.value)*60;
   event.remain=event.total;
 
-  active.forEach(p=>{
-    stats[p]={games:0};
-  });
-
   admin.style.display="none";
   court.style.display="flex";
 
+  generateNext();
   render();
 }
 
-/* ================= FAIR ROTATION ENGINE ================= */
+/* ================= FAIR MATCH ================= */
 
-function pickTeam(pool,used){
+function getTeams(offset=0){
 
-  let best=null;
-  let bestScore=9999;
+  const list=[...active];
+  let a=[],b=[],bank=[];
 
-  for(let i=0;i<pool.length;i++){
-    for(let j=i+1;j<pool.length;j++){
+  for(let i=0;i<list.length;i++){
+    let idx=(i+rotation+offset)%list.length;
 
-      let a=pool[i];
-      let b=pool[j];
-
-      let score=
-        (stats[a].games + stats[b].games) +
-        (used.has(a)?5:0) +
-        (used.has(b)?5:0);
-
-      if(score<bestScore){
-        bestScore=score;
-        best=[a,b];
-      }
-    }
+    if(i<2)a.push(list[idx]);
+    else if(i<4)b.push(list[idx]);
+    else bank.push(list[idx]);
   }
 
-  return best;
+  return{a,b,bank};
 }
 
-function generateMatch(){
+/* ================= NEXT PREVIEW ================= */
 
-  let pool=[...active];
-  let used=new Set();
-
-  let teamA=pickTeam(pool,used);
-  used.add(teamA[0]);
-  used.add(teamA[1]);
-
-  let rest=pool.filter(p=>!used.has(p));
-  let teamB=pickTeam(rest,used);
-
-  let bank=pool.filter(p=>!teamA.includes(p)&&!teamB.includes(p));
-
-  return {teamA,teamB,bank};
+function generateNext(){
+  nextMatchData=getTeams(2);
 }
 
 /* ================= MATCH ================= */
@@ -288,19 +291,13 @@ function pause(){
 
 function next(){
 
-  let m=generateMatch();
+  beep();
 
-  // stats update
-  m.teamA.concat(m.teamB).forEach(p=>{
-    stats[p].games++;
-  });
-
-  rotation++;
+  rotation=(rotation+2)%active.length;
 
   match.remain=match.total;
 
-  lastMatch=m;
-
+  generateNext();
   render();
 }
 
@@ -312,9 +309,21 @@ function exit(){
   admin.style.display="block";
 }
 
-/* ================= RENDER ================= */
+/* ================= WARNING ================= */
 
-let lastMatch=null;
+function checkWarning(){
+
+  if(match.remain<=30 && match.remain>0){
+    warning.style.display="block";
+    warning.classList.add("blink");
+    beepSoft();
+  } else {
+    warning.style.display="none";
+    warning.classList.remove("blink");
+  }
+}
+
+/* ================= RENDER ================= */
 
 function render(){
 
@@ -327,30 +336,31 @@ function render(){
   eventTime.textContent=em+":"+String(es).padStart(2,"0");
   matchTime.textContent=mm+":"+String(ms).padStart(2,"0");
 
-  let m=lastMatch || generateMatch();
+  currentMatch=getTeams();
 
   teams.innerHTML=
-    "TEAM A: "+m.teamA.join(" | ")+"<br>"+
-    "TEAM B: "+m.teamB.join(" | ")+"<br>"+
-    "BANK: "+m.bank.join(" | ");
+    "TEAM A: "+currentMatch.a.join(" | ")+"<br>"+
+    "TEAM B: "+currentMatch.b.join(" | ")+"<br>"+
+    "BANK: "+currentMatch.bank.join(" | ");
 
   nextBox.innerHTML=
-    "➡ NEXT PREVIEW LIVE";
+    "➡ NEXT MATCH<br>"+
+    nextMatchData.a.join(" | ")+" vs "+nextMatchData.b.join(" | ")+"<br>"+
+    "Bank: "+nextMatchData.bank.join(" | ");
 
-  statsBox();
+  checkWarning();
 }
 
-/* ================= STATS ================= */
+/* ================= SOUND ================= */
 
-function statsBox(){
+function beep(){
+  let b=document.getElementById("beep");
+  b.currentTime=0;
+  b.play();
+}
 
-  let txt="";
-
-  for(let p of active){
-    txt+=p+": "+(stats[p]?.games||0)+" Spiele | ";
-  }
-
-  stats.innerHTML=txt;
+function beepSoft(){
+  if(match.remain%10===0) beep();
 }
 
 /* INIT */
