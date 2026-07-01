@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V8 Final Stable</title>
+<title>Padel Terminal V8 Auto Event</title>
 
 <style>
 body{
@@ -51,7 +51,6 @@ input, select{
   font-size:140px;
   text-align:center;
   font-weight:900;
-  letter-spacing:2px;
 }
 
 .teamBox{
@@ -103,10 +102,6 @@ input, select{
 
 .kiosk .teamBox{
   font-size:42px;
-}
-
-.kiosk .small{
-  font-size:18px;
 }
 </style>
 </head>
@@ -228,6 +223,9 @@ function generate(){
 
  let list=players.filter(p=>p.active).map(p=>p.name);
 
+ schedule=[];
+ index=0;
+
  let matchMin = parseInt(document.getElementById("matchTime").value);
  matchSeconds = matchMin * 60;
  match = matchSeconds;
@@ -236,12 +234,9 @@ function generate(){
  let playerCount = list.length;
  let eventMin = (playerCount <= 4) ? 120 : 180;
 
- // 🎯 ROUNDS AUTO
+ // 🎯 ROUND CALCULATION
  let rounds = Math.floor(eventMin / matchMin);
  rounds = Math.max(3, Math.min(12, rounds));
-
- schedule=[];
- index=0;
 
  let pairHistory={};
  let oppHistory={};
@@ -272,6 +267,41 @@ function generate(){
   }
 
   return s;
+ }
+
+ function update(a,b,bank){
+
+  function addPair(x,y){
+   let k=key(x,y);
+   pairHistory[k]=(pairHistory[k]||0)+1;
+  }
+
+  function addOpp(x,y){
+   let k=key(x,y);
+   oppHistory[k]=(oppHistory[k]||0)+1;
+  }
+
+  a.forEach(x=>{
+   a.forEach(y=>{
+    if(x!==y) addPair(x,y);
+   });
+  });
+
+  b.forEach(x=>{
+   b.forEach(y=>{
+    if(x!==y) addPair(x,y);
+   });
+  });
+
+  a.forEach(x=>{
+   b.forEach(y=>{
+    addOpp(x,y);
+   });
+  });
+
+  bank.forEach(p=>{
+   pauseHistory[p]=(pauseHistory[p]||0)+1;
+  });
  }
 
  for(let r=0;r<rounds;r++){
@@ -376,45 +406,6 @@ function beep(){
  b.currentTime=0;
  b.play();
 }
-
-/* ================= KIOSK EXIT (ROBUST 3-FINGER HOLD) ================= */
-
-let holdStart = 0;
-let fingers = 0;
-
-document.addEventListener("touchstart", function(e){
-
- if(!document.body.classList.contains("kiosk")) return;
-
- fingers = e.touches.length;
-
- if(fingers === 3){
-  holdStart = Date.now();
- }
-});
-
-document.addEventListener("touchmove", function(e){
- if(e.touches.length !== 3){
-  holdStart = 0;
- }
-});
-
-document.addEventListener("touchend", function(){
-
- if(!document.body.classList.contains("kiosk")) return;
-
- if(fingers === 3 && holdStart > 0){
-
-  let duration = Date.now() - holdStart;
-
-  if(duration > 1200){
-   exitKiosk();
-  }
- }
-
- fingers = 0;
- holdStart = 0;
-});
 
 render();
 
