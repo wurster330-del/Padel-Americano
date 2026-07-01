@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V8 Kiosk</title>
+<title>Padel Terminal V8 Kiosk Fixed</title>
 
 <style>
 body{
@@ -46,7 +46,7 @@ input, select{
   margin:4px;
 }
 
-/* ================= BIG TIMER ================= */
+/* ================= TIMER ================= */
 .bigTimer{
   font-size:140px;
   text-align:center;
@@ -90,30 +90,35 @@ input, select{
 }
 
 /* ===================================================== */
-/* 🧠 KIOSK MODE – SHOW ONLY TIMER + TEAMS              */
+/* 🧠 KIOSK MODE FIX – CLEAN & SAFE                     */
 /* ===================================================== */
 
-.kiosk .panel,
 .kiosk h2,
 .kiosk #players,
 .kiosk select,
-.kiosk button{
+.kiosk button,
+.kiosk .warning,
+.kiosk #eventTimer{
   display:none !important;
+}
+
+/* 🔥 WICHTIG: Match-Timer bleibt sichtbar */
+.kiosk #timerPanel{
+  display:block !important;
 }
 
 /* Court bleibt sichtbar */
 .kiosk #court{
-  display:block;
-  margin-top:20px;
+  display:block !important;
 }
 
-/* Fokus-Display */
+/* Focus Display */
 .kiosk .bigTimer{
-  font-size:170px;
+  font-size:180px;
 }
 
 .kiosk .teamBox{
-  font-size:34px;
+  font-size:36px;
   font-weight:900;
 }
 
@@ -127,7 +132,7 @@ input, select{
 
 <div id="wrap">
 
-<h2>🎾 Padel Terminal V8 – KIOSK MODE</h2>
+<h2>🎾 Padel Terminal V8 – KIOSK FIX</h2>
 
 <!-- ================= KIOSK CONTROL ================= -->
 <div class="panel">
@@ -150,8 +155,8 @@ input, select{
 <button onclick="generate()">🏆 Spielplan erstellen</button>
 </div>
 
-<!-- ================= TIMER ================= -->
-<div class="panel">
+<!-- ================= TIMER (IMPORTANT FIX) ================= -->
+<div class="panel" id="timerPanel">
 
 <div class="bigTimer" id="matchTimer">18:00</div>
 
@@ -165,6 +170,7 @@ input, select{
 
 </div>
 
+<!-- ================= EVENT TIMER ================= -->
 <div class="panel">
 <div class="bigTimer" id="eventTimer">120:00</div>
 </div>
@@ -245,7 +251,7 @@ function renderPlayers(){
 }
 renderPlayers();
 
-/* ================= FOCUS MODE ================= */
+/* ================= FOCUS ================= */
 
 function setFocusMode(active){
  if(active) document.body.classList.add("focus");
