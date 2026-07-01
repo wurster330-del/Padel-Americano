@@ -99,6 +99,20 @@ button{
   padding:10px;
   gap:10px;
 }
+
+/* PIN */
+#pinBox{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.92);
+  z-index:9999;
+  text-align:center;
+  padding-top:120px;
+}
 </style>
 </head>
 
@@ -131,7 +145,7 @@ button{
 
 </div>
 
-<!-- KIOSK -->
+<!-- ================= KIOSK ================= -->
 <div id="kiosk">
 
 <div class="kioskTimer" id="kioskTimer">18:00</div>
@@ -141,11 +155,25 @@ button{
 
 </div>
 
-<!-- CONTROL -->
+<!-- ================= CONTROL ================= -->
 <div class="controlBar">
 <button onclick="startTimer()">▶ Start</button>
 <button onclick="pauseTimer()">⏸ Pause</button>
 <button onclick="nextMatch()">➡ Next</button>
+<button onclick="openPin()">🔒 Exit</button>
+</div>
+
+<!-- ================= PIN ================= -->
+<div id="pinBox">
+  <h2>🔐 Admin PIN</h2>
+
+  <input id="pinInput" type="password"
+    style="font-size:28px; padding:10px; border-radius:8px;">
+
+  <br><br>
+
+  <button onclick="checkPin()">OK</button>
+  <button onclick="closePin()">Abbrechen</button>
 </div>
 
 <script>
@@ -172,7 +200,7 @@ let breakMinutes = 2;
 let matchTime = matchMinutes * 60;
 let run = null;
 
-/* ================= FAIRNESS ENGINE ================= */
+/* ================= FAIRNESS ================= */
 
 let pairHistory = {};
 
@@ -185,7 +213,7 @@ function addPair(a,b){
   pairHistory[k] = (pairHistory[k] || 0) + 1;
 }
 
-/* ================= PLAYER UI (RESTORED) ================= */
+/* ================= PLAYER UI ================= */
 
 function renderPlayers(){
   let box = document.getElementById("players");
@@ -197,7 +225,6 @@ function renderPlayers(){
         <input type="checkbox"
           ${p.active ? "checked":""}
           onchange="players[${i}].active=this.checked;">
-
         <input type="text"
           value="${p.name}"
           onchange="players[${i}].name=this.value;">
@@ -208,7 +235,7 @@ function renderPlayers(){
 
 renderPlayers();
 
-/* ================= TURNIER ENGINE ================= */
+/* ================= TURNIER ================= */
 
 function generate(){
 
@@ -223,14 +250,13 @@ function generate(){
   index = 0;
   pairHistory = {};
 
-  // 🎯 Eventlogik
   let eventMinutes = (list.length === 4) ? 120 : 180;
   let roundMinutes = matchMinutes + breakMinutes;
 
   let rounds = Math.floor(eventMinutes / roundMinutes);
   if(rounds < 3) rounds = 3;
 
-  for(let r = 0; r < rounds; r++){
+  for(let r=0;r<rounds;r++){
 
     list = list.sort(() => Math.random() - 0.5);
 
@@ -243,7 +269,7 @@ function generate(){
     let bank = list.slice(4);
 
     schedule.push({
-      round: r + 1,
+      round:r+1,
       a,
       b,
       bank
@@ -328,6 +354,31 @@ function enterKiosk(){
   document.body.classList.add("kiosk");
   document.documentElement.requestFullscreen?.();
   update();
+}
+
+/* ================= PIN ================= */
+
+const ADMIN_PIN = "1234";
+
+function openPin(){
+  document.getElementById("pinBox").style.display = "block";
+}
+
+function closePin(){
+  document.getElementById("pinBox").style.display = "none";
+  document.getElementById("pinInput").value = "";
+}
+
+function checkPin(){
+  let val = document.getElementById("pinInput").value;
+
+  if(val === ADMIN_PIN){
+    document.body.classList.remove("kiosk");
+  } else {
+    alert("Falscher PIN");
+  }
+
+  closePin();
 }
 
 </script>
