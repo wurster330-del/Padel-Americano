@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Terminal V7</title>
+<title>Padel Club Terminal V7 Focus</title>
 
 <style>
 body{
@@ -43,11 +43,29 @@ input, select{
   margin:4px;
 }
 
+/* ================= TIMER ================= */
+
 .bigTimer{
-  font-size:60px;
+  font-size:140px;
   text-align:center;
-  font-weight:bold;
+  font-weight:900;
+  letter-spacing:2px;
+  margin-top:10px;
+  transition: all 0.3s ease;
 }
+
+/* ================= FOCUS MODE ================= */
+
+.focus .teamBox{
+  font-size:18px;
+  opacity:0.7;
+}
+
+.focus #court{
+  transform: scale(1.02);
+}
+
+/* ================= TEAMS ================= */
 
 .teamBox{
   font-size:22px;
@@ -60,6 +78,8 @@ input, select{
   font-size:13px;
 }
 
+/* ================= WARNING ================= */
+
 .warning{
   color:red;
   text-align:center;
@@ -68,12 +88,18 @@ input, select{
 }
 
 .blink{animation:blink 1s infinite;}
-@keyframes blink{50%{opacity:0.2;}}
+
+@keyframes blink{
+  50%{opacity:0.2;}
+}
+
+/* ================= COURT ================= */
 
 #court{
   background:#0e3d26;
   padding:12px;
   border-radius:12px;
+  transition: all 0.3s ease;
 }
 </style>
 </head>
@@ -82,7 +108,7 @@ input, select{
 
 <div id="wrap">
 
-<h2>🎾 Padel Club Terminal – V7</h2>
+<h2>🎾 Padel Club Terminal V7 – FOCUS MODE</h2>
 
 <!-- ================= PLAYERS ================= -->
 <div class="panel">
@@ -172,7 +198,17 @@ function renderPlayers(){
 }
 renderPlayers();
 
-/* ================= GENERATE (V7 ENGINE) ================= */
+/* ================= FOCUS MODE ================= */
+
+function setFocusMode(active){
+ if(active){
+  document.body.classList.add("focus");
+ } else {
+  document.body.classList.remove("focus");
+ }
+}
+
+/* ================= GENERATE ================= */
 
 function generate(){
 
@@ -294,6 +330,8 @@ function start(){
 
  if(run) return;
 
+ setFocusMode(true);
+
  run=setInterval(()=>{
 
   match--;
@@ -301,6 +339,7 @@ function start(){
 
   if(match===30){
    warn.style.display="block";
+   warn.classList.add("blink");
    beep();
   }
 
@@ -321,6 +360,7 @@ function start(){
 function pause(){
  clearInterval(run);
  run=null;
+ setFocusMode(false);
 }
 
 /* ================= NEXT ================= */
