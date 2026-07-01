@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V3.1 UPGRADE</title>
+<title>Padel Club Terminal V3.0 FINAL</title>
 
 <style>
 body{
@@ -33,41 +33,67 @@ button{
   background:#2e8b57;
   color:white;
   margin:5px;
-  cursor:pointer;
+  font-size:16px;
+}
+
+input, select{
+  padding:8px;
+  border-radius:6px;
+  border:none;
+  margin:4px;
 }
 
 .bigTimer{
-  font-size:65px;
+  font-size:70px;
   text-align:center;
   font-weight:bold;
 }
 
+.sectionTitle{
+  font-size:20px;
+  margin-bottom:10px;
+}
+
+/* COURT MODE */
+#court{
+  background:#0e3d26;
+  padding:15px;
+  border-radius:12px;
+}
+
 .teamBox{
-  font-size:22px;
+  font-size:24px;
   font-weight:bold;
-  margin:8px 0;
+  margin:10px 0;
 }
 
-.small{
-  opacity:0.8;
-  font-size:14px;
+.next{
+  color:#66d9ff;
+  margin-top:10px;
 }
 
-.statBox{
-  font-size:13px;
-  opacity:0.85;
-  margin-top:8px;
-  line-height:1.4em;
-}
-
+/* WARNING */
 .warning{
   color:red;
   text-align:center;
   display:none;
+  font-size:18px;
   font-weight:bold;
 }
-.blink{animation:blink 1s infinite;}
-@keyframes blink{50%{opacity:0.2;}}
+
+.blink{
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  50%{opacity:0.2;}
+}
+
+/* small */
+.small{
+  opacity:0.8;
+  font-size:14px;
+}
 </style>
 </head>
 
@@ -75,31 +101,71 @@ button{
 
 <div id="wrap">
 
-<h2>🎾 Padel Terminal V3.1 – UPGRADE</h2>
+<h2>🎾 Padel Club Terminal V3.0 FINAL</h2>
 
+<!-- ================= SETTINGS ================= -->
 <div class="panel">
-<button onclick="generate()">🏆 Turnier neu berechnen</button>
-<button onclick="resetStats()">♻ Statistik reset</button>
+<div class="sectionTitle">👥 Spieler</div>
+
+<div id="players"></div>
+
+<br>
+
+<div class="sectionTitle">⏱ Matchzeit</div>
+<select id="matchTime">
+  <option value="15">15</option>
+  <option value="18" selected>18</option>
+  <option value="20">20</option>
+</select>
+
+<div class="sectionTitle">🕒 Spielabend</div>
+<select id="eventTime">
+  <option value="120" selected>120</option>
+  <option value="180">180</option>
+</select>
+
+<br><br>
+<button onclick="save()">💾 Speichern</button>
+<button onclick="generate()">🏆 Turnier generieren</button>
 </div>
 
+<!-- ================= TIMER ================= -->
 <div class="panel">
-<div id="court"></div>
-</div>
 
-<div class="panel">
+<div class="sectionTitle">⏱ MATCH TIMER</div>
 <div class="bigTimer" id="matchTimer">18:00</div>
 
 <div style="text-align:center;">
-<button onclick="start()">▶ Start</button>
-<button onclick="pause()">⏸ Pause</button>
+<button onclick="startMatch()">▶ Start</button>
+<button onclick="pauseMatch()">⏸ Pause</button>
 <button onclick="next()">➡ Next</button>
 </div>
 
 <div class="warning" id="warn">⚠ 30 Sekunden</div>
+
 </div>
 
 <div class="panel">
+
+<div class="sectionTitle">🕒 SPIELABEND</div>
 <div class="bigTimer" id="eventTimer">120:00</div>
+
+</div>
+
+<!-- ================= COURT ================= -->
+<div id="court">
+
+<div class="sectionTitle">📺 COURT MODE</div>
+
+<div id="round"></div>
+
+<div class="teamBox" id="teamA"></div>
+<div class="teamBox" id="teamB"></div>
+
+<div class="small" id="bank"></div>
+
+<div class="next" id="next"></div>
+
 </div>
 
 </div>
@@ -109,105 +175,85 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-/* ================= PLAYERS ================= */
+/* ================= DATA ================= */
 
-let players=["Tobias","Werner","Christian","Stefan","David","Marco"];
-
-/* ================= STATS ================= */
-
-let stats={};
-
-players.forEach(p=>{
- stats[p]={games:0,pause:0,partners:{}};
-});
-
-/* ================= SCHEDULE ================= */
+let players = [
+ {name:"Tobias",active:true},
+ {name:"Werner",active:true},
+ {name:"Christian",active:true},
+ {name:"Stefan",active:true},
+ {name:"David",active:true},
+ {name:"Marco",active:true}
+];
 
 let schedule=[];
 let index=0;
 
 /* ================= TIMER ================= */
 
-let match=18*60;
-let event=120*60;
+let matchSeconds=18*60;
+let eventSeconds=120*60;
+
+let match=matchSeconds;
+let event=eventSeconds;
 
 let run=null;
+let eventRun=null;
 
-/* ================= SCORE ENGINE ================= */
+/* ================= INIT ================= */
 
-function scorePair(a,b){
- return stats[a].partners[b]||0;
+function renderPlayers(){
+ let box=document.getElementById("players");
+ box.innerHTML="";
+
+ players.forEach((p,i)=>{
+  box.innerHTML+=`
+   <div>
+    <input type="checkbox" ${p.active?"checked":""}
+    onchange="players[${i}].active=!players[${i}].active">
+
+    <input type="text" value="${p.name}"
+    onchange="players[${i}].name=this.value">
+   </div>
+  `;
+ });
 }
 
-/* ================= GENERATOR (FAIR) ================= */
+/* ================= SAVE ================= */
+
+function save(){
+ localStorage.setItem("padel",JSON.stringify(players));
+ alert("Gespeichert");
+}
+
+/* ================= GENERATOR ================= */
 
 function generate(){
 
+ let list=players.filter(p=>p.active).map(p=>p.name);
+
  schedule=[];
+ index=0;
 
- let pool=[...players];
+ let rounds=list.length;
 
- for(let r=0;r<players.length;r++){
+ for(let r=0;r<rounds;r++){
 
-  let best=null;
-  let bestScore=99999;
-
-  let rot=[...pool.slice(r),...pool.slice(0,r)];
+  let rot=[...list.slice(r),...list.slice(0,r)];
 
   let a=[rot[0],rot[1]];
   let b=[rot[2],rot[3]];
   let bank=rot.slice(4);
 
-  let score=0;
-
-  // Partner-Belastung prüfen
-  score+=scorePair(a[0],a[1]);
-  score+=scorePair(b[0],b[1]);
-
-  if(score<bestScore){
-   bestScore=score;
-   best={a,b,bank,round:r+1};
-  }
-
-  schedule.push(best);
-
-  // STATS update
-  updateStats(best);
+  schedule.push({a,b,bank,round:r+1});
  }
 
  render();
 }
 
-/* ================= UPDATE STATS ================= */
+/* ================= MATCH TIMER ================= */
 
-function updateStats(s){
-
- s.a.forEach(p=>{
-  stats[p].games++;
-  s.a.forEach(q=>{
-   if(p!==q){
-    stats[p].partners[q]=(stats[p].partners[q]||0)+1;
-   }
-  });
- });
-
- s.b.forEach(p=>{
-  stats[p].games++;
-  s.b.forEach(q=>{
-   if(p!==q){
-    stats[p].partners[q]=(stats[p].partners[q]||0)+1;
-   }
-  });
- });
-
- s.bank.forEach(p=>{
-  stats[p].pause++;
- });
-}
-
-/* ================= CONTROL ================= */
-
-function start(){
+function startMatch(){
 
  if(run) return;
 
@@ -216,8 +262,11 @@ function start(){
   match--;
   event--;
 
+  if(eventRun==null) startEvent();
+
   if(match===30){
    warn.style.display="block";
+   warn.classList.add("blink");
    beep();
   }
 
@@ -231,7 +280,7 @@ function start(){
  },1000);
 }
 
-function pause(){
+function pauseMatch(){
  clearInterval(run);
  run=null;
 }
@@ -239,53 +288,61 @@ function pause(){
 function next(){
  index++;
  if(index>=schedule.length) index=0;
- match=18*60;
+ match=matchSeconds;
  render();
 }
 
-/* ================= RESET STATS ================= */
+/* ================= EVENT ================= */
 
-function resetStats(){
- players.forEach(p=>{
-  stats[p]={games:0,pause:0,partners:{}};
- });
- alert("Stats zurückgesetzt");
+function startEvent(){
+ eventRun=setInterval(()=>{
+  event--;
+  if(event<=0){
+   beep();
+   clearInterval(eventRun);
+  }
+  render();
+ },1000);
 }
 
 /* ================= RENDER ================= */
 
 function render(){
 
- let c=document.getElementById("court");
- c.innerHTML="";
+ let m=Math.floor(match/60);
+ let s=match%60;
 
- if(!schedule.length){
-  c.innerHTML="Kein Turnier";
-  return;
- }
+ let e=Math.floor(event/60);
+ let es=event%60;
 
- let s=schedule[index];
+ matchTimer.textContent=`${m}:${String(s).padStart(2,"0")}`;
+ eventTimer.textContent=`${e}:${String(es).padStart(2,"0")}`;
 
- c.innerHTML=`
-  <div class="teamBox">TEAM A: ${s.a.join(" | ")}</div>
-  <div class="teamBox">TEAM B: ${s.b.join(" | ")}</div>
-  <div class="small">Pause: ${s.bank.join(" | ")||"-"}</div>
+ if(schedule.length===0) return;
 
-  <div class="statBox">
-   📊 STATISTIK:<br>
-   ${players.map(p=>
-    `${p}: ${stats[p].games} Spiele / ${stats[p].pause} Pausen`
-   ).join("<br>")}
-  </div>
- `;
+ let cur=schedule[index];
 
- matchTimer.textContent=Math.floor(match/60)+":"+String(match%60).padStart(2,"0");
- eventTimer.textContent=Math.floor(event/60)+":"+String(event%60).padStart(2,"0");
+ round.textContent="Runde "+cur.round;
+
+ teamA.textContent="TEAM A: "+cur.a.join(" | ");
+ teamB.textContent="TEAM B: "+cur.b.join(" | ");
+ bank.textContent="Bank: "+(cur.bank.join(" | ")||"-");
+
+ let nextS=schedule[index+1]||schedule[0];
+
+ next.textContent="NEXT: "+nextS.a.join(" / ")+" vs "+nextS.b.join(" / ");
 }
 
-/* ================= INIT ================= */
+/* ================= SOUND ================= */
 
-generate();
+function beep(){
+ let b=document.getElementById("beep");
+ b.currentTime=0;
+ b.play();
+}
+
+/* INIT */
+renderPlayers();
 render();
 
 </script>
