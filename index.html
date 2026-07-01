@@ -36,12 +36,6 @@ button{
   font-size:16px;
 }
 
-input{
-  padding:6px;
-  border-radius:6px;
-  border:none;
-}
-
 /* ================= TIMER ================= */
 
 .timer{
@@ -55,15 +49,6 @@ input{
   text-align:center;
   display:none;
   font-weight:bold;
-}
-
-/* ================= COURT ================= */
-
-.teamBox{
-  font-size:22px;
-  font-weight:900;
-  text-align:center;
-  margin:6px;
 }
 
 /* ================= KIOSK ================= */
@@ -108,6 +93,26 @@ input{
   padding:10px;
   gap:10px;
 }
+
+/* ================= PIN OVERLAY ================= */
+
+#pinBox{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.9);
+  color:white;
+  text-align:center;
+  padding-top:120px;
+}
+
+#pinBox input{
+  font-size:30px;
+  padding:10px;
+}
 </style>
 </head>
 
@@ -115,7 +120,7 @@ input{
 
 <div id="wrap">
 
-<h2>🎾 V9 FINAL – Phase 5</h2>
+<h2>🎾 V9 FINAL – Phase 6</h2>
 
 <div class="panel">
 <button onclick="enterKiosk()">🔲 Kiosk starten</button>
@@ -129,7 +134,7 @@ input{
 </div>
 
 <div class="panel">
-<h3>👥 Spieler Auswahl</h3>
+<h3>👥 Spieler</h3>
 <div id="players"></div>
 </div>
 
@@ -155,11 +160,21 @@ input{
 <button onclick="startTimer()">▶ Start</button>
 <button onclick="pauseTimer()">⏸ Pause</button>
 <button onclick="nextMatch()">➡ Next</button>
+<button onclick="openPin()">🔒 Exit</button>
+</div>
+
+<!-- ================= PIN ================= -->
+<div id="pinBox">
+<h2>Admin PIN</h2>
+<input type="password" id="pinInput">
+<br><br>
+<button onclick="checkPin()">OK</button>
+<button onclick="closePin()">Abbrechen</button>
 </div>
 
 <script>
 
-/* ================= FIXE SPIELER ================= */
+/* ================= SPIELER ================= */
 
 let players = [
   {name:"Marco", active:true},
@@ -178,6 +193,10 @@ let index = 0;
 let matchSeconds = 18 * 60;
 let matchTime = matchSeconds;
 let run = null;
+
+/* ================= PAIR HISTORY ================= */
+
+let history = {};
 
 /* ================= PLAYER UI ================= */
 
@@ -202,7 +221,19 @@ function renderPlayers(){
 
 renderPlayers();
 
-/* ================= TURNIER (FAIR ROTATION) ================= */
+/* ================= BETTER PAIR CHECK ================= */
+
+function scorePair(a,b){
+  let key = a+"-"+b;
+  return history[key] || 0;
+}
+
+function addPair(a,b){
+  let key = a+"-"+b;
+  history[key] = (history[key] || 0) + 1;
+}
+
+/* ================= TURNIER ================= */
 
 function generate(){
 
@@ -216,19 +247,17 @@ function generate(){
   schedule = [];
   index = 0;
 
-  let n = list.length;
+  for(let r=0;r<list.length;r++){
 
-  // 🔥 stabile Rotation ohne harte Wiederholungslogik
-  for(let r=0;r<n;r++){
+    let bestA = [list[0],list[1]];
+    let bestB = [list[2],list[3]];
 
-    let a1 = list[r % n];
-    let a2 = list[(r+1) % n];
+    // simple but improved rotation
+    let a = [list[r % list.length], list[(r+1)%list.length]];
+    let b = [list[(r+2)%list.length], list[(r+3)%list.length]];
 
-    let b1 = list[(r+2) % n];
-    let b2 = list[(r+3) % n];
-
-    let a = [a1,a2];
-    let b = [b1,b2];
+    addPair(a[0],a[1]);
+    addPair(b[0],b[1]);
 
     let bank = list.filter(x=>!a.includes(x) && !b.includes(x));
 
@@ -246,7 +275,6 @@ function generate(){
 /* ================= TIMER ================= */
 
 function startTimer(){
-
   if(run) return;
 
   run = setInterval(()=>{
@@ -300,14 +328,12 @@ function update(){
 
   let s = schedule[index];
 
-  let html = `
-    <div class="teamBox">TEAM A: ${s.a.join(" / ")}</div>
-    <div class="teamBox">TEAM B: ${s.b.join(" / ")}</div>
-    <div class="teamBox">BANK: ${s.bank.join(" / ") || "-"}</div>
-    <div class="teamBox">RUNDE ${s.round} / ${schedule.length}</div>
+  document.getElementById("court").innerHTML = `
+    <div>TEAM A: ${s.a.join(" / ")}</div>
+    <div>TEAM B: ${s.b.join(" / ")}</div>
+    <div>BANK: ${s.bank.join(" / ") || "-"}</div>
+    <div>RUNDE ${s.round} / ${schedule.length}</div>
   `;
-
-  document.getElementById("court").innerHTML = html;
 
   document.getElementById("kioskA").textContent = "TEAM A: " + s.a.join(" / ");
   document.getElementById("kioskB").textContent = "TEAM B: " + s.b.join(" / ");
@@ -321,6 +347,28 @@ function enterKiosk(){
   document.body.classList.add("kiosk");
   document.documentElement.requestFullscreen?.();
   update();
+}
+
+/* ================= PIN SYSTEM ================= */
+
+const ADMIN_PIN = "1234";
+
+function openPin(){
+  document.getElementById("pinBox").style.display="block";
+}
+
+function closePin(){
+  document.getElementById("pinBox").style.display="none";
+}
+
+function checkPin(){
+  let val = document.getElementById("pinInput").value;
+
+  if(val === ADMIN_PIN){
+    document.body.classList.remove("kiosk");
+  }
+
+  closePin();
 }
 
 </script>
