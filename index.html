@@ -6,6 +6,10 @@
 <title>Padel Club Terminal V9 FINAL</title>
 
 <style>
+/* =========================
+   BASIS DESIGN
+========================= */
+
 body{
   margin:0;
   font-family:Arial, sans-serif;
@@ -13,15 +17,15 @@ body{
   color:white;
 }
 
-/* ================= LAYOUT ================= */
-
 #wrap{
   padding:15px;
   max-width:1000px;
   margin:auto;
 }
 
-/* ================= PANELS ================= */
+/* =========================
+   PANELS
+========================= */
 
 .panel{
   background:#1f5e3a;
@@ -29,6 +33,10 @@ body{
   border-radius:12px;
   margin-bottom:15px;
 }
+
+/* =========================
+   BUTTONS
+========================= */
 
 button{
   padding:12px 16px;
@@ -40,67 +48,44 @@ button{
   font-size:16px;
 }
 
-input, select{
-  padding:6px;
-  border-radius:6px;
-  border:none;
-  margin:4px;
+/* =========================
+   KIOSK MODE
+========================= */
+
+.kiosk #wrap{
+  display:none;
 }
 
-/* ================= TIMER ================= */
+.kiosk #kiosk{
+  display:block;
+}
 
-.bigTimer{
+#kiosk{
+  display:none;
+  height:100vh;
+  text-align:center;
+  background:#000;
+  padding-top:80px;
+}
+
+/* große Anzeige */
+.big{
   font-size:120px;
-  text-align:center;
   font-weight:900;
-}
-
-.teamBox{
-  font-size:22px;
-  font-weight:900;
-  text-align:center;
-  margin:8px 0;
 }
 
 .small{
-  text-align:center;
   opacity:0.8;
 }
 
-/* ================= KIOSK ================= */
+/* =========================
+   TIMER STYLE (PLACEHOLDER)
+========================= */
 
-.kiosk #wrap > *{
-  display:none !important;
-}
-
-.kiosk #kioskView{
-  display:block !important;
-}
-
-#kioskView{
-  display:none;
-  height:100vh;
-  background:#000;
-  color:#fff;
+.timer{
+  font-size:80px;
   text-align:center;
-  padding-top:60px;
-}
-
-.kiosk .bigTimer{
-  font-size:180px;
-}
-
-.kiosk .teamBox{
-  font-size:44px;
-}
-
-/* ================= WARNING ================= */
-
-.warning{
-  color:red;
-  text-align:center;
-  display:none;
-  font-weight:bold;
+  font-weight:900;
 }
 </style>
 </head>
@@ -109,198 +94,41 @@ input, select{
 
 <div id="wrap">
 
-<h2>🎾 Padel Club Terminal V9 FINAL</h2>
+  <h2>🎾 Padel Club Terminal V9 FINAL</h2>
 
-<!-- ================= SETUP ================= -->
-<div class="panel">
-<button onclick="enterKiosk()">🔲 Kiosk</button>
-</div>
+  <!-- ================= SETUP ================= -->
+  <div class="panel">
+    <button onclick="enterKiosk()">🔲 Kiosk starten</button>
+  </div>
 
-<div class="panel">
-<h3>👥 Spieler</h3>
-<div id="players"></div>
+  <div class="panel">
+    <h3>👥 Spieler (Phase 1 Platzhalter)</h3>
+    <p>Hier kommt Phase 2: Spieler + Turnier</p>
+  </div>
 
-<h3>⏱ Matchzeit</h3>
-<select id="matchTime">
-  <option value="15">15 min</option>
-  <option value="18" selected>18 min</option>
-  <option value="20">20 min</option>
-</select>
+  <div class="panel">
+    <h3>⏱ Timer (Phase 1 Platzhalter)</h3>
+    <div class="timer">18:00</div>
+  </div>
 
-<br><br>
-<button onclick="generate()">🏆 Turnier starten</button>
-</div>
-
-<!-- ================= CONTROL ================= -->
-<div class="panel">
-<div class="bigTimer" id="matchTimer">18:00</div>
-
-<button onclick="startMatch()">▶ Start</button>
-<button onclick="pauseMatch()">⏸ Pause</button>
-<button onclick="nextMatch()">➡ Next</button>
-
-<div class="warning" id="warning">⚠ 30 Sekunden</div>
-</div>
-
-<!-- ================= COURT ================= -->
-<div class="panel">
-<div id="court"></div>
-</div>
+  <div class="panel">
+    <h3>🎾 Court (Phase 1 Platzhalter)</h3>
+    <p>Hier kommt Phase 3: Matchanzeige</p>
+  </div>
 
 </div>
 
-<!-- ================= KIOSK VIEW ================= -->
-<div id="kioskView">
-<div class="bigTimer" id="kioskTimer">18:00</div>
-<div class="teamBox" id="kioskA"></div>
-<div class="teamBox" id="kioskB"></div>
-<div class="small" id="kioskInfo"></div>
+<!-- ================= KIOSK ================= -->
+<div id="kiosk">
+  <div class="big">KIOSK MODE</div>
+  <div class="small">Phase 1 - Grundgerüst aktiv</div>
 </div>
-
-<audio id="beep"
-src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-/* ================= PLAYERS ================= */
-
-let players = [
-  {name:"Spieler 1",active:true},
-  {name:"Spieler 2",active:true},
-  {name:"Spieler 3",active:true},
-  {name:"Spieler 4",active:true},
-  {name:"Spieler 5",active:true},
-  {name:"Spieler 6",active:true}
-];
-
-let schedule = [];
-let index = 0;
-
-/* ================= TIMER ================= */
-
-let matchSeconds = 18 * 60;
-let match = matchSeconds;
-let run = null;
-
-/* ================= PLAYERS UI ================= */
-
-function renderPlayers(){
-  let box = document.getElementById("players");
-  box.innerHTML = "";
-
-  players.forEach((p,i)=>{
-    box.innerHTML += `
-      <div>
-        <input type="checkbox" ${p.active ? "checked":""}
-        onchange="players[${i}].active=!players[${i}].active">
-
-        <input type="text" value="${p.name}"
-        onchange="players[${i}].name=this.value">
-      </div>
-    `;
-  });
-}
-
-renderPlayers();
-
-/* ================= GENERATE ================= */
-
-function generate(){
-
-  let list = players.filter(p=>p.active).map(p=>p.name);
-
-  let m = parseInt(document.getElementById("matchTime").value);
-  matchSeconds = m * 60;
-  match = matchSeconds;
-
-  let eventMin = (list.length <= 4) ? 120 : 180;
-  let rounds = Math.floor(eventMin / m);
-  rounds = Math.max(3, Math.min(12, rounds));
-
-  schedule = [];
-  index = 0;
-
-  for(let r=0;r<rounds;r++){
-
-    let a = [list[(r)%list.length], list[(r+1)%list.length]];
-    let b = [list[(r+2)%list.length], list[(r+3)%list.length]];
-
-    let bank = list.filter(x=>!a.includes(x) && !b.includes(x));
-
-    schedule.push({a,b,bank,round:r+1});
-  }
-
-  render();
-}
-
-/* ================= MATCH CONTROL ================= */
-
-function startMatch(){
-  if(run) return;
-
-  run = setInterval(()=>{
-
-    if(match > 0) match--;
-
-    if(match === 30){
-      document.getElementById("warning").style.display="block";
-      beep();
-    }
-
-    if(match <= 0){
-      match = 0;
-      beep();
-      nextMatch();
-      return;
-    }
-
-    render();
-
-  },1000);
-}
-
-function pauseMatch(){
-  clearInterval(run);
-  run = null;
-}
-
-function nextMatch(){
-  index++;
-  if(index >= schedule.length) index = 0;
-  match = matchSeconds;
-  render();
-}
-
-/* ================= RENDER ================= */
-
-function render(){
-
-  let t = Math.floor(match/60)+":"+String(match%60).padStart(2,"0");
-
-  document.getElementById("matchTimer").textContent = t;
-  document.getElementById("kioskTimer").textContent = t;
-
-  if(schedule.length === 0){
-    court.innerHTML = "Kein Turnier";
-    return;
-  }
-
-  let s = schedule[index];
-
-  document.getElementById("court").innerHTML = `
-    <div class="teamBox">TEAM A: ${s.a.join(" | ")}</div>
-    <div class="teamBox">TEAM B: ${s.b.join(" | ")}</div>
-    <div class="small">Bank: ${s.bank.join(" | ") || "-"}</div>
-    <div class="small">Runde ${s.round} / ${schedule.length}</div>
-  `;
-
-  document.getElementById("kioskA").textContent = "TEAM A: " + s.a.join(" | ");
-  document.getElementById("kioskB").textContent = "TEAM B: " + s.b.join(" | ");
-  document.getElementById("kioskInfo").textContent =
-    "Runde " + s.round + " / " + schedule.length;
-}
-
-/* ================= KIOSK ================= */
+/* =========================
+   KIOSK CONTROL
+========================= */
 
 function enterKiosk(){
   document.body.classList.add("kiosk");
@@ -309,35 +137,6 @@ function enterKiosk(){
     document.documentElement.requestFullscreen();
   }
 }
-
-document.addEventListener("touchstart", function(e){
-
-  // 3 Finger Exit
-  if(e.touches.length === 3){
-    window._hold = Date.now();
-  }
-
-});
-
-document.addEventListener("touchend", function(){
-
-  if(window._hold && Date.now() - window._hold > 1200){
-    document.body.classList.remove("kiosk");
-    document.exitFullscreen?.();
-  }
-
-  window._hold = null;
-});
-
-/* ================= SOUND ================= */
-
-function beep(){
-  let b = document.getElementById("beep");
-  b.currentTime = 0;
-  b.play();
-}
-
-render();
 
 </script>
 
