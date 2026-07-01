@@ -3,195 +3,278 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V3.0 Phase 3</title>
+<title>Padel Terminal V3.0 Phase 4 – Court Mode</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#0b2f1d;
+  background:#071f14;
   color:white;
+  overflow:hidden;
 }
 
-#wrap{
-  padding:20px;
-  max-width:900px;
-  margin:auto;
+/* TOP BAR */
+#topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 15px;
+  font-size:18px;
+  opacity:0.9;
 }
 
-.panel{
-  background:#1f5e3a;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
-}
-
-.big{
-  font-size:28px;
+/* BIG MATCH TIMER */
+#matchTime{
+  font-size:22vh;
+  text-align:center;
   font-weight:bold;
 }
 
-.small{
+/* ROUND */
+#round{
+  text-align:center;
+  font-size:4vh;
   opacity:0.8;
 }
 
+/* TEAMS */
+#teams{
+  display:flex;
+  justify-content:space-around;
+  margin-top:10px;
+  font-size:5vh;
+  font-weight:bold;
+}
+
+.teamBox{
+  text-align:center;
+}
+
+/* BANK + NEXT */
+#bottom{
+  margin-top:20px;
+  text-align:center;
+  font-size:3vh;
+  opacity:0.9;
+}
+
+#next{
+  margin-top:10px;
+  color:#66d9ff;
+}
+
+/* WARNING */
+#warning{
+  display:none;
+  text-align:center;
+  color:#ff4d4d;
+  font-size:3vh;
+  font-weight:bold;
+}
+
+.blink{
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%{opacity:1;}
+  50%{opacity:0.2;}
+  100%{opacity:1;}
+}
+
+/* BUTTONS */
+#controls{
+  position:fixed;
+  bottom:10px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+
 button{
-  padding:12px 16px;
+  padding:14px 18px;
   border:none;
   border-radius:10px;
   background:#2e8b57;
   color:white;
-  margin:5px;
-}
-
-/* COURT */
-#court{
-  margin-top:20px;
-  padding:15px;
-  background:#144d30;
-  border-radius:12px;
-}
-
-.team{
-  font-size:22px;
-  font-weight:bold;
-  margin:5px 0;
-}
-
-.round{
-  font-size:18px;
-  opacity:0.8;
-}
-
-.next{
-  margin-top:10px;
-  color:#66d9ff;
+  font-size:16px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="wrap">
-
-<h1>🎾 Phase 3 – Turniergenerator</h1>
-
-<div class="panel">
-<button onclick="generate()">🏆 Turnier erstellen</button>
-<button onclick="next()">➡ Next</button>
+<div id="topbar">
+  <div id="eventTime">120:00</div>
+  <div>COURT MODE</div>
 </div>
 
-<div id="court">
+<div id="matchTime">18:00</div>
 
-<div class="round" id="roundInfo"></div>
+<div id="warning">⚠ LETZTE 30 SEKUNDEN</div>
 
-<div class="team" id="teamA"></div>
-<div class="team" id="teamB"></div>
+<div id="round">Runde 1</div>
 
-<div class="small" id="bank"></div>
+<div id="teams">
+  <div class="teamBox">
+    <div>TEAM A</div>
+    <div id="teamA"></div>
+  </div>
 
-<div class="next" id="nextInfo"></div>
-
+  <div class="teamBox">
+    <div>TEAM B</div>
+    <div id="teamB"></div>
+  </div>
 </div>
 
+<div id="bottom">
+  <div id="bank"></div>
+  <div id="next"></div>
 </div>
+
+<div id="controls">
+  <button onclick="start()">▶ Start</button>
+  <button onclick="pause()">⏸ Pause</button>
+  <button onclick="next()">➡ Next</button>
+</div>
+
+<audio id="beep"
+src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-/* ================= PLAYERS ================= */
+/* ================= DATA ================= */
 
-const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
+const players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 
-let active = [...allPlayers];
 let schedule = [];
 let index = 0;
 
-/* ================= SHUFFLE ================= */
+/* ================= TIMER ================= */
+
+let matchSeconds = 18 * 60;
+let eventSeconds = 120 * 60;
+
+let matchRemain = matchSeconds;
+let eventRemain = eventSeconds;
+
+let interval = null;
+
+/* ================= GENERATOR ================= */
 
 function shuffle(arr){
-  let a = [...arr];
+  let a=[...arr];
   for(let i=a.length-1;i>0;i--){
-    let j = Math.floor(Math.random()*(i+1));
+    let j=Math.floor(Math.random()*(i+1));
     [a[i],a[j]]=[a[j],a[i]];
   }
   return a;
 }
 
-/* ================= GENERATOR ================= */
-
 function generate(){
 
-  let players = shuffle(active);
+  let p = shuffle(players);
 
   schedule = [];
-  index = 0;
 
-  let rounds = players.length; // einfache stabile Basis
+  for(let r=0;r<p.length;r++){
 
-  for(let r=0;r<rounds;r++){
-
-    let rot = [
-      ...players.slice(r%players.length),
-      ...players.slice(0,r%players.length)
-    ];
-
-    let teamA = [rot[0],rot[1]];
-    let teamB = [rot[2],rot[3]];
-    let bank  = rot.slice(4);
+    let rot = [...p.slice(r),...p.slice(0,r)];
 
     schedule.push({
-      a: teamA,
-      b: teamB,
-      bank: bank,
-      round: r+1
+      a:[rot[0],rot[1]],
+      b:[rot[2],rot[3]],
+      bank:rot.slice(4),
+      round:r+1
     });
   }
-
-  render();
 }
 
-/* ================= NEXT ================= */
-
-function next(){
-
-  if(schedule.length === 0) return;
-
-  index++;
-  if(index >= schedule.length) index = 0;
-
-  render();
-}
+generate();
 
 /* ================= RENDER ================= */
 
 function render(){
 
-  if(schedule.length === 0){
-    document.getElementById("court").innerHTML =
-      "<div class='small'>Noch kein Turnier erstellt</div>";
-    return;
-  }
+  let m=Math.floor(matchRemain/60);
+  let s=matchRemain%60;
 
-  let s = schedule[index];
+  let e=Math.floor(eventRemain/60);
+  let es=eventRemain%60;
 
-  document.getElementById("roundInfo").innerText =
-    "Runde " + s.round + " / " + schedule.length;
+  eventTime.textContent=e+":"+String(es).padStart(2,"0");
+  matchTime.textContent=m+":"+String(s).padStart(2,"0");
 
-  document.getElementById("teamA").innerText =
-    "TEAM A: " + s.a.join(" | ");
+  let cur=schedule[index];
 
-  document.getElementById("teamB").innerText =
-    "TEAM B: " + s.b.join(" | ");
+  if(!cur) return;
 
-  document.getElementById("bank").innerText =
-    "Bank: " + (s.bank.length ? s.bank.join(" | ") : "-");
+  round.textContent="Runde "+cur.round;
 
-  let nextS = schedule[index+1] || schedule[0];
+  teamA.textContent=cur.a.join(" | ");
+  teamB.textContent=cur.b.join(" | ");
 
-  document.getElementById("nextInfo").innerText =
-    "➡ Nächstes Match: " + nextS.a.join(" / ") +
-    " vs " + nextS.b.join(" / ");
+  bank.textContent="Bank: "+(cur.bank.length?cur.bank.join(" | "):"-");
+
+  let nextS=schedule[index+1]||schedule[0];
+
+  next.textContent="➡ NEXT: "+nextS.a.join(" / ")+" vs "+nextS.b.join(" / ");
 }
+
+/* ================= CONTROL ================= */
+
+function start(){
+
+  if(interval) return;
+
+  interval=setInterval(()=>{
+
+    matchRemain--;
+    eventRemain--;
+
+    if(eventRemain<=0){
+      beep(); pause();
+    }
+
+    if(matchRemain===30){
+      warning.style.display="block";
+      warning.classList.add("blink");
+      beep();
+    }
+
+    if(matchRemain<=0){
+      beep(); beep();
+      next();
+    }
+
+    render();
+
+  },1000);
+}
+
+function pause(){
+  clearInterval(interval);
+  interval=null;
+}
+
+function next(){
+  index++;
+  if(index>=schedule.length) index=0;
+  matchRemain=matchSeconds;
+  render();
+}
+
+/* ================= SOUND ================= */
+
+function beep(){
+  let b=document.getElementById("beep");
+  b.currentTime=0;
+  b.play();
+}
+
+/* INIT */
+render();
 
 </script>
 
