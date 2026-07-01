@@ -13,23 +13,13 @@ body{
   color:white;
 }
 
-/* ================= KIOSK FULLSCREEN LOOK ================= */
-body.kiosk{
-  overflow:hidden;
-}
-
 #wrap{
   padding:15px;
   max-width:1000px;
   margin:auto;
 }
 
-/* FULLSCREEN LOCK VISUAL */
-.kiosk #wrap{
-  max-width:100%;
-}
-
-/* PANELS */
+/* ================= PANELS ================= */
 .panel{
   background:#1f5e3a;
   padding:15px;
@@ -37,7 +27,7 @@ body.kiosk{
   margin-bottom:15px;
 }
 
-/* BUTTONS */
+/* ================= BUTTONS ================= */
 button{
   padding:12px 16px;
   border:none;
@@ -48,7 +38,7 @@ button{
   font-size:15px;
 }
 
-/* INPUTS */
+/* ================= INPUT ================= */
 input, select{
   padding:6px;
   border-radius:6px;
@@ -56,7 +46,7 @@ input, select{
   margin:4px;
 }
 
-/* TIMER */
+/* ================= BIG TIMER ================= */
 .bigTimer{
   font-size:140px;
   text-align:center;
@@ -64,25 +54,21 @@ input, select{
   letter-spacing:2px;
 }
 
-/* FOCUS MODE */
-.focus .teamBox{
-  font-size:18px;
-  opacity:0.7;
-}
-
-/* TEAMS */
+/* ================= TEAMS ================= */
 .teamBox{
   font-size:22px;
   font-weight:bold;
   margin:8px 0;
+  text-align:center;
 }
 
 .small{
   opacity:0.8;
   font-size:13px;
+  text-align:center;
 }
 
-/* WARNING */
+/* ================= WARNING ================= */
 .warning{
   color:red;
   text-align:center;
@@ -96,11 +82,43 @@ input, select{
   50%{opacity:0.2;}
 }
 
-/* COURT */
+/* ================= COURT ================= */
 #court{
   background:#0e3d26;
   padding:12px;
   border-radius:12px;
+}
+
+/* ===================================================== */
+/* 🧠 KIOSK MODE – SHOW ONLY TIMER + TEAMS              */
+/* ===================================================== */
+
+.kiosk .panel,
+.kiosk h2,
+.kiosk #players,
+.kiosk select,
+.kiosk button{
+  display:none !important;
+}
+
+/* Court bleibt sichtbar */
+.kiosk #court{
+  display:block;
+  margin-top:20px;
+}
+
+/* Fokus-Display */
+.kiosk .bigTimer{
+  font-size:170px;
+}
+
+.kiosk .teamBox{
+  font-size:34px;
+  font-weight:900;
+}
+
+.kiosk .small{
+  font-size:18px;
 }
 </style>
 </head>
@@ -113,7 +131,7 @@ input, select{
 
 <!-- ================= KIOSK CONTROL ================= -->
 <div class="panel">
-<button onclick="enterKiosk()">🔲 Kiosk Vollbild starten</button>
+<button onclick="enterKiosk()">🔲 Kiosk starten</button>
 <button onclick="exitKiosk()">❌ Kiosk verlassen</button>
 </div>
 
@@ -189,16 +207,22 @@ let run=null;
 
 function enterKiosk(){
  document.body.classList.add("kiosk");
+
  if(document.documentElement.requestFullscreen){
   document.documentElement.requestFullscreen();
  }
+
+ setFocusMode(true);
 }
 
 function exitKiosk(){
  document.body.classList.remove("kiosk");
+
  if(document.exitFullscreen){
   document.exitFullscreen();
  }
+
+ setFocusMode(false);
 }
 
 /* ================= UI ================= */
@@ -211,7 +235,7 @@ function renderPlayers(){
   box.innerHTML+=`
    <div>
     <input type="checkbox" ${p.active?"checked":""}
-    onchange="players[${i}].active=!players[${i}.active]">
+    onchange="players[${i}].active=!players[${i}].active">
 
     <input type="text" value="${p.name}"
     onchange="players[${i}].name=this.value">
