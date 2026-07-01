@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V3.0 Phase 2</title>
+<title>Padel Terminal V3.0 Phase 3</title>
 
 <style>
 body{
@@ -26,44 +26,46 @@ body{
   margin-bottom:15px;
 }
 
+.big{
+  font-size:28px;
+  font-weight:bold;
+}
+
+.small{
+  opacity:0.8;
+}
+
 button{
-  padding:14px 18px;
+  padding:12px 16px;
   border:none;
   border-radius:10px;
   background:#2e8b57;
   color:white;
-  font-size:16px;
   margin:5px;
 }
 
-.bigTimer{
-  font-size:80px;
-  font-weight:bold;
-  text-align:center;
+/* COURT */
+#court{
+  margin-top:20px;
+  padding:15px;
+  background:#144d30;
+  border-radius:12px;
 }
 
-.label{
-  text-align:center;
+.team{
+  font-size:22px;
+  font-weight:bold;
+  margin:5px 0;
+}
+
+.round{
   font-size:18px;
   opacity:0.8;
 }
 
-.warning{
-  color:#ff4d4d;
-  font-weight:bold;
-  display:none;
-  text-align:center;
-  font-size:20px;
-}
-
-.blink{
-  animation:blink 1s infinite;
-}
-
-@keyframes blink{
-  0%{opacity:1;}
-  50%{opacity:0.2;}
-  100%{opacity:1;}
+.next{
+  margin-top:10px;
+  color:#66d9ff;
 }
 </style>
 </head>
@@ -72,167 +74,124 @@ button{
 
 <div id="wrap">
 
-<h1>🎾 Padel Terminal V3.0 – Phase 2</h1>
+<h1>🎾 Phase 3 – Turniergenerator</h1>
 
-<!-- ================= MATCH TIMER ================= -->
 <div class="panel">
-
-<div class="label">MATCH TIMER</div>
-<div class="bigTimer" id="matchTimer">18:00</div>
-
-<div style="text-align:center;">
-<button onclick="startMatch()">▶ Start</button>
-<button onclick="pauseMatch()">⏸ Pause</button>
-<button onclick="resetMatch()">🔄 Reset</button>
+<button onclick="generate()">🏆 Turnier erstellen</button>
+<button onclick="next()">➡ Next</button>
 </div>
 
-<div id="warn" class="warning">⚠ Noch 30 Sekunden</div>
+<div id="court">
+
+<div class="round" id="roundInfo"></div>
+
+<div class="team" id="teamA"></div>
+<div class="team" id="teamB"></div>
+
+<div class="small" id="bank"></div>
+
+<div class="next" id="nextInfo"></div>
 
 </div>
-
-<!-- ================= EVENT TIMER ================= -->
-<div class="panel">
-
-<div class="label">SPIELABEND TIMER</div>
-<div class="bigTimer" id="eventTimer">120:00</div>
-
-<div style="text-align:center;">
-<button onclick="startEvent()">▶ Start Abend</button>
-<button onclick="pauseEvent()">⏸ Pause</button>
-<button onclick="resetEvent()">🔄 Reset</button>
-</div>
-
-</div>
-
-<audio id="beep"
-src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 </div>
 
 <script>
 
-/* ================= SETTINGS ================= */
+/* ================= PLAYERS ================= */
 
-let matchSeconds = 18 * 60;
-let eventSeconds = 120 * 60;
+const allPlayers = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 
-/* ================= STATE ================= */
+let active = [...allPlayers];
+let schedule = [];
+let index = 0;
 
-let matchRun = null;
-let eventRun = null;
+/* ================= SHUFFLE ================= */
 
-/* ================= MATCH ================= */
+function shuffle(arr){
+  let a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    let j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
 
-let matchRemain = matchSeconds;
-let eventRemain = eventSeconds;
+/* ================= GENERATOR ================= */
 
-let matchStarted = false;
-let eventStarted = false;
+function generate(){
 
-function format(s){
-  let m = Math.floor(s/60);
-  let sec = s % 60;
-  return m + ":" + String(sec).padStart(2,"0");
+  let players = shuffle(active);
+
+  schedule = [];
+  index = 0;
+
+  let rounds = players.length; // einfache stabile Basis
+
+  for(let r=0;r<rounds;r++){
+
+    let rot = [
+      ...players.slice(r%players.length),
+      ...players.slice(0,r%players.length)
+    ];
+
+    let teamA = [rot[0],rot[1]];
+    let teamB = [rot[2],rot[3]];
+    let bank  = rot.slice(4);
+
+    schedule.push({
+      a: teamA,
+      b: teamB,
+      bank: bank,
+      round: r+1
+    });
+  }
+
+  render();
+}
+
+/* ================= NEXT ================= */
+
+function next(){
+
+  if(schedule.length === 0) return;
+
+  index++;
+  if(index >= schedule.length) index = 0;
+
+  render();
 }
 
 /* ================= RENDER ================= */
 
 function render(){
-  document.getElementById("matchTimer").textContent = format(matchRemain);
-  document.getElementById("eventTimer").textContent = format(eventRemain);
+
+  if(schedule.length === 0){
+    document.getElementById("court").innerHTML =
+      "<div class='small'>Noch kein Turnier erstellt</div>";
+    return;
+  }
+
+  let s = schedule[index];
+
+  document.getElementById("roundInfo").innerText =
+    "Runde " + s.round + " / " + schedule.length;
+
+  document.getElementById("teamA").innerText =
+    "TEAM A: " + s.a.join(" | ");
+
+  document.getElementById("teamB").innerText =
+    "TEAM B: " + s.b.join(" | ");
+
+  document.getElementById("bank").innerText =
+    "Bank: " + (s.bank.length ? s.bank.join(" | ") : "-");
+
+  let nextS = schedule[index+1] || schedule[0];
+
+  document.getElementById("nextInfo").innerText =
+    "➡ Nächstes Match: " + nextS.a.join(" / ") +
+    " vs " + nextS.b.join(" / ");
 }
-
-/* ================= MATCH TIMER ================= */
-
-function startMatch(){
-
-  if(matchRun) return;
-
-  matchRun = setInterval(()=>{
-
-    if(matchRemain > 0){
-      matchRemain--;
-    }
-
-    if(!eventStarted){
-      startEvent(); // startet automatisch beim ersten Match
-    }
-
-    if(matchRemain === 30){
-      let w = document.getElementById("warn");
-      w.style.display="block";
-      w.classList.add("blink");
-      beep();
-    }
-
-    if(matchRemain === 0){
-      beep();
-      beep();
-      pauseMatch();
-    }
-
-    render();
-
-  },1000);
-}
-
-function pauseMatch(){
-  clearInterval(matchRun);
-  matchRun = null;
-}
-
-function resetMatch(){
-  pauseMatch();
-  matchRemain = matchSeconds;
-  document.getElementById("warn").style.display="none";
-  render();
-}
-
-/* ================= EVENT TIMER ================= */
-
-function startEvent(){
-
-  if(eventRun) return;
-
-  eventStarted = true;
-
-  eventRun = setInterval(()=>{
-
-    if(eventRemain > 0){
-      eventRemain--;
-    }
-
-    if(eventRemain === 0){
-      beep();
-      pauseEvent();
-    }
-
-    render();
-
-  },1000);
-}
-
-function pauseEvent(){
-  clearInterval(eventRun);
-  eventRun = null;
-}
-
-function resetEvent(){
-  pauseEvent();
-  eventRemain = eventSeconds;
-  render();
-}
-
-/* ================= SOUND ================= */
-
-function beep(){
-  let b = document.getElementById("beep");
-  b.currentTime = 0;
-  b.play();
-}
-
-/* INIT */
-render();
 
 </script>
 
