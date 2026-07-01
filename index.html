@@ -6,13 +6,9 @@
 <title>Padel Club Terminal V9 FINAL</title>
 
 <style>
-/* =========================
-   BASIS DESIGN
-========================= */
-
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   background:#071f14;
   color:white;
 }
@@ -23,20 +19,12 @@ body{
   margin:auto;
 }
 
-/* =========================
-   PANELS
-========================= */
-
 .panel{
   background:#1f5e3a;
   padding:15px;
   border-radius:12px;
   margin-bottom:15px;
 }
-
-/* =========================
-   BUTTONS
-========================= */
 
 button{
   padding:12px 16px;
@@ -48,9 +36,14 @@ button{
   font-size:16px;
 }
 
-/* =========================
-   KIOSK MODE
-========================= */
+input{
+  padding:6px;
+  border-radius:6px;
+  border:none;
+  margin:3px;
+}
+
+/* ================= KIOSK ================= */
 
 .kiosk #wrap{
   display:none;
@@ -68,7 +61,6 @@ button{
   padding-top:80px;
 }
 
-/* große Anzeige */
 .big{
   font-size:120px;
   font-weight:900;
@@ -78,14 +70,17 @@ button{
   opacity:0.8;
 }
 
-/* =========================
-   TIMER STYLE (PLACEHOLDER)
-========================= */
-
 .timer{
   font-size:80px;
   text-align:center;
   font-weight:900;
+}
+
+.teamBox{
+  font-size:20px;
+  font-weight:900;
+  text-align:center;
+  margin:5px;
 }
 </style>
 </head>
@@ -94,40 +89,143 @@ button{
 
 <div id="wrap">
 
-  <h2>🎾 Padel Club Terminal V9 FINAL</h2>
+<h2>🎾 V9 FINAL – Phase 2</h2>
 
-  <!-- ================= SETUP ================= -->
-  <div class="panel">
-    <button onclick="enterKiosk()">🔲 Kiosk starten</button>
-  </div>
+<!-- ================= KIOSK ================= -->
+<div class="panel">
+<button onclick="enterKiosk()">🔲 Kiosk starten</button>
+</div>
 
-  <div class="panel">
-    <h3>👥 Spieler (Phase 1 Platzhalter)</h3>
-    <p>Hier kommt Phase 2: Spieler + Turnier</p>
-  </div>
+<!-- ================= PLAYERS ================= -->
+<div class="panel">
+<h3>👥 Spieler</h3>
 
-  <div class="panel">
-    <h3>⏱ Timer (Phase 1 Platzhalter)</h3>
-    <div class="timer">18:00</div>
-  </div>
+<div id="players"></div>
 
-  <div class="panel">
-    <h3>🎾 Court (Phase 1 Platzhalter)</h3>
-    <p>Hier kommt Phase 3: Matchanzeige</p>
-  </div>
+<button onclick="generate()">🏆 Turnier erstellen</button>
+</div>
+
+<!-- ================= COURT ================= -->
+<div class="panel">
+<h3>🎾 Matchanzeige</h3>
+
+<div id="court">Noch kein Turnier</div>
+</div>
 
 </div>
 
 <!-- ================= KIOSK ================= -->
 <div id="kiosk">
   <div class="big">KIOSK MODE</div>
-  <div class="small">Phase 1 - Grundgerüst aktiv</div>
+  <div id="kioskMatch"></div>
 </div>
 
 <script>
 
 /* =========================
-   KIOSK CONTROL
+   SPIELER
+========================= */
+
+let players = [
+  {name:"Spieler 1",active:true},
+  {name:"Spieler 2",active:true},
+  {name:"Spieler 3",active:true},
+  {name:"Spieler 4",active:true},
+  {name:"Spieler 5",active:true},
+  {name:"Spieler 6",active:true}
+];
+
+let schedule = [];
+let index = 0;
+
+/* =========================
+   UI SPIELER
+========================= */
+
+function renderPlayers(){
+  let box = document.getElementById("players");
+  box.innerHTML = "";
+
+  players.forEach((p,i)=>{
+    box.innerHTML += `
+      <div>
+        <input type="checkbox" ${p.active ? "checked":""}
+        onchange="players[${i}].active=!players[${i}].active">
+
+        <input type="text" value="${p.name}"
+        onchange="players[${i}].name=this.value">
+      </div>
+    `;
+  });
+}
+
+renderPlayers();
+
+/* =========================
+   TURNIER GENERATOR (Phase 2 SIMPLE)
+========================= */
+
+function generate(){
+
+  let list = players.filter(p=>p.active).map(p=>p.name);
+
+  schedule = [];
+  index = 0;
+
+  if(list.length < 4){
+    alert("Mindestens 4 Spieler nötig");
+    return;
+  }
+
+  let rounds = list.length;
+
+  for(let r=0;r<rounds;r++){
+
+    let a = [list[(r)%list.length], list[(r+1)%list.length]];
+    let b = [list[(r+2)%list.length], list[(r+3)%list.length]];
+
+    let bank = list.filter(x=>!a.includes(x) && !b.includes(x));
+
+    schedule.push({
+      round:r+1,
+      a:a,
+      b:b,
+      bank:bank
+    });
+  }
+
+  render();
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+  if(schedule.length === 0){
+    document.getElementById("court").innerHTML = "Kein Turnier";
+    return;
+  }
+
+  let s = schedule[index];
+
+  document.getElementById("court").innerHTML = `
+    <div class="teamBox">TEAM A: ${s.a.join(" / ")}</div>
+    <div class="teamBox">TEAM B: ${s.b.join(" / ")}</div>
+    <div class="small">Bank: ${s.bank.join(" / ") || "-"}</div>
+    <div class="small">Runde ${s.round} / ${schedule.length}</div>
+  `;
+
+  document.getElementById("kioskMatch").innerHTML = `
+    TEAM A: ${s.a.join(" / ")} <br><br>
+    VS <br><br>
+    TEAM B: ${s.b.join(" / ")}
+  `;
+}
+
+/* =========================
+   KIOSK
 ========================= */
 
 function enterKiosk(){
