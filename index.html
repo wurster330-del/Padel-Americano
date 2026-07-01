@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V8 Kiosk Final</title>
+<title>Padel Terminal V8 Kiosk Fixed</title>
 
 <style>
 body{
@@ -20,6 +20,7 @@ body{
 }
 
 /* ================= NORMAL UI ================= */
+
 .panel{
   background:#1f5e3a;
   padding:15px;
@@ -44,7 +45,8 @@ input, select{
   margin:4px;
 }
 
-/* ================= TIMER ================= */
+/* ================= DISPLAY ================= */
+
 .bigTimer{
   font-size:140px;
   text-align:center;
@@ -52,10 +54,9 @@ input, select{
   letter-spacing:2px;
 }
 
-/* ================= TEAMS ================= */
 .teamBox{
   font-size:22px;
-  font-weight:bold;
+  font-weight:900;
   margin:8px 0;
   text-align:center;
 }
@@ -66,14 +67,8 @@ input, select{
   text-align:center;
 }
 
-/* ================= COURT ================= */
-#court{
-  background:#0e3d26;
-  padding:12px;
-  border-radius:12px;
-}
-
 /* ================= WARNING ================= */
+
 .warning{
   color:red;
   text-align:center;
@@ -81,43 +76,41 @@ input, select{
   font-weight:bold;
 }
 
-.blink{animation:blink 1s infinite;}
+/* ================= COURT ================= */
 
-@keyframes blink{
-  50%{opacity:0.2;}
+#court{
+  background:#0e3d26;
+  padding:12px;
+  border-radius:12px;
 }
 
 /* ===================================================== */
-/* 🧠 KIOSK MODE – CLEAN DISPLAY                        */
+/* 🔒 KIOSK HARD LOCK                                     */
 /* ===================================================== */
 
-.kiosk h2,
-.kiosk #players,
-.kiosk #eventTime,
-.kiosk select,
-.kiosk button,
-.kiosk .warning,
-.kiosk #eventTimer{
+.kiosk #wrap > *{
   display:none !important;
 }
 
-/* Match bleibt sichtbar */
-.kiosk #timerPanel{
-  display:block !important;
-}
-
-/* Court bleibt sichtbar */
+/* nur Timer + Court */
+.kiosk #timerPanel,
 .kiosk #court{
   display:block !important;
 }
 
-/* Fokus Look */
+/* extra Sicherheit */
+.kiosk #playersPanel,
+.kiosk #eventTimerPanel{
+  display:none !important;
+}
+
+/* BIG SCOREBOARD */
 .kiosk .bigTimer{
-  font-size:180px;
+  font-size:190px;
 }
 
 .kiosk .teamBox{
-  font-size:36px;
+  font-size:42px;
   font-weight:900;
 }
 
@@ -168,8 +161,8 @@ input, select{
 
 </div>
 
-<!-- ================= EVENT TIMER ================= -->
-<div class="panel">
+<!-- ================= EVENT TIMER (hidden in kiosk) ================= -->
+<div class="panel" id="eventTimerPanel">
 <div class="bigTimer" id="eventTimer">120:00</div>
 </div>
 
@@ -207,7 +200,7 @@ let event=eventSeconds;
 
 let run=null;
 
-/* ================= KIOSK MODE ================= */
+/* ================= KIOSK ================= */
 
 function enterKiosk(){
  document.body.classList.add("kiosk");
@@ -215,31 +208,7 @@ function enterKiosk(){
  if(document.documentElement.requestFullscreen){
   document.documentElement.requestFullscreen();
  }
-
- setFocusMode(true);
 }
-
-/* ================= EXIT GESTURE (3 TAP) ================= */
-
-let tapCount = 0;
-let tapTimer = null;
-
-document.addEventListener("touchstart", function(){
- if(!document.body.classList.contains("kiosk")) return;
-
- tapCount++;
-
- clearTimeout(tapTimer);
-
- tapTimer = setTimeout(()=>{
-  tapCount = 0;
- }, 1000);
-
- if(tapCount >= 3){
-  exitKiosk();
-  tapCount = 0;
- }
-});
 
 function exitKiosk(){
  document.body.classList.remove("kiosk");
@@ -247,11 +216,9 @@ function exitKiosk(){
  if(document.exitFullscreen){
   document.exitFullscreen();
  }
-
- setFocusMode(false);
 }
 
-/* ================= UI ================= */
+/* ================= PLAYERS ================= */
 
 function renderPlayers(){
  let box=document.getElementById("players");
@@ -270,13 +237,6 @@ function renderPlayers(){
  });
 }
 renderPlayers();
-
-/* ================= FOCUS ================= */
-
-function setFocusMode(active){
- if(active) document.body.classList.add("focus");
- else document.body.classList.remove("focus");
-}
 
 /* ================= GENERATE ================= */
 
@@ -380,15 +340,12 @@ function generate(){
 
       if(sc<bestScore){
        bestScore=sc;
-       best={a,b,bank,round:r+1};
+       schedule.push({a,b,bank,round:r+1});
       }
      }
     }
    }
   }
-
-  schedule.push(best);
-  update(best.a,best.b,best.bank);
  }
 
  render();
@@ -400,25 +357,32 @@ function start(){
 
  if(run) return;
 
- setFocusMode(true);
-
  run=setInterval(()=>{
 
-  match--;
-  event--;
-
-  if(match===30){
-   warn.style.display="block";
-   beep();
+  if(match > 0){
+    match--;
   }
 
-  if(match<=0){
-   beep(); beep();
-   next();
+  if(event > 0){
+    event--;
   }
 
-  if(event<=0){
-   pause();
+  if(match === 30){
+    warn.style.display="block";
+    beep();
+  }
+
+  if(match <= 0){
+    match = 0;
+    beep();
+
+    next();
+    return;
+  }
+
+  if(event <= 0){
+    event = 0;
+    pause();
   }
 
   render();
@@ -429,7 +393,6 @@ function start(){
 function pause(){
  clearInterval(run);
  run=null;
- setFocusMode(false);
 }
 
 /* ================= NEXT ================= */
