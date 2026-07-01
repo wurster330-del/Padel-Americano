@@ -146,7 +146,7 @@ button{
 
 </div>
 
-<!-- ================= CONTROL BAR ================= -->
+<!-- ================= CONTROL ================= -->
 <div class="controlBar">
 <button onclick="startTimer()">▶ Start</button>
 <button onclick="pauseTimer()">⏸ Pause</button>
@@ -189,7 +189,13 @@ function generate(){
   schedule = [];
   index = 0;
 
-  for(let r=0;r<list.length;r++){
+  // 🔥 AUTO EVENT ZEIT LOGIK
+  let eventMinutes = (list.length === 4) ? 120 : 180;
+  let rounds = Math.floor(eventMinutes / (matchSeconds / 60));
+
+  if(rounds < 3) rounds = 3;
+
+  for(let r=0;r<rounds;r++){
 
     let a = [list[(r)%list.length], list[(r+1)%list.length]];
     let b = [list[(r+2)%list.length], list[(r+3)%list.length]];
