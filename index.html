@@ -9,7 +9,7 @@
 body{
   margin:0;
   font-family:Arial;
-  background:#071f14;
+  background:#061a12;
   color:white;
 }
 
@@ -20,7 +20,7 @@ body{
 }
 
 .panel{
-  background:#1f5e3a;
+  background:#1c5a38;
   padding:15px;
   border-radius:12px;
   margin-bottom:15px;
@@ -36,8 +36,7 @@ button{
   font-size:16px;
 }
 
-/* ================= TIMER ================= */
-
+/* TIMER */
 .timer{
   font-size:80px;
   text-align:center;
@@ -51,8 +50,15 @@ button{
   font-weight:bold;
 }
 
-/* ================= KIOSK ================= */
+/* COURT */
+.teamBox{
+  font-size:22px;
+  font-weight:900;
+  text-align:center;
+  margin:6px;
+}
 
+/* KIOSK */
 .kiosk #wrap{ display:none; }
 .kiosk #kiosk{ display:block; }
 
@@ -61,57 +67,37 @@ button{
   height:100vh;
   background:black;
   text-align:center;
-  padding-top:60px;
+  padding-top:40px;
 }
 
 .kioskTimer{
-  font-size:160px;
+  font-size:180px;
   font-weight:900;
+  color:#00ff88;
 }
 
 .kioskTeam{
-  font-size:44px;
+  font-size:52px;
   font-weight:900;
-  margin:10px;
+  margin:15px;
 }
 
 .kioskSmall{
-  opacity:0.8;
-  font-size:22px;
+  opacity:0.7;
+  font-size:26px;
 }
 
-/* ================= CONTROL ================= */
-
+/* CONTROL */
 .controlBar{
   position:fixed;
   bottom:0;
   left:0;
   width:100%;
-  background:#0f3d27;
+  background:#0e3a25;
   display:flex;
   justify-content:center;
   padding:10px;
   gap:10px;
-}
-
-/* ================= PIN OVERLAY ================= */
-
-#pinBox{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.9);
-  color:white;
-  text-align:center;
-  padding-top:120px;
-}
-
-#pinBox input{
-  font-size:30px;
-  padding:10px;
 }
 </style>
 </head>
@@ -120,7 +106,7 @@ button{
 
 <div id="wrap">
 
-<h2>🎾 V9 FINAL – Phase 6</h2>
+<h2>🎾 V9 FINAL – Komplett</h2>
 
 <div class="panel">
 <button onclick="enterKiosk()">🔲 Kiosk starten</button>
@@ -145,7 +131,7 @@ button{
 
 </div>
 
-<!-- ================= KIOSK ================= -->
+<!-- KIOSK -->
 <div id="kiosk">
 
 <div class="kioskTimer" id="kioskTimer">18:00</div>
@@ -155,26 +141,16 @@ button{
 
 </div>
 
-<!-- ================= CONTROL ================= -->
+<!-- CONTROL -->
 <div class="controlBar">
 <button onclick="startTimer()">▶ Start</button>
 <button onclick="pauseTimer()">⏸ Pause</button>
 <button onclick="nextMatch()">➡ Next</button>
-<button onclick="openPin()">🔒 Exit</button>
-</div>
-
-<!-- ================= PIN ================= -->
-<div id="pinBox">
-<h2>Admin PIN</h2>
-<input type="password" id="pinInput">
-<br><br>
-<button onclick="checkPin()">OK</button>
-<button onclick="closePin()">Abbrechen</button>
 </div>
 
 <script>
 
-/* ================= SPIELER ================= */
+/* ================= PLAYERS ================= */
 
 let players = [
   {name:"Marco", active:true},
@@ -194,10 +170,6 @@ let matchSeconds = 18 * 60;
 let matchTime = matchSeconds;
 let run = null;
 
-/* ================= PAIR HISTORY ================= */
-
-let history = {};
-
 /* ================= PLAYER UI ================= */
 
 function renderPlayers(){
@@ -210,7 +182,6 @@ function renderPlayers(){
         <input type="checkbox"
           ${p.active ? "checked":""}
           onchange="players[${i}].active=this.checked;">
-
         <input type="text"
           value="${p.name}"
           onchange="players[${i}].name=this.value;">
@@ -221,23 +192,11 @@ function renderPlayers(){
 
 renderPlayers();
 
-/* ================= BETTER PAIR CHECK ================= */
-
-function scorePair(a,b){
-  let key = a+"-"+b;
-  return history[key] || 0;
-}
-
-function addPair(a,b){
-  let key = a+"-"+b;
-  history[key] = (history[key] || 0) + 1;
-}
-
-/* ================= TURNIER ================= */
+/* ================= EVENT LOGIK (WICHTIG) ================= */
 
 function generate(){
 
-  let list = players.filter(p=>p.active).map(p=>p.name);
+  let list = players.filter(p => p.active).map(p => p.name);
 
   if(list.length < 4){
     alert("Mindestens 4 Spieler nötig");
@@ -247,25 +206,34 @@ function generate(){
   schedule = [];
   index = 0;
 
-  for(let r=0;r<list.length;r++){
+  // 🎯 EVENTZEIT AUTOMATIK
+  let eventMinutes = (list.length === 4) ? 120 : 180;
 
-    let bestA = [list[0],list[1]];
-    let bestB = [list[2],list[3]];
+  let matchMinutes = matchSeconds / 60;
 
-    // simple but improved rotation
-    let a = [list[r % list.length], list[(r+1)%list.length]];
-    let b = [list[(r+2)%list.length], list[(r+3)%list.length]];
+  let rounds = Math.floor(eventMinutes / matchMinutes);
 
-    addPair(a[0],a[1]);
-    addPair(b[0],b[1]);
+  if(rounds < 3) rounds = 3;
 
-    let bank = list.filter(x=>!a.includes(x) && !b.includes(x));
+  for(let r = 0; r < rounds; r++){
+
+    let a = [
+      list[(r) % list.length],
+      list[(r + 1) % list.length]
+    ];
+
+    let b = [
+      list[(r + 2) % list.length],
+      list[(r + 3) % list.length]
+    ];
+
+    let bank = list.filter(x => !a.includes(x) && !b.includes(x));
 
     schedule.push({
-      round:r+1,
-      a:a,
-      b:b,
-      bank:bank
+      round: r + 1,
+      a,
+      b,
+      bank
     });
   }
 
@@ -329,10 +297,10 @@ function update(){
   let s = schedule[index];
 
   document.getElementById("court").innerHTML = `
-    <div>TEAM A: ${s.a.join(" / ")}</div>
-    <div>TEAM B: ${s.b.join(" / ")}</div>
-    <div>BANK: ${s.bank.join(" / ") || "-"}</div>
-    <div>RUNDE ${s.round} / ${schedule.length}</div>
+    <div class="teamBox">TEAM A: ${s.a.join(" / ")}</div>
+    <div class="teamBox">TEAM B: ${s.b.join(" / ")}</div>
+    <div class="teamBox">BANK: ${s.bank.join(" / ") || "-"}</div>
+    <div class="teamBox">RUNDE ${s.round} / ${schedule.length}</div>
   `;
 
   document.getElementById("kioskA").textContent = "TEAM A: " + s.a.join(" / ");
@@ -347,28 +315,6 @@ function enterKiosk(){
   document.body.classList.add("kiosk");
   document.documentElement.requestFullscreen?.();
   update();
-}
-
-/* ================= PIN SYSTEM ================= */
-
-const ADMIN_PIN = "1234";
-
-function openPin(){
-  document.getElementById("pinBox").style.display="block";
-}
-
-function closePin(){
-  document.getElementById("pinBox").style.display="none";
-}
-
-function checkPin(){
-  let val = document.getElementById("pinInput").value;
-
-  if(val === ADMIN_PIN){
-    document.body.classList.remove("kiosk");
-  }
-
-  closePin();
 }
 
 </script>
