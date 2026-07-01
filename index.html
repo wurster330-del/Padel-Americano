@@ -36,6 +36,12 @@ button{
   font-size:16px;
 }
 
+input{
+  padding:6px;
+  border-radius:6px;
+  border:none;
+}
+
 /* ================= TIMER ================= */
 
 .timer{
@@ -62,13 +68,8 @@ button{
 
 /* ================= KIOSK ================= */
 
-.kiosk #wrap{
-  display:none;
-}
-
-.kiosk #kiosk{
-  display:block;
-}
+.kiosk #wrap{ display:none; }
+.kiosk #kiosk{ display:block; }
 
 #kiosk{
   display:none;
@@ -114,7 +115,7 @@ button{
 
 <div id="wrap">
 
-<h2>🎾 Padel Club Terminal V9 FINAL</h2>
+<h2>🎾 V9 FINAL – Phase 5</h2>
 
 <div class="panel">
 <button onclick="enterKiosk()">🔲 Kiosk starten</button>
@@ -128,6 +129,11 @@ button{
 </div>
 
 <div class="panel">
+<h3>👥 Spieler Auswahl</h3>
+<div id="players"></div>
+</div>
+
+<div class="panel">
 <h3>🎾 Court</h3>
 <div id="court">Kein Turnier</div>
 </div>
@@ -138,10 +144,8 @@ button{
 <div id="kiosk">
 
 <div class="kioskTimer" id="kioskTimer">18:00</div>
-
 <div class="kioskTeam" id="kioskA"></div>
 <div class="kioskTeam" id="kioskB"></div>
-
 <div class="kioskSmall" id="kioskInfo"></div>
 
 </div>
@@ -175,7 +179,30 @@ let matchSeconds = 18 * 60;
 let matchTime = matchSeconds;
 let run = null;
 
-/* ================= TURNIER ================= */
+/* ================= PLAYER UI ================= */
+
+function renderPlayers(){
+  let box = document.getElementById("players");
+  box.innerHTML = "";
+
+  players.forEach((p,i)=>{
+    box.innerHTML += `
+      <div>
+        <input type="checkbox"
+          ${p.active ? "checked":""}
+          onchange="players[${i}].active=this.checked;">
+
+        <input type="text"
+          value="${p.name}"
+          onchange="players[${i}].name=this.value;">
+      </div>
+    `;
+  });
+}
+
+renderPlayers();
+
+/* ================= TURNIER (FAIR ROTATION) ================= */
 
 function generate(){
 
@@ -189,16 +216,19 @@ function generate(){
   schedule = [];
   index = 0;
 
-  // 🔥 AUTO EVENT ZEIT LOGIK
-  let eventMinutes = (list.length === 4) ? 120 : 180;
-  let rounds = Math.floor(eventMinutes / (matchSeconds / 60));
+  let n = list.length;
 
-  if(rounds < 3) rounds = 3;
+  // 🔥 stabile Rotation ohne harte Wiederholungslogik
+  for(let r=0;r<n;r++){
 
-  for(let r=0;r<rounds;r++){
+    let a1 = list[r % n];
+    let a2 = list[(r+1) % n];
 
-    let a = [list[(r)%list.length], list[(r+1)%list.length]];
-    let b = [list[(r+2)%list.length], list[(r+3)%list.length]];
+    let b1 = list[(r+2) % n];
+    let b2 = list[(r+3) % n];
+
+    let a = [a1,a2];
+    let b = [b1,b2];
 
     let bank = list.filter(x=>!a.includes(x) && !b.includes(x));
 
@@ -221,9 +251,7 @@ function startTimer(){
 
   run = setInterval(()=>{
 
-    if(matchTime > 0){
-      matchTime--;
-    }
+    if(matchTime > 0) matchTime--;
 
     if(matchTime === 30){
       document.getElementById("warning").style.display="block";
@@ -290,11 +318,8 @@ function update(){
 /* ================= KIOSK ================= */
 
 function enterKiosk(){
-
   document.body.classList.add("kiosk");
-
   document.documentElement.requestFullscreen?.();
-
   update();
 }
 
