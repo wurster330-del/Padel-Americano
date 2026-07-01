@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V9 FINAL</title>
+<title>Padel Club Terminal FINAL MASTER</title>
 
 <style>
 body{
@@ -36,6 +36,7 @@ button{
   font-size:16px;
 }
 
+/* TIMER */
 .timer{
   font-size:80px;
   text-align:center;
@@ -49,6 +50,7 @@ button{
   font-weight:bold;
 }
 
+/* COURT */
 .teamBox{
   font-size:22px;
   font-weight:900;
@@ -56,8 +58,7 @@ button{
   margin:6px;
 }
 
-/* ================= KIOSK ================= */
-
+/* KIOSK */
 .kiosk #wrap{ display:none; }
 .kiosk #kiosk{ display:block; }
 
@@ -86,8 +87,7 @@ button{
   font-size:24px;
 }
 
-/* ================= CONTROL ================= */
-
+/* CONTROL */
 .controlBar{
   position:fixed;
   bottom:0;
@@ -106,7 +106,7 @@ button{
 
 <div id="wrap">
 
-<h2>🎾 V9 FINAL – Phase 8 Stable</h2>
+<h2>🎾 FINAL MASTER VERSION</h2>
 
 <div class="panel">
 <button onclick="enterKiosk()">🔲 Kiosk</button>
@@ -120,13 +120,18 @@ button{
 </div>
 
 <div class="panel">
+<h3>👥 Spieler</h3>
+<div id="players"></div>
+</div>
+
+<div class="panel">
 <h3>🎾 Court</h3>
 <div id="court">Kein Turnier</div>
 </div>
 
 </div>
 
-<!-- ================= KIOSK ================= -->
+<!-- KIOSK -->
 <div id="kiosk">
 
 <div class="kioskTimer" id="kioskTimer">18:00</div>
@@ -136,7 +141,7 @@ button{
 
 </div>
 
-<!-- ================= CONTROL ================= -->
+<!-- CONTROL -->
 <div class="controlBar">
 <button onclick="startTimer()">▶ Start</button>
 <button onclick="pauseTimer()">⏸ Pause</button>
@@ -167,7 +172,43 @@ let breakMinutes = 2;
 let matchTime = matchMinutes * 60;
 let run = null;
 
-/* ================= CORE EVENT LOGIC ================= */
+/* ================= FAIRNESS ENGINE ================= */
+
+let pairHistory = {};
+
+function pairKey(a,b){
+  return [a,b].sort().join("-");
+}
+
+function addPair(a,b){
+  let k = pairKey(a,b);
+  pairHistory[k] = (pairHistory[k] || 0) + 1;
+}
+
+/* ================= PLAYER UI (RESTORED) ================= */
+
+function renderPlayers(){
+  let box = document.getElementById("players");
+  box.innerHTML = "";
+
+  players.forEach((p,i)=>{
+    box.innerHTML += `
+      <div>
+        <input type="checkbox"
+          ${p.active ? "checked":""}
+          onchange="players[${i}].active=this.checked;">
+
+        <input type="text"
+          value="${p.name}"
+          onchange="players[${i}].name=this.value;">
+      </div>
+    `;
+  });
+}
+
+renderPlayers();
+
+/* ================= TURNIER ENGINE ================= */
 
 function generate(){
 
@@ -180,15 +221,13 @@ function generate(){
 
   schedule = [];
   index = 0;
+  pairHistory = {};
 
-  // 🎯 EVENTZEIT LOGIK
+  // 🎯 Eventlogik
   let eventMinutes = (list.length === 4) ? 120 : 180;
-
-  // ⏱ realistische Rundendauer
   let roundMinutes = matchMinutes + breakMinutes;
 
   let rounds = Math.floor(eventMinutes / roundMinutes);
-
   if(rounds < 3) rounds = 3;
 
   for(let r = 0; r < rounds; r++){
@@ -197,6 +236,9 @@ function generate(){
 
     let a = [list[0], list[1]];
     let b = [list[2], list[3]];
+
+    addPair(a[0], a[1]);
+    addPair(b[0], b[1]);
 
     let bank = list.slice(4);
 
