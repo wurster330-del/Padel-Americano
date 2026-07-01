@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V8 Kiosk Fixed</title>
+<title>Padel Terminal V8 Kiosk Reliable</title>
 
 <style>
 body{
@@ -67,6 +67,14 @@ input, select{
   text-align:center;
 }
 
+/* ================= COURT ================= */
+
+#court{
+  background:#0e3d26;
+  padding:12px;
+  border-radius:12px;
+}
+
 /* ================= WARNING ================= */
 
 .warning{
@@ -74,14 +82,6 @@ input, select{
   text-align:center;
   display:none;
   font-weight:bold;
-}
-
-/* ================= COURT ================= */
-
-#court{
-  background:#0e3d26;
-  padding:12px;
-  border-radius:12px;
 }
 
 /* ===================================================== */
@@ -92,19 +92,19 @@ input, select{
   display:none !important;
 }
 
-/* nur Timer + Court */
+/* nur Match + Court sichtbar */
 .kiosk #timerPanel,
 .kiosk #court{
   display:block !important;
 }
 
-/* extra Sicherheit */
+/* extra safety */
 .kiosk #playersPanel,
 .kiosk #eventTimerPanel{
   display:none !important;
 }
 
-/* BIG SCOREBOARD */
+/* SCOREBOARD LOOK */
 .kiosk .bigTimer{
   font-size:190px;
 }
@@ -161,7 +161,7 @@ input, select{
 
 </div>
 
-<!-- ================= EVENT TIMER (hidden in kiosk) ================= -->
+<!-- ================= EVENT TIMER ================= -->
 <div class="panel" id="eventTimerPanel">
 <div class="bigTimer" id="eventTimer">120:00</div>
 </div>
@@ -210,6 +210,39 @@ function enterKiosk(){
  }
 }
 
+/* ================= EXIT (3 FINGER HOLD) ================= */
+
+let touchStart = 0;
+let fingers = 0;
+
+document.addEventListener("touchstart", function(e){
+
+ if(!document.body.classList.contains("kiosk")) return;
+
+ fingers = e.touches.length;
+
+ if(fingers === 3){
+  touchStart = Date.now();
+ }
+
+});
+
+document.addEventListener("touchend", function(e){
+
+ if(!document.body.classList.contains("kiosk")) return;
+
+ if(fingers === 3){
+
+  let duration = Date.now() - touchStart;
+
+  if(duration > 800){
+   exitKiosk();
+  }
+ }
+
+ fingers = 0;
+});
+
 function exitKiosk(){
  document.body.classList.remove("kiosk");
 
@@ -218,7 +251,7 @@ function exitKiosk(){
  }
 }
 
-/* ================= PLAYERS ================= */
+/* ================= UI ================= */
 
 function renderPlayers(){
  let box=document.getElementById("players");
@@ -359,13 +392,8 @@ function start(){
 
  run=setInterval(()=>{
 
-  if(match > 0){
-    match--;
-  }
-
-  if(event > 0){
-    event--;
-  }
+  if(match > 0) match--;
+  if(event > 0) event--;
 
   if(match === 30){
     warn.style.display="block";
