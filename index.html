@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Terminal FINAL</title>
+<title>Padel Club Terminal V3.0 FINAL</title>
 
 <style>
 body{
@@ -33,48 +33,66 @@ button{
   background:#2e8b57;
   color:white;
   margin:5px;
-  cursor:pointer;
-  font-size:15px;
+  font-size:16px;
 }
 
 input, select{
-  padding:6px;
+  padding:8px;
   border-radius:6px;
   border:none;
   margin:4px;
 }
 
 .bigTimer{
-  font-size:60px;
+  font-size:70px;
   text-align:center;
   font-weight:bold;
 }
 
+.sectionTitle{
+  font-size:20px;
+  margin-bottom:10px;
+}
+
+/* COURT MODE */
+#court{
+  background:#0e3d26;
+  padding:15px;
+  border-radius:12px;
+}
+
 .teamBox{
-  font-size:22px;
+  font-size:24px;
   font-weight:bold;
-  margin:8px 0;
+  margin:10px 0;
 }
 
-.small{
-  opacity:0.8;
-  font-size:13px;
+.next{
+  color:#66d9ff;
+  margin-top:10px;
 }
 
+/* WARNING */
 .warning{
   color:red;
   text-align:center;
   display:none;
+  font-size:18px;
   font-weight:bold;
 }
 
-.blink{animation:blink 1s infinite;}
-@keyframes blink{50%{opacity:0.2;}}
+.blink{
+  animation:blink 1s infinite;
+}
 
-#court{
-  background:#0e3d26;
-  padding:12px;
-  border-radius:12px;
+@keyframes blink{
+  50%{opacity:0.2;}
+}
+
+/* small */
+.small{
+  opacity:0.8;
+  font-size:14px;
 }
 </style>
 </head>
@@ -83,38 +101,43 @@ input, select{
 
 <div id="wrap">
 
-<h2>🎾 Padel Club Terminal – FINAL VERSION</h2>
+<h2>🎾 Padel Club Terminal V3.0 FINAL</h2>
 
-<!-- ================= PLAYERS ================= -->
+<!-- ================= SETTINGS ================= -->
 <div class="panel">
-<h3>👥 Spieler</h3>
+<div class="sectionTitle">👥 Spieler</div>
+
 <div id="players"></div>
 
-<h3>⏱ Einstellungen</h3>
+<br>
+
+<div class="sectionTitle">⏱ Matchzeit</div>
 <select id="matchTime">
-  <option value="15">15 Min</option>
-  <option value="18" selected>18 Min</option>
-  <option value="20">20 Min</option>
+  <option value="15">15</option>
+  <option value="18" selected>18</option>
+  <option value="20">20</option>
 </select>
 
+<div class="sectionTitle">🕒 Spielabend</div>
 <select id="eventTime">
-  <option value="120" selected>120 Min</option>
-  <option value="180">180 Min</option>
+  <option value="120" selected>120</option>
+  <option value="180">180</option>
 </select>
 
 <br><br>
 <button onclick="save()">💾 Speichern</button>
-<button onclick="generate()">🏆 Turnier</button>
+<button onclick="generate()">🏆 Turnier generieren</button>
 </div>
 
 <!-- ================= TIMER ================= -->
 <div class="panel">
 
+<div class="sectionTitle">⏱ MATCH TIMER</div>
 <div class="bigTimer" id="matchTimer">18:00</div>
 
 <div style="text-align:center;">
-<button onclick="start()">▶ Start</button>
-<button onclick="pause()">⏸ Pause</button>
+<button onclick="startMatch()">▶ Start</button>
+<button onclick="pauseMatch()">⏸ Pause</button>
 <button onclick="next()">➡ Next</button>
 </div>
 
@@ -123,11 +146,27 @@ input, select{
 </div>
 
 <div class="panel">
+
+<div class="sectionTitle">🕒 SPIELABEND</div>
 <div class="bigTimer" id="eventTimer">120:00</div>
+
 </div>
 
 <!-- ================= COURT ================= -->
-<div id="court"></div>
+<div id="court">
+
+<div class="sectionTitle">📺 COURT MODE</div>
+
+<div id="round"></div>
+
+<div class="teamBox" id="teamA"></div>
+<div class="teamBox" id="teamB"></div>
+
+<div class="small" id="bank"></div>
+
+<div class="next" id="next"></div>
+
+</div>
 
 </div>
 
@@ -136,9 +175,9 @@ src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-/* ================= PLAYERS ================= */
+/* ================= DATA ================= */
 
-let players=[
+let players = [
  {name:"Tobias",active:true},
  {name:"Werner",active:true},
  {name:"Christian",active:true},
@@ -159,8 +198,9 @@ let match=matchSeconds;
 let event=eventSeconds;
 
 let run=null;
+let eventRun=null;
 
-/* ================= LOAD PLAYERS ================= */
+/* ================= INIT ================= */
 
 function renderPlayers(){
  let box=document.getElementById("players");
@@ -182,11 +222,11 @@ function renderPlayers(){
 /* ================= SAVE ================= */
 
 function save(){
- localStorage.setItem("padel_final",JSON.stringify(players));
+ localStorage.setItem("padel",JSON.stringify(players));
  alert("Gespeichert");
 }
 
-/* ================= FAIR GENERATOR ================= */
+/* ================= GENERATOR ================= */
 
 function generate(){
 
@@ -197,11 +237,7 @@ function generate(){
 
  let rounds=list.length;
 
- let usedPairs={};
-
  for(let r=0;r<rounds;r++){
-
-  let best=null;
 
   let rot=[...list.slice(r),...list.slice(0,r)];
 
@@ -209,37 +245,15 @@ function generate(){
   let b=[rot[2],rot[3]];
   let bank=rot.slice(4);
 
-  function pairScore(x,y){
-   let key=x+"-"+y;
-   return usedPairs[key]||0;
-  }
-
-  let score =
-   pairScore(a[0],a[1]) +
-   pairScore(b[0],b[1]);
-
-  best={a,b,bank,round:r+1};
-
-  schedule.push(best);
-
-  // update usage
-  function add(x,y){
-   let k1=x+"-"+y;
-   let k2=y+"-"+x;
-   usedPairs[k1]=(usedPairs[k1]||0)+1;
-   usedPairs[k2]=(usedPairs[k2]||0)+1;
-  }
-
-  add(a[0],a[1]);
-  add(b[0],b[1]);
+  schedule.push({a,b,bank,round:r+1});
  }
 
  render();
 }
 
-/* ================= TIMER ================= */
+/* ================= MATCH TIMER ================= */
 
-function start(){
+function startMatch(){
 
  if(run) return;
 
@@ -247,6 +261,8 @@ function start(){
 
   match--;
   event--;
+
+  if(eventRun==null) startEvent();
 
   if(match===30){
    warn.style.display="block";
@@ -264,7 +280,7 @@ function start(){
  },1000);
 }
 
-function pause(){
+function pauseMatch(){
  clearInterval(run);
  run=null;
 }
@@ -276,32 +292,45 @@ function next(){
  render();
 }
 
+/* ================= EVENT ================= */
+
+function startEvent(){
+ eventRun=setInterval(()=>{
+  event--;
+  if(event<=0){
+   beep();
+   clearInterval(eventRun);
+  }
+  render();
+ },1000);
+}
+
 /* ================= RENDER ================= */
 
 function render(){
 
- matchTimer.textContent =
-  Math.floor(match/60)+":"+String(match%60).padStart(2,"0");
+ let m=Math.floor(match/60);
+ let s=match%60;
 
- eventTimer.textContent =
-  Math.floor(event/60)+":"+String(event%60).padStart(2,"0");
+ let e=Math.floor(event/60);
+ let es=event%60;
 
- renderPlayers();
+ matchTimer.textContent=`${m}:${String(s).padStart(2,"0")}`;
+ eventTimer.textContent=`${e}:${String(es).padStart(2,"0")}`;
 
- if(schedule.length===0){
-  court.innerHTML="Noch kein Turnier";
-  return;
- }
+ if(schedule.length===0) return;
 
- let s=schedule[index];
+ let cur=schedule[index];
 
- court.innerHTML=`
-  <div class="teamBox">TEAM A: ${s.a.join(" | ")}</div>
-  <div class="teamBox">TEAM B: ${s.b.join(" | ")}</div>
-  <div class="small">Pause: ${s.bank.join(" | ")||"-"}</div>
+ round.textContent="Runde "+cur.round;
 
-  <div class="small">Runde ${s.round} / ${schedule.length}</div>
- `;
+ teamA.textContent="TEAM A: "+cur.a.join(" | ");
+ teamB.textContent="TEAM B: "+cur.b.join(" | ");
+ bank.textContent="Bank: "+(cur.bank.join(" | ")||"-");
+
+ let nextS=schedule[index+1]||schedule[0];
+
+ next.textContent="NEXT: "+nextS.a.join(" / ")+" vs "+nextS.b.join(" / ");
 }
 
 /* ================= SOUND ================= */
@@ -312,8 +341,7 @@ function beep(){
  b.play();
 }
 
-/* ================= INIT ================= */
-
+/* INIT */
 renderPlayers();
 render();
 
