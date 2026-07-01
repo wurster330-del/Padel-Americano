@@ -1,415 +1,49 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V8 Auto Event</title>
+let kioskHoldStart = 0;
+let activeFingers = 0;
+let holdTimer = null;
 
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#071f14;
-  color:white;
+function resetHold(){
+  kioskHoldStart = 0;
+  if(holdTimer) clearTimeout(holdTimer);
+  holdTimer = null;
 }
 
-#wrap{
-  padding:15px;
-  max-width:1000px;
-  margin:auto;
-}
+document.addEventListener("touchstart", function(e){
 
-/* ================= UI ================= */
+  if(!document.body.classList.contains("kiosk")) return;
 
-.panel{
-  background:#1f5e3a;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
-}
+  activeFingers = e.touches.length;
 
-button{
-  padding:12px 16px;
-  border:none;
-  border-radius:10px;
-  background:#2e8b57;
-  color:white;
-  margin:5px;
-  font-size:15px;
-}
+  if(activeFingers === 3){
+    kioskHoldStart = Date.now();
 
-input, select{
-  padding:6px;
-  border-radius:6px;
-  border:none;
-  margin:4px;
-}
-
-/* ================= DISPLAY ================= */
-
-.bigTimer{
-  font-size:140px;
-  text-align:center;
-  font-weight:900;
-}
-
-.teamBox{
-  font-size:22px;
-  font-weight:900;
-  text-align:center;
-  margin:8px 0;
-}
-
-.small{
-  opacity:0.8;
-  font-size:13px;
-  text-align:center;
-}
-
-/* ================= COURT ================= */
-
-#court{
-  background:#0e3d26;
-  padding:12px;
-  border-radius:12px;
-}
-
-/* ================= WARNING ================= */
-
-.warning{
-  color:red;
-  text-align:center;
-  display:none;
-  font-weight:bold;
-}
-
-/* ===================================================== */
-/* 🔒 KIOSK MODE                                          */
-/* ===================================================== */
-
-.kiosk #wrap > *{
-  display:none !important;
-}
-
-.kiosk #timerPanel,
-.kiosk #court{
-  display:block !important;
-}
-
-.kiosk .bigTimer{
-  font-size:190px;
-}
-
-.kiosk .teamBox{
-  font-size:42px;
-}
-</style>
-</head>
-
-<body>
-
-<div id="wrap">
-
-<h2>🎾 Padel Terminal V8</h2>
-
-<!-- ================= KIOSK ================= -->
-<div class="panel">
-<button onclick="enterKiosk()">🔲 Kiosk starten</button>
-</div>
-
-<!-- ================= PLAYERS ================= -->
-<div class="panel" id="playersPanel">
-<h3>👥 Spieler</h3>
-<div id="players"></div>
-
-<h3>⏱ Matchzeit</h3>
-<select id="matchTime">
-  <option value="15">15 Minuten</option>
-  <option value="18" selected>18 Minuten</option>
-  <option value="20">20 Minuten</option>
-</select>
-
-<br><br>
-<button onclick="generate()">🏆 Spielplan erstellen</button>
-</div>
-
-<!-- ================= TIMER ================= -->
-<div class="panel" id="timerPanel">
-
-<div class="bigTimer" id="matchTimer">18:00</div>
-
-<div style="text-align:center;">
-<button onclick="start()">▶ Start</button>
-<button onclick="pause()">⏸ Pause</button>
-<button onclick="next()">➡ Next</button>
-</div>
-
-<div class="warning" id="warn">⚠ 30 Sekunden</div>
-
-</div>
-
-<!-- ================= COURT ================= -->
-<div id="court"></div>
-
-</div>
-
-<audio id="beep"
-src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-
-<script>
-
-/* ================= PLAYERS ================= */
-
-let players=[
- {name:"Tobias",active:true},
- {name:"Werner",active:true},
- {name:"Christian",active:true},
- {name:"Stefan",active:true},
- {name:"David",active:true},
- {name:"Marco",active:true}
-];
-
-let schedule=[];
-let index=0;
-
-/* ================= TIMER ================= */
-
-let matchSeconds=18*60;
-let match=matchSeconds;
-
-let run=null;
-
-/* ================= KIOSK ================= */
-
-function enterKiosk(){
- document.body.classList.add("kiosk");
-
- if(document.documentElement.requestFullscreen){
-  document.documentElement.requestFullscreen();
- }
-}
-
-function exitKiosk(){
- document.body.classList.remove("kiosk");
-
- if(document.exitFullscreen){
-  document.exitFullscreen();
- }
-}
-
-/* ================= PLAYERS ================= */
-
-function renderPlayers(){
- let box=document.getElementById("players");
- box.innerHTML="";
-
- players.forEach((p,i)=>{
-  box.innerHTML+=`
-   <div>
-    <input type="checkbox" ${p.active?"checked":""}
-    onchange="players[${i}].active=!players[${i}].active">
-
-    <input type="text" value="${p.name}"
-    onchange="players[${i}].name=this.value">
-   </div>
-  `;
- });
-}
-renderPlayers();
-
-/* ================= GENERATE ================= */
-
-function generate(){
-
- let list=players.filter(p=>p.active).map(p=>p.name);
-
- schedule=[];
- index=0;
-
- let matchMin = parseInt(document.getElementById("matchTime").value);
- matchSeconds = matchMin * 60;
- match = matchSeconds;
-
- // 🎯 EVENT LOGIC
- let playerCount = list.length;
- let eventMin = (playerCount <= 4) ? 120 : 180;
-
- // 🎯 ROUND CALCULATION
- let rounds = Math.floor(eventMin / matchMin);
- rounds = Math.max(3, Math.min(12, rounds));
-
- let pairHistory={};
- let oppHistory={};
- let pauseHistory={};
-
- function key(a,b){
-  return a<b?a+"-"+b:b+"-"+a;
- }
-
- function score(a,b,bank){
-
-  let s=0;
-
-  let p1=key(a[0],a[1]);
-  let p2=key(b[0],b[1]);
-
-  s+=(pairHistory[p1]||0)*100;
-  s+=(pairHistory[p2]||0)*100;
-
-  for(let x of a){
-   for(let y of b){
-    s+=(oppHistory[key(x,y)]||0)*10;
-   }
+    holdTimer = setTimeout(()=>{
+      // Sicherheitsreset
+      resetHold();
+    }, 2000);
   }
+});
 
-  for(let p of bank){
-   s+=(pauseHistory[p]||0)*5;
+document.addEventListener("touchmove", function(e){
+  // Wenn Fingerzahl sich ändert → abbrechen
+  if(e.touches.length !== 3){
+    resetHold();
   }
+});
 
-  return s;
- }
+document.addEventListener("touchend", function(e){
 
- function update(a,b,bank){
+  if(!document.body.classList.contains("kiosk")) return;
 
-  function addPair(x,y){
-   let k=key(x,y);
-   pairHistory[k]=(pairHistory[k]||0)+1;
-  }
+  if(activeFingers === 3){
 
-  function addOpp(x,y){
-   let k=key(x,y);
-   oppHistory[k]=(oppHistory[k]||0)+1;
-  }
+    let duration = Date.now() - kioskHoldStart;
 
-  a.forEach(x=>{
-   a.forEach(y=>{
-    if(x!==y) addPair(x,y);
-   });
-  });
-
-  b.forEach(x=>{
-   b.forEach(y=>{
-    if(x!==y) addPair(x,y);
-   });
-  });
-
-  a.forEach(x=>{
-   b.forEach(y=>{
-    addOpp(x,y);
-   });
-  });
-
-  bank.forEach(p=>{
-   pauseHistory[p]=(pauseHistory[p]||0)+1;
-  });
- }
-
- for(let r=0;r<rounds;r++){
-
-  let best=null;
-  let bestScore=1e9;
-
-  for(let i=0;i<list.length;i++){
-   for(let j=i+1;j<list.length;j++){
-
-    let rem=list.filter(x=>x!==list[i]&&x!==list[j]);
-
-    for(let k=0;k<rem.length;k++){
-     for(let l=k+1;l<rem.length;l++){
-
-      let a=[list[i],list[j]];
-      let b=[rem[k],rem[l]];
-      let bank=rem.filter(x=>x!==b[0]&&x!==b[1]);
-
-      let sc=score(a,b,bank);
-
-      if(sc<bestScore){
-       bestScore=sc;
-       schedule.push({a,b,bank,round:r+1});
-      }
-     }
+    // 🔑 1.2 Sekunden halten
+    if(duration > 1200){
+      exitKiosk();
     }
-   }
-  }
- }
-
- render();
-}
-
-/* ================= TIMER ================= */
-
-function start(){
-
- if(run) return;
-
- run=setInterval(()=>{
-
-  if(match > 0) match--;
-
-  if(match === 30){
-    warn.style.display="block";
-    beep();
   }
 
-  if(match <= 0){
-    match = 0;
-    beep();
-    next();
-    return;
-  }
-
-  render();
-
- },1000);
-}
-
-function pause(){
- clearInterval(run);
- run=null;
-}
-
-/* ================= NEXT ================= */
-
-function next(){
- index++;
- if(index>=schedule.length) index=0;
- match = matchSeconds;
- render();
-}
-
-/* ================= RENDER ================= */
-
-function render(){
-
- matchTimer.textContent=
-  Math.floor(match/60)+":"+String(match%60).padStart(2,"0");
-
- if(schedule.length===0){
-  court.innerHTML="Kein Spielplan";
-  return;
- }
-
- let s=schedule[index];
-
- court.innerHTML=`
-  <div class="teamBox">TEAM A: ${s.a.join(" | ")}</div>
-  <div class="teamBox">TEAM B: ${s.b.join(" | ")}</div>
-  <div class="small">Pause: ${s.bank.join(" | ")||"-"}</div>
-  <div class="small">Runde ${s.round} / ${schedule.length}</div>
- `;
-}
-
-/* ================= SOUND ================= */
-
-function beep(){
- let b=document.getElementById("beep");
- b.currentTime=0;
- b.play();
-}
-
-render();
-
-</script>
-
-</body>
-</html>
+  resetHold();
+});
