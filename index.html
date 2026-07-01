@@ -36,11 +36,35 @@ button{
   font-size:16px;
 }
 
-input{
+input, select{
   padding:6px;
   border-radius:6px;
   border:none;
   margin:3px;
+}
+
+/* ================= TIMER ================= */
+
+.timer{
+  font-size:80px;
+  text-align:center;
+  font-weight:900;
+}
+
+.warning{
+  color:red;
+  text-align:center;
+  display:none;
+  font-weight:bold;
+}
+
+/* ================= COURT ================= */
+
+.teamBox{
+  font-size:20px;
+  font-weight:900;
+  text-align:center;
+  margin:5px;
 }
 
 /* ================= KIOSK ================= */
@@ -69,19 +93,6 @@ input{
 .small{
   opacity:0.8;
 }
-
-.timer{
-  font-size:80px;
-  text-align:center;
-  font-weight:900;
-}
-
-.teamBox{
-  font-size:20px;
-  font-weight:900;
-  text-align:center;
-  margin:5px;
-}
 </style>
 </head>
 
@@ -89,17 +100,29 @@ input{
 
 <div id="wrap">
 
-<h2>🎾 V9 FINAL – Phase 2</h2>
+<h2>🎾 V9 FINAL – Phase 3</h2>
 
 <!-- ================= KIOSK ================= -->
 <div class="panel">
 <button onclick="enterKiosk()">🔲 Kiosk starten</button>
 </div>
 
+<!-- ================= TIMER ================= -->
+<div class="panel">
+<h3>⏱ Matchtimer</h3>
+
+<div class="timer" id="timer">18:00</div>
+
+<button onclick="startTimer()">▶ Start</button>
+<button onclick="pauseTimer()">⏸ Pause</button>
+<button onclick="nextMatch()">➡ Next</button>
+
+<div class="warning" id="warning">⚠ 30 Sekunden</div>
+</div>
+
 <!-- ================= PLAYERS ================= -->
 <div class="panel">
 <h3>👥 Spieler</h3>
-
 <div id="players"></div>
 
 <button onclick="generate()">🏆 Turnier erstellen</button>
@@ -108,7 +131,6 @@ input{
 <!-- ================= COURT ================= -->
 <div class="panel">
 <h3>🎾 Matchanzeige</h3>
-
 <div id="court">Noch kein Turnier</div>
 </div>
 
@@ -116,15 +138,13 @@ input{
 
 <!-- ================= KIOSK ================= -->
 <div id="kiosk">
-  <div class="big">KIOSK MODE</div>
+  <div class="big" id="kioskTimer">18:00</div>
   <div id="kioskMatch"></div>
 </div>
 
 <script>
 
-/* =========================
-   SPIELER
-========================= */
+/* ================= PLAYERS ================= */
 
 let players = [
   {name:"Spieler 1",active:true},
@@ -138,9 +158,13 @@ let players = [
 let schedule = [];
 let index = 0;
 
-/* =========================
-   UI SPIELER
-========================= */
+/* ================= TIMER ================= */
+
+let matchSeconds = 18 * 60;
+let matchTime = matchSeconds;
+let run = null;
+
+/* ================= UI PLAYERS ================= */
 
 function renderPlayers(){
   let box = document.getElementById("players");
@@ -161,52 +185,85 @@ function renderPlayers(){
 
 renderPlayers();
 
-/* =========================
-   TURNIER GENERATOR (Phase 2 SIMPLE)
-========================= */
+/* ================= TURNIER ================= */
 
 function generate(){
 
   let list = players.filter(p=>p.active).map(p=>p.name);
 
-  schedule = [];
-  index = 0;
-
   if(list.length < 4){
-    alert("Mindestens 4 Spieler nötig");
+    alert("Mindestens 4 Spieler");
     return;
   }
 
-  let rounds = list.length;
+  schedule = [];
+  index = 0;
 
-  for(let r=0;r<rounds;r++){
+  for(let r=0;r<list.length;r++){
 
     let a = [list[(r)%list.length], list[(r+1)%list.length]];
     let b = [list[(r+2)%list.length], list[(r+3)%list.length]];
 
     let bank = list.filter(x=>!a.includes(x) && !b.includes(x));
 
-    schedule.push({
-      round:r+1,
-      a:a,
-      b:b,
-      bank:bank
-    });
+    schedule.push({round:r+1,a,b,bank});
   }
 
   render();
 }
 
-/* =========================
-   RENDER
-========================= */
+/* ================= TIMER ================= */
 
-function render(){
+function startTimer(){
 
-  if(schedule.length === 0){
-    document.getElementById("court").innerHTML = "Kein Turnier";
-    return;
-  }
+  if(run) return;
+
+  run = setInterval(()=>{
+
+    if(matchTime > 0){
+      matchTime--;
+    }
+
+    if(matchTime === 30){
+      document.getElementById("warning").style.display="block";
+    }
+
+    if(matchTime <= 0){
+      matchTime = 0;
+      nextMatch();
+      return;
+    }
+
+    update();
+
+  },1000);
+}
+
+function pauseTimer(){
+  clearInterval(run);
+  run = null;
+}
+
+function nextMatch(){
+  index++;
+  if(index >= schedule.length) index = 0;
+
+  matchTime = matchSeconds;
+  document.getElementById("warning").style.display="none";
+
+  update();
+}
+
+/* ================= RENDER ================= */
+
+function update(){
+
+  let t = Math.floor(matchTime/60)+":"+String(matchTime%60).padStart(2,"0");
+
+  document.getElementById("timer").textContent = t;
+  document.getElementById("kioskTimer").textContent = t;
+
+  if(schedule.length === 0) return;
 
   let s = schedule[index];
 
@@ -218,22 +275,18 @@ function render(){
   `;
 
   document.getElementById("kioskMatch").innerHTML = `
-    TEAM A: ${s.a.join(" / ")} <br><br>
-    VS <br><br>
+    TEAM A: ${s.a.join(" / ")}<br><br>
+    VS<br><br>
     TEAM B: ${s.b.join(" / ")}
   `;
 }
 
-/* =========================
-   KIOSK
-========================= */
+/* ================= KIOSK ================= */
 
 function enterKiosk(){
   document.body.classList.add("kiosk");
 
-  if(document.documentElement.requestFullscreen){
-    document.documentElement.requestFullscreen();
-  }
+  document.documentElement.requestFullscreen?.();
 }
 
 </script>
