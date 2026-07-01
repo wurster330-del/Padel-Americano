@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V8 Kiosk Reliable</title>
+<title>Padel Terminal V8 Final</title>
 
 <style>
 body{
@@ -19,7 +19,7 @@ body{
   margin:auto;
 }
 
-/* ================= NORMAL UI ================= */
+/* ================= UI ================= */
 
 .panel{
   background:#1f5e3a;
@@ -85,26 +85,18 @@ input, select{
 }
 
 /* ===================================================== */
-/* 🔒 KIOSK HARD LOCK                                     */
+/* 🔒 KIOSK MODE                                          */
 /* ===================================================== */
 
 .kiosk #wrap > *{
   display:none !important;
 }
 
-/* nur Match + Court sichtbar */
 .kiosk #timerPanel,
 .kiosk #court{
   display:block !important;
 }
 
-/* extra safety */
-.kiosk #playersPanel,
-.kiosk #eventTimerPanel{
-  display:none !important;
-}
-
-/* SCOREBOARD LOOK */
 .kiosk .bigTimer{
   font-size:190px;
 }
@@ -126,7 +118,7 @@ input, select{
 
 <h2>🎾 Padel Terminal V8</h2>
 
-<!-- ================= KIOSK CONTROL ================= -->
+<!-- ================= KIOSK ================= -->
 <div class="panel">
 <button onclick="enterKiosk()">🔲 Kiosk starten</button>
 </div>
@@ -136,10 +128,11 @@ input, select{
 <h3>👥 Spieler</h3>
 <div id="players"></div>
 
-<h3>⏱ Spielzeit</h3>
-<select id="eventTime">
-  <option value="120" selected>120 Min</option>
-  <option value="180">180 Min</option>
+<h3>⏱ Matchzeit</h3>
+<select id="matchTime">
+  <option value="15">15 Minuten</option>
+  <option value="18" selected>18 Minuten</option>
+  <option value="20">20 Minuten</option>
 </select>
 
 <br><br>
@@ -159,11 +152,6 @@ input, select{
 
 <div class="warning" id="warn">⚠ 30 Sekunden</div>
 
-</div>
-
-<!-- ================= EVENT TIMER ================= -->
-<div class="panel" id="eventTimerPanel">
-<div class="bigTimer" id="eventTimer">120:00</div>
 </div>
 
 <!-- ================= COURT ================= -->
@@ -193,10 +181,7 @@ let index=0;
 /* ================= TIMER ================= */
 
 let matchSeconds=18*60;
-let eventSeconds=120*60;
-
 let match=matchSeconds;
-let event=eventSeconds;
 
 let run=null;
 
@@ -210,39 +195,6 @@ function enterKiosk(){
  }
 }
 
-/* ================= EXIT (3 FINGER HOLD) ================= */
-
-let touchStart = 0;
-let fingers = 0;
-
-document.addEventListener("touchstart", function(e){
-
- if(!document.body.classList.contains("kiosk")) return;
-
- fingers = e.touches.length;
-
- if(fingers === 3){
-  touchStart = Date.now();
- }
-
-});
-
-document.addEventListener("touchend", function(e){
-
- if(!document.body.classList.contains("kiosk")) return;
-
- if(fingers === 3){
-
-  let duration = Date.now() - touchStart;
-
-  if(duration > 800){
-   exitKiosk();
-  }
- }
-
- fingers = 0;
-});
-
 function exitKiosk(){
  document.body.classList.remove("kiosk");
 
@@ -251,7 +203,7 @@ function exitKiosk(){
  }
 }
 
-/* ================= UI ================= */
+/* ================= PLAYERS UI ================= */
 
 function renderPlayers(){
  let box=document.getElementById("players");
@@ -274,6 +226,10 @@ renderPlayers();
 /* ================= GENERATE ================= */
 
 function generate(){
+
+ let selectedMatchMin = parseInt(document.getElementById("matchTime").value);
+ matchSeconds = selectedMatchMin * 60;
+ match = matchSeconds;
 
  let list=players.filter(p=>p.active).map(p=>p.name);
 
@@ -346,10 +302,6 @@ function generate(){
   });
  }
 
- let eventMin=parseInt(document.getElementById("eventTime").value);
- eventSeconds=eventMin*60;
- event=eventSeconds;
-
  let rounds=list.length*2;
 
  for(let r=0;r<rounds;r++){
@@ -393,7 +345,6 @@ function start(){
  run=setInterval(()=>{
 
   if(match > 0) match--;
-  if(event > 0) event--;
 
   if(match === 30){
     warn.style.display="block";
@@ -403,14 +354,8 @@ function start(){
   if(match <= 0){
     match = 0;
     beep();
-
     next();
     return;
-  }
-
-  if(event <= 0){
-    event = 0;
-    pause();
   }
 
   render();
@@ -428,7 +373,7 @@ function pause(){
 function next(){
  index++;
  if(index>=schedule.length) index=0;
- match=matchSeconds;
+ match = matchSeconds;
  render();
 }
 
@@ -438,9 +383,6 @@ function render(){
 
  matchTimer.textContent=
   Math.floor(match/60)+":"+String(match%60).padStart(2,"0");
-
- eventTimer.textContent=
-  Math.floor(event/60)+":"+String(event%60).padStart(2,"0");
 
  if(schedule.length===0){
   court.innerHTML="Kein Spielplan";
