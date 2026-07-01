@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V3.0 Phase 1</title>
+<title>Padel Terminal V3.0 Phase 2</title>
 
 <style>
 body{
@@ -12,8 +12,6 @@ body{
   background:#0b2f1d;
   color:white;
 }
-
-h1{margin:10px 0;}
 
 #wrap{
   padding:20px;
@@ -28,44 +26,44 @@ h1{margin:10px 0;}
   margin-bottom:15px;
 }
 
-.playerRow{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
-
-.player{
-  background:#2c7a4a;
-  padding:10px;
-  border-radius:10px;
-}
-
-input[type="text"]{
-  width:120px;
-  padding:6px;
-  border-radius:6px;
-  border:none;
-}
-
-select{
-  padding:8px;
-  border-radius:6px;
-  border:none;
-}
-
 button{
-  padding:12px 16px;
+  padding:14px 18px;
   border:none;
   border-radius:10px;
   background:#2e8b57;
   color:white;
   font-size:16px;
-  cursor:pointer;
+  margin:5px;
 }
 
-.small{
+.bigTimer{
+  font-size:80px;
+  font-weight:bold;
+  text-align:center;
+}
+
+.label{
+  text-align:center;
+  font-size:18px;
   opacity:0.8;
-  font-size:14px;
+}
+
+.warning{
+  color:#ff4d4d;
+  font-weight:bold;
+  display:none;
+  text-align:center;
+  font-size:20px;
+}
+
+.blink{
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%{opacity:1;}
+  50%{opacity:0.2;}
+  100%{opacity:1;}
 }
 </style>
 </head>
@@ -74,134 +72,167 @@ button{
 
 <div id="wrap">
 
-<h1>🎾 Padel Terminal V3.0 – Phase 1</h1>
+<h1>🎾 Padel Terminal V3.0 – Phase 2</h1>
 
+<!-- ================= MATCH TIMER ================= -->
 <div class="panel">
-<h2>👥 Spieler</h2>
-<div id="players" class="playerRow"></div>
-<p class="small">Wähle 4–6 Spieler aus</p>
+
+<div class="label">MATCH TIMER</div>
+<div class="bigTimer" id="matchTimer">18:00</div>
+
+<div style="text-align:center;">
+<button onclick="startMatch()">▶ Start</button>
+<button onclick="pauseMatch()">⏸ Pause</button>
+<button onclick="resetMatch()">🔄 Reset</button>
 </div>
 
-<div class="panel">
-<h2>⏱ Matchzeit</h2>
-<select id="matchTime">
-  <option value="15">15 Minuten</option>
-  <option value="18" selected>18 Minuten</option>
-  <option value="20">20 Minuten</option>
-</select>
-<input id="matchCustom" type="text" placeholder="oder frei (Min)">
+<div id="warn" class="warning">⚠ Noch 30 Sekunden</div>
+
 </div>
 
+<!-- ================= EVENT TIMER ================= -->
 <div class="panel">
-<h2>🕒 Spielabend</h2>
-<select id="eventTime">
-  <option value="120" selected>120 Minuten</option>
-  <option value="180">180 Minuten</option>
-</select>
-<input id="eventCustom" type="text" placeholder="oder frei (Min)">
+
+<div class="label">SPIELABEND TIMER</div>
+<div class="bigTimer" id="eventTimer">120:00</div>
+
+<div style="text-align:center;">
+<button onclick="startEvent()">▶ Start Abend</button>
+<button onclick="pauseEvent()">⏸ Pause</button>
+<button onclick="resetEvent()">🔄 Reset</button>
 </div>
 
-<div class="panel">
-<button onclick="saveSettings()">💾 Speichern</button>
-<button onclick="resetAll()">🔄 Reset</button>
 </div>
 
-<div class="panel">
-<p class="small">
-Phase 1: Setup & Speicherung abgeschlossen<br>
-(Spielplan + Timer kommen in Phase 2/3)
-</p>
-</div>
+<audio id="beep"
+src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 </div>
 
 <script>
 
-/* ================= DATA ================= */
+/* ================= SETTINGS ================= */
 
-let defaultPlayers = [
-  {name:"Tobias", active:true},
-  {name:"Werner", active:true},
-  {name:"Christian", active:true},
-  {name:"Stefan", active:true},
-  {name:"David", active:true},
-  {name:"Marco", active:true}
-];
+let matchSeconds = 18 * 60;
+let eventSeconds = 120 * 60;
 
-let players = [];
+/* ================= STATE ================= */
 
-/* ================= INIT ================= */
+let matchRun = null;
+let eventRun = null;
 
-function load(){
-  let data = localStorage.getItem("padel_v3_phase1");
-  if(data){
-    players = JSON.parse(data);
-  } else {
-    players = defaultPlayers;
-  }
-  render();
+/* ================= MATCH ================= */
+
+let matchRemain = matchSeconds;
+let eventRemain = eventSeconds;
+
+let matchStarted = false;
+let eventStarted = false;
+
+function format(s){
+  let m = Math.floor(s/60);
+  let sec = s % 60;
+  return m + ":" + String(sec).padStart(2,"0");
 }
 
 /* ================= RENDER ================= */
 
 function render(){
-  let box = document.getElementById("players");
-  box.innerHTML = "";
-
-  players.forEach((p,i)=>{
-    box.innerHTML += `
-      <div class="player">
-        <input type="checkbox" ${p.active ? "checked":""}
-          onchange="toggle(${i})">
-
-        <input type="text"
-          value="${p.name}"
-          onchange="rename(${i},this.value)">
-      </div>
-    `;
-  });
-
-  let m = localStorage.getItem("matchTime") || 18;
-  let e = localStorage.getItem("eventTime") || 120;
-
-  document.getElementById("matchTime").value = m;
-  document.getElementById("eventTime").value = e;
+  document.getElementById("matchTimer").textContent = format(matchRemain);
+  document.getElementById("eventTimer").textContent = format(eventRemain);
 }
 
-/* ================= ACTIONS ================= */
+/* ================= MATCH TIMER ================= */
 
-function toggle(i){
-  players[i].active = !players[i].active;
+function startMatch(){
+
+  if(matchRun) return;
+
+  matchRun = setInterval(()=>{
+
+    if(matchRemain > 0){
+      matchRemain--;
+    }
+
+    if(!eventStarted){
+      startEvent(); // startet automatisch beim ersten Match
+    }
+
+    if(matchRemain === 30){
+      let w = document.getElementById("warn");
+      w.style.display="block";
+      w.classList.add("blink");
+      beep();
+    }
+
+    if(matchRemain === 0){
+      beep();
+      beep();
+      pauseMatch();
+    }
+
+    render();
+
+  },1000);
 }
 
-function rename(i,val){
-  players[i].name = val;
+function pauseMatch(){
+  clearInterval(matchRun);
+  matchRun = null;
 }
 
-function saveSettings(){
-
-  let match = document.getElementById("matchTime").value;
-  let event = document.getElementById("eventTime").value;
-
-  let matchCustom = document.getElementById("matchCustom").value;
-  let eventCustom = document.getElementById("eventCustom").value;
-
-  localStorage.setItem("padel_v3_phase1", JSON.stringify(players));
-
-  localStorage.setItem("matchTime", matchCustom || match);
-  localStorage.setItem("eventTime", eventCustom || event);
-
-  alert("Gespeichert ✅");
+function resetMatch(){
+  pauseMatch();
+  matchRemain = matchSeconds;
+  document.getElementById("warn").style.display="none";
+  render();
 }
 
-function resetAll(){
-  localStorage.clear();
-  location.reload();
+/* ================= EVENT TIMER ================= */
+
+function startEvent(){
+
+  if(eventRun) return;
+
+  eventStarted = true;
+
+  eventRun = setInterval(()=>{
+
+    if(eventRemain > 0){
+      eventRemain--;
+    }
+
+    if(eventRemain === 0){
+      beep();
+      pauseEvent();
+    }
+
+    render();
+
+  },1000);
 }
 
-/* ================= START ================= */
+function pauseEvent(){
+  clearInterval(eventRun);
+  eventRun = null;
+}
 
-load();
+function resetEvent(){
+  pauseEvent();
+  eventRemain = eventSeconds;
+  render();
+}
+
+/* ================= SOUND ================= */
+
+function beep(){
+  let b = document.getElementById("beep");
+  b.currentTime = 0;
+  b.play();
+}
+
+/* INIT */
+render();
 
 </script>
 
