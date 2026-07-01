@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Terminal V3.0 FINAL</title>
+<title>Padel Terminal V3.0 Phase 5</title>
 
 <style>
 body{
@@ -14,8 +14,8 @@ body{
 }
 
 #wrap{
-  padding:15px;
-  max-width:1000px;
+  padding:20px;
+  max-width:900px;
   margin:auto;
 }
 
@@ -33,66 +33,19 @@ button{
   background:#2e8b57;
   color:white;
   margin:5px;
-  font-size:16px;
+  cursor:pointer;
 }
 
-input, select{
-  padding:8px;
-  border-radius:6px;
-  border:none;
-  margin:4px;
-}
-
-.bigTimer{
-  font-size:70px;
-  text-align:center;
-  font-weight:bold;
-}
-
-.sectionTitle{
-  font-size:20px;
-  margin-bottom:10px;
-}
-
-/* COURT MODE */
-#court{
-  background:#0e3d26;
-  padding:15px;
-  border-radius:12px;
-}
-
-.teamBox{
-  font-size:24px;
-  font-weight:bold;
-  margin:10px 0;
-}
-
-.next{
-  color:#66d9ff;
+.big{
+  font-size:18px;
   margin-top:10px;
 }
 
-/* WARNING */
-.warning{
-  color:red;
-  text-align:center;
-  display:none;
-  font-size:18px;
-  font-weight:bold;
-}
-
-.blink{
-  animation:blink 1s infinite;
-}
-
-@keyframes blink{
-  50%{opacity:0.2;}
-}
-
-/* small */
-.small{
-  opacity:0.8;
-  font-size:14px;
+.roundBox{
+  background:#144d30;
+  padding:12px;
+  border-radius:10px;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -101,249 +54,130 @@ input, select{
 
 <div id="wrap">
 
-<h2>🎾 Padel Club Terminal V3.0 FINAL</h2>
+<h1>🎾 Phase 5 – Fairness Engine</h1>
 
-<!-- ================= SETTINGS ================= -->
 <div class="panel">
-<div class="sectionTitle">👥 Spieler</div>
-
-<div id="players"></div>
-
-<br>
-
-<div class="sectionTitle">⏱ Matchzeit</div>
-<select id="matchTime">
-  <option value="15">15</option>
-  <option value="18" selected>18</option>
-  <option value="20">20</option>
-</select>
-
-<div class="sectionTitle">🕒 Spielabend</div>
-<select id="eventTime">
-  <option value="120" selected>120</option>
-  <option value="180">180</option>
-</select>
-
-<br><br>
-<button onclick="save()">💾 Speichern</button>
 <button onclick="generate()">🏆 Turnier generieren</button>
 </div>
 
-<!-- ================= TIMER ================= -->
-<div class="panel">
-
-<div class="sectionTitle">⏱ MATCH TIMER</div>
-<div class="bigTimer" id="matchTimer">18:00</div>
-
-<div style="text-align:center;">
-<button onclick="startMatch()">▶ Start</button>
-<button onclick="pauseMatch()">⏸ Pause</button>
-<button onclick="next()">➡ Next</button>
-</div>
-
-<div class="warning" id="warn">⚠ 30 Sekunden</div>
+<div id="output"></div>
 
 </div>
-
-<div class="panel">
-
-<div class="sectionTitle">🕒 SPIELABEND</div>
-<div class="bigTimer" id="eventTimer">120:00</div>
-
-</div>
-
-<!-- ================= COURT ================= -->
-<div id="court">
-
-<div class="sectionTitle">📺 COURT MODE</div>
-
-<div id="round"></div>
-
-<div class="teamBox" id="teamA"></div>
-<div class="teamBox" id="teamB"></div>
-
-<div class="small" id="bank"></div>
-
-<div class="next" id="next"></div>
-
-</div>
-
-</div>
-
-<audio id="beep"
-src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
 
-/* ================= DATA ================= */
+/* ================= PLAYERS ================= */
 
-let players = [
- {name:"Tobias",active:true},
- {name:"Werner",active:true},
- {name:"Christian",active:true},
- {name:"Stefan",active:true},
- {name:"David",active:true},
- {name:"Marco",active:true}
-];
+const players = ["Tobias","Werner","Christian","Stefan","David","Marco"];
 
-let schedule=[];
-let index=0;
+let schedule = [];
 
-/* ================= TIMER ================= */
+/* ================= TRACKING ================= */
 
-let matchSeconds=18*60;
-let eventSeconds=120*60;
+let partnerCount = {};
+let opponentCount = {};
+let pauseCount = {};
 
-let match=matchSeconds;
-let event=eventSeconds;
+/* init stats */
+players.forEach(p=>{
+  partnerCount[p]={};
+  opponentCount[p]={};
+  pauseCount[p]=0;
+});
 
-let run=null;
-let eventRun=null;
+/* ================= HELPERS ================= */
 
-/* ================= INIT ================= */
-
-function renderPlayers(){
- let box=document.getElementById("players");
- box.innerHTML="";
-
- players.forEach((p,i)=>{
-  box.innerHTML+=`
-   <div>
-    <input type="checkbox" ${p.active?"checked":""}
-    onchange="players[${i}].active=!players[${i}].active">
-
-    <input type="text" value="${p.name}"
-    onchange="players[${i}].name=this.value">
-   </div>
-  `;
- });
+function shuffle(arr){
+  let a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
 }
 
-/* ================= SAVE ================= */
+/* penalty scoring */
+function scoreTeam(a,b){
 
-function save(){
- localStorage.setItem("padel",JSON.stringify(players));
- alert("Gespeichert");
+  let score=0;
+
+  // gleiche Partner vermeiden
+  if(partnerCount[a]?.[b]) score += partnerCount[a][b]*10;
+
+  return score;
 }
 
 /* ================= GENERATOR ================= */
 
 function generate(){
 
- let list=players.filter(p=>p.active).map(p=>p.name);
+  schedule = [];
 
- schedule=[];
- index=0;
+  let pool = shuffle(players);
 
- let rounds=list.length;
+  let rounds = players.length;
 
- for(let r=0;r<rounds;r++){
+  for(let r=0;r<rounds;r++){
 
-  let rot=[...list.slice(r),...list.slice(0,r)];
+    let rotated = [...pool.slice(r),...pool.slice(0,r)];
 
-  let a=[rot[0],rot[1]];
-  let b=[rot[2],rot[3]];
-  let bank=rot.slice(4);
+    let a=[rotated[0],rotated[1]];
+    let b=[rotated[2],rotated[3]];
+    let bank=rotated.slice(4);
 
-  schedule.push({a,b,bank,round:r+1});
- }
+    schedule.push({a,b,bank,round:r+1});
 
- render();
-}
-
-/* ================= MATCH TIMER ================= */
-
-function startMatch(){
-
- if(run) return;
-
- run=setInterval(()=>{
-
-  match--;
-  event--;
-
-  if(eventRun==null) startEvent();
-
-  if(match===30){
-   warn.style.display="block";
-   warn.classList.add("blink");
-   beep();
-  }
-
-  if(match<=0){
-   beep(); beep();
-   next();
+    updateStats(a,b,bank);
   }
 
   render();
-
- },1000);
 }
 
-function pauseMatch(){
- clearInterval(run);
- run=null;
-}
+/* ================= STATS ================= */
 
-function next(){
- index++;
- if(index>=schedule.length) index=0;
- match=matchSeconds;
- render();
-}
+function updateStats(a,b,bank){
 
-/* ================= EVENT ================= */
-
-function startEvent(){
- eventRun=setInterval(()=>{
-  event--;
-  if(event<=0){
-   beep();
-   clearInterval(eventRun);
+  function addPair(x,y){
+    partnerCount[x][y]=(partnerCount[x][y]||0)+1;
+    partnerCount[y][x]=(partnerCount[y][x]||0)+1;
   }
-  render();
- },1000);
+
+  a.forEach((p,i)=>{
+    a.forEach((q,j)=>{
+      if(i!==j) addPair(p,q);
+    });
+  });
+
+  b.forEach((p,i)=>{
+    b.forEach((q,j)=>{
+      if(i!==j) addPair(p,q);
+    });
+  });
+
+  bank.forEach(p=>{
+    pauseCount[p]++;
+  });
 }
 
 /* ================= RENDER ================= */
 
 function render(){
 
- let m=Math.floor(match/60);
- let s=match%60;
+  let out=document.getElementById("output");
+  out.innerHTML="";
 
- let e=Math.floor(event/60);
- let es=event%60;
+  schedule.forEach(s=>{
 
- matchTimer.textContent=`${m}:${String(s).padStart(2,"0")}`;
- eventTimer.textContent=`${e}:${String(es).padStart(2,"0")}`;
-
- if(schedule.length===0) return;
-
- let cur=schedule[index];
-
- round.textContent="Runde "+cur.round;
-
- teamA.textContent="TEAM A: "+cur.a.join(" | ");
- teamB.textContent="TEAM B: "+cur.b.join(" | ");
- bank.textContent="Bank: "+(cur.bank.join(" | ")||"-");
-
- let nextS=schedule[index+1]||schedule[0];
-
- next.textContent="NEXT: "+nextS.a.join(" / ")+" vs "+nextS.b.join(" / ");
+    out.innerHTML+=`
+      <div class="roundBox">
+        <b>Runde ${s.round}</b><br><br>
+        TEAM A: ${s.a.join(" | ")}<br>
+        TEAM B: ${s.b.join(" | ")}<br>
+        Pause: ${s.bank.join(" | ")}
+      </div>
+    `;
+  });
 }
-
-/* ================= SOUND ================= */
-
-function beep(){
- let b=document.getElementById("beep");
- b.currentTime=0;
- b.play();
-}
-
-/* INIT */
-renderPlayers();
-render();
 
 </script>
 
