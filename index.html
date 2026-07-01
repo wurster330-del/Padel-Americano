@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V8 Kiosk Fixed</title>
+<title>Padel Terminal V8 Kiosk Final</title>
 
 <style>
 body{
@@ -19,7 +19,7 @@ body{
   margin:auto;
 }
 
-/* ================= PANELS ================= */
+/* ================= NORMAL UI ================= */
 .panel{
   background:#1f5e3a;
   padding:15px;
@@ -27,7 +27,6 @@ body{
   margin-bottom:15px;
 }
 
-/* ================= BUTTONS ================= */
 button{
   padding:12px 16px;
   border:none;
@@ -38,7 +37,6 @@ button{
   font-size:15px;
 }
 
-/* ================= INPUT ================= */
 input, select{
   padding:6px;
   border-radius:6px;
@@ -68,6 +66,13 @@ input, select{
   text-align:center;
 }
 
+/* ================= COURT ================= */
+#court{
+  background:#0e3d26;
+  padding:12px;
+  border-radius:12px;
+}
+
 /* ================= WARNING ================= */
 .warning{
   color:red;
@@ -82,19 +87,13 @@ input, select{
   50%{opacity:0.2;}
 }
 
-/* ================= COURT ================= */
-#court{
-  background:#0e3d26;
-  padding:12px;
-  border-radius:12px;
-}
-
 /* ===================================================== */
-/* 🧠 KIOSK MODE FIX – CLEAN & SAFE                     */
+/* 🧠 KIOSK MODE – CLEAN DISPLAY                        */
 /* ===================================================== */
 
 .kiosk h2,
 .kiosk #players,
+.kiosk #eventTime,
 .kiosk select,
 .kiosk button,
 .kiosk .warning,
@@ -102,7 +101,7 @@ input, select{
   display:none !important;
 }
 
-/* 🔥 WICHTIG: Match-Timer bleibt sichtbar */
+/* Match bleibt sichtbar */
 .kiosk #timerPanel{
   display:block !important;
 }
@@ -112,7 +111,7 @@ input, select{
   display:block !important;
 }
 
-/* Focus Display */
+/* Fokus Look */
 .kiosk .bigTimer{
   font-size:180px;
 }
@@ -132,16 +131,15 @@ input, select{
 
 <div id="wrap">
 
-<h2>🎾 Padel Terminal V8 – KIOSK FIX</h2>
+<h2>🎾 Padel Terminal V8</h2>
 
 <!-- ================= KIOSK CONTROL ================= -->
 <div class="panel">
 <button onclick="enterKiosk()">🔲 Kiosk starten</button>
-<button onclick="exitKiosk()">❌ Kiosk verlassen</button>
 </div>
 
 <!-- ================= PLAYERS ================= -->
-<div class="panel">
+<div class="panel" id="playersPanel">
 <h3>👥 Spieler</h3>
 <div id="players"></div>
 
@@ -155,7 +153,7 @@ input, select{
 <button onclick="generate()">🏆 Spielplan erstellen</button>
 </div>
 
-<!-- ================= TIMER (IMPORTANT FIX) ================= -->
+<!-- ================= TIMER ================= -->
 <div class="panel" id="timerPanel">
 
 <div class="bigTimer" id="matchTimer">18:00</div>
@@ -220,6 +218,28 @@ function enterKiosk(){
 
  setFocusMode(true);
 }
+
+/* ================= EXIT GESTURE (3 TAP) ================= */
+
+let tapCount = 0;
+let tapTimer = null;
+
+document.addEventListener("touchstart", function(){
+ if(!document.body.classList.contains("kiosk")) return;
+
+ tapCount++;
+
+ clearTimeout(tapTimer);
+
+ tapTimer = setTimeout(()=>{
+  tapCount = 0;
+ }, 1000);
+
+ if(tapCount >= 3){
+  exitKiosk();
+  tapCount = 0;
+ }
+});
 
 function exitKiosk(){
  document.body.classList.remove("kiosk");
