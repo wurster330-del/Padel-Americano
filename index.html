@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Terminal V2.4.1 Fix</title>
+<title>Padel Terminal V3.0 Phase 1</title>
 
 <style>
 body{
@@ -11,141 +11,106 @@ body{
   font-family:Arial;
   background:#0b2f1d;
   color:white;
-  text-align:center;
 }
 
-#admin{padding:20px;}
+h1{margin:10px 0;}
+
+#wrap{
+  padding:20px;
+  max-width:900px;
+  margin:auto;
+}
 
 .panel{
-  background:#255d3d;
+  background:#1f5e3a;
   padding:15px;
   border-radius:12px;
-  margin:10px auto;
-  max-width:800px;
+  margin-bottom:15px;
 }
 
-.playerBox{
+.playerRow{
   display:flex;
   flex-wrap:wrap;
-  justify-content:center;
   gap:10px;
 }
 
 .player{
-  background:#1f6b42;
+  background:#2c7a4a;
+  padding:10px;
+  border-radius:10px;
+}
+
+input[type="text"]{
+  width:120px;
+  padding:6px;
+  border-radius:6px;
+  border:none;
+}
+
+select{
   padding:8px;
-  border-radius:8px;
-}
-
-/* COURT */
-#court{
-  display:none;
-  height:100vh;
-  flex-direction:column;
-  justify-content:space-between;
-  padding:15px;
-}
-
-.top{
-  display:flex;
-  justify-content:space-between;
-  font-size:22px;
-}
-
-#matchTime{
-  font-size:24vh;
-  font-weight:bold;
-}
-
-#teams{
-  font-size:5vh;
-  font-weight:bold;
-}
-
-#plan{
-  font-size:3vh;
-  color:#ffd966;
-}
-
-#next{
-  font-size:3vh;
-  color:#66d9ff;
+  border-radius:6px;
+  border:none;
 }
 
 button{
-  padding:16px 22px;
+  padding:12px 16px;
   border:none;
-  border-radius:12px;
+  border-radius:10px;
   background:#2e8b57;
   color:white;
+  font-size:16px;
+  cursor:pointer;
 }
 
-.exit{
-  position:absolute;
-  top:10px;
-  right:10px;
-  background:#b33a3a;
+.small{
+  opacity:0.8;
+  font-size:14px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ================= ADMIN ================= -->
-<div id="admin">
+<div id="wrap">
 
-<h1>🎾 Padel Terminal V2.4.1 FIX</h1>
+<h1>🎾 Padel Terminal V3.0 – Phase 1</h1>
 
 <div class="panel">
-<h3>Spieler Auswahl</h3>
-<div id="playerBox" class="playerBox"></div>
+<h2>👥 Spieler</h2>
+<div id="players" class="playerRow"></div>
+<p class="small">Wähle 4–6 Spieler aus</p>
 </div>
 
 <div class="panel">
-<h3>Matchzeit</h3>
-<select id="matchSelect">
-  <option value="15">15</option>
-  <option value="18" selected>18</option>
-  <option value="20">20</option>
+<h2>⏱ Matchzeit</h2>
+<select id="matchTime">
+  <option value="15">15 Minuten</option>
+  <option value="18" selected>18 Minuten</option>
+  <option value="20">20 Minuten</option>
 </select>
+<input id="matchCustom" type="text" placeholder="oder frei (Min)">
 </div>
 
 <div class="panel">
-<h3>Spielabend</h3>
-<select id="eventSelect">
-  <option value="120" selected>120</option>
-  <option value="180">180</option>
+<h2>🕒 Spielabend</h2>
+<select id="eventTime">
+  <option value="120" selected>120 Minuten</option>
+  <option value="180">180 Minuten</option>
 </select>
+<input id="eventCustom" type="text" placeholder="oder frei (Min)">
 </div>
 
 <div class="panel">
-<button onclick="startTournament()">▶ START</button>
+<button onclick="saveSettings()">💾 Speichern</button>
+<button onclick="resetAll()">🔄 Reset</button>
 </div>
 
-</div>
-
-<!-- ================= COURT ================= -->
-<div id="court">
-
-<button class="exit" onclick="exit()">❌ EXIT</button>
-
-<div class="top">
-  <div id="eventTime"></div>
-  <div>COURT 1</div>
-</div>
-
-<div id="matchTime">18:00</div>
-
-<div id="teams"></div>
-
-<div id="next"></div>
-
-<div id="plan"></div>
-
-<div>
-<button onclick="startMatch()">▶ START</button>
-<button onclick="pauseMatch()">⏸ PAUSE</button>
-<button onclick="nextRound()">➡ NEXT</button>
+<div class="panel">
+<p class="small">
+Phase 1: Setup & Speicherung abgeschlossen<br>
+(Spielplan + Timer kommen in Phase 2/3)
+</p>
 </div>
 
 </div>
@@ -154,170 +119,89 @@ button{
 
 /* ================= DATA ================= */
 
-const allPlayers=["Tobias","Werner","Christian","Stefan","David","Marco"];
+let defaultPlayers = [
+  {name:"Tobias", active:true},
+  {name:"Werner", active:true},
+  {name:"Christian", active:true},
+  {name:"Stefan", active:true},
+  {name:"David", active:true},
+  {name:"Marco", active:true}
+];
 
-let active=[];
-let schedule=[];
-let currentIndex=0;
+let players = [];
 
-/* TIMER */
-let match={total:0,remain:0,interval:null};
-let event={total:0,remain:0};
+/* ================= INIT ================= */
 
-/* ================= PLAYERS ================= */
-
-function renderPlayers(){
-  const box=document.getElementById("playerBox");
-  box.innerHTML="";
-
-  allPlayers.forEach(p=>{
-    box.innerHTML+=`
-      <label class="player">
-        <input type="checkbox" checked>
-        ${p}
-      </label>
-    `;
-  });
-}
-
-function getSelectedPlayers(){
-  let boxes=document.querySelectorAll("input[type=checkbox]");
-  let result=[];
-
-  boxes.forEach((b,i)=>{
-    if(b.checked) result.push(allPlayers[i]);
-  });
-
-  return result;
-}
-
-/* ================= SCHEDULE ================= */
-
-function createSchedule(players){
-
-  let list=[...players];
-  let rounds=[];
-  let matchTime=parseInt(matchSelect.value)*60;
-  let eventTime=parseInt(eventSelect.value)*60;
-
-  let maxRounds=Math.floor(eventTime / matchTime);
-
-  for(let r=0;r<maxRounds;r++){
-
-    let rot=[...list.slice(r%list.length),...list.slice(0,r%list.length)];
-
-    let teamA=rot.slice(0,2);
-    let teamB=rot.slice(2,4);
-    let bank=rot.slice(4);
-
-    rounds.push({
-      a:teamA,
-      b:teamB,
-      bank:bank,
-      label:"Runde "+(r+1)
-    });
+function load(){
+  let data = localStorage.getItem("padel_v3_phase1");
+  if(data){
+    players = JSON.parse(data);
+  } else {
+    players = defaultPlayers;
   }
-
-  return rounds;
-}
-
-/* ================= START ================= */
-
-function startTournament(){
-
-  active=getSelectedPlayers();
-
-  if(active.length < 4){
-    alert("Mindestens 4 Spieler nötig");
-    return;
-  }
-
-  schedule=createSchedule(active);
-  currentIndex=0;
-
-  match.total=parseInt(matchSelect.value)*60;
-  match.remain=match.total;
-
-  event.total=parseInt(eventSelect.value)*60;
-  event.remain=event.total;
-
-  admin.style.display="none";
-  court.style.display="flex";
-
   render();
-}
-
-/* ================= CONTROL ================= */
-
-function startMatch(){
-
-  if(match.interval) return;
-
-  match.interval=setInterval(()=>{
-
-    match.remain--;
-    event.remain--;
-
-    if(match.remain<=0){
-      nextRound();
-      return;
-    }
-
-    render();
-
-  },1000);
-}
-
-function pauseMatch(){
-  clearInterval(match.interval);
-  match.interval=null;
-}
-
-/* ================= NEXT ================= */
-
-function nextRound(){
-
-  if(currentIndex < schedule.length-1){
-    currentIndex++;
-  }
-
-  match.remain=match.total;
-
-  render();
-}
-
-/* ================= EXIT ================= */
-
-function exit(){
-  pauseMatch();
-  court.style.display="none";
-  admin.style.display="block";
 }
 
 /* ================= RENDER ================= */
 
 function render(){
+  let box = document.getElementById("players");
+  box.innerHTML = "";
 
-  let m=schedule[currentIndex];
-  if(!m) return;
+  players.forEach((p,i)=>{
+    box.innerHTML += `
+      <div class="player">
+        <input type="checkbox" ${p.active ? "checked":""}
+          onchange="toggle(${i})">
 
-  teams.innerHTML=
-    "TEAM A: "+m.a.join(" | ")+"<br>"+
-    "TEAM B: "+m.b.join(" | ")+"<br>"+
-    "BANK: "+(m.bank.length ? m.bank.join(" | ") : "-");
+        <input type="text"
+          value="${p.name}"
+          onchange="rename(${i},this.value)">
+      </div>
+    `;
+  });
 
-  let nextM=schedule[currentIndex+1];
+  let m = localStorage.getItem("matchTime") || 18;
+  let e = localStorage.getItem("eventTime") || 120;
 
-  next.innerHTML= nextM
-    ? "➡ NEXT: "+nextM.a.join(" | ")+" vs "+nextM.b.join(" | ")
-    : "➡ LETZTE RUNDE";
-
-  plan.innerHTML=m.label+" / "+schedule.length;
+  document.getElementById("matchTime").value = m;
+  document.getElementById("eventTime").value = e;
 }
 
-/* INIT */
-renderPlayers();
-render();
+/* ================= ACTIONS ================= */
+
+function toggle(i){
+  players[i].active = !players[i].active;
+}
+
+function rename(i,val){
+  players[i].name = val;
+}
+
+function saveSettings(){
+
+  let match = document.getElementById("matchTime").value;
+  let event = document.getElementById("eventTime").value;
+
+  let matchCustom = document.getElementById("matchCustom").value;
+  let eventCustom = document.getElementById("eventCustom").value;
+
+  localStorage.setItem("padel_v3_phase1", JSON.stringify(players));
+
+  localStorage.setItem("matchTime", matchCustom || match);
+  localStorage.setItem("eventTime", eventCustom || event);
+
+  alert("Gespeichert ✅");
+}
+
+function resetAll(){
+  localStorage.clear();
+  location.reload();
+}
+
+/* ================= START ================= */
+
+load();
 
 </script>
 
