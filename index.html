@@ -19,11 +19,6 @@ body{
   margin:auto;
 }
 
-h1{
-  text-align:center;
-}
-
-/* PANELS */
 .panel{
   background:#1a5335;
   padding:15px;
@@ -31,7 +26,6 @@ h1{
   margin-bottom:15px;
 }
 
-/* BUTTONS */
 button{
   padding:12px 16px;
   border:none;
@@ -42,7 +36,6 @@ button{
   font-size:16px;
 }
 
-/* TIMER */
 .timer{
   font-size:80px;
   text-align:center;
@@ -56,12 +49,10 @@ button{
   font-weight:bold;
 }
 
-/* PLAYERS */
 .playerRow{
   display:flex;
   gap:10px;
-  margin:5px 0;
-  align-items:center;
+  margin:6px 0;
 }
 
 input[type="text"]{
@@ -69,7 +60,6 @@ input[type="text"]{
   padding:6px;
 }
 
-/* COURT */
 .teamBox{
   font-size:22px;
   font-weight:900;
@@ -79,6 +69,7 @@ input[type="text"]{
 
 /* KIOSK */
 .kiosk #app{ display:none; }
+.kiosk #kiosk{ display:block; }
 
 #kiosk{
   display:none;
@@ -86,10 +77,6 @@ input[type="text"]{
   background:black;
   text-align:center;
   padding-top:40px;
-}
-
-.kiosk #kiosk{
-  display:block;
 }
 
 .kioskTimer{
@@ -145,7 +132,7 @@ input[type="text"]{
 <h1>🎾 V10 MASTER</h1>
 
 <div class="panel">
-<button onclick="enterKiosk()">🔲 Kiosk</button>
+<button onclick="enterKiosk()">📺 Kiosk</button>
 <button onclick="generate()">🏆 Turnier erstellen</button>
 </div>
 
@@ -215,19 +202,7 @@ let matchMinutes = 18;
 let breakMinutes = 2;
 let matchTime = matchMinutes * 60;
 let run = null;
-
-/* ================= FAIRNESS ================= */
-
-let pairHistory = {};
-
-function pairKey(a,b){
-  return [a,b].sort().join("-");
-}
-
-function addPair(a,b){
-  let k = pairKey(a,b);
-  pairHistory[k] = (pairHistory[k] || 0) + 1;
-}
+let finished = false;
 
 /* ================= UI PLAYERS ================= */
 
@@ -263,7 +238,6 @@ function generate(){
 
   schedule = [];
   index = 0;
-  pairHistory = {};
 
   let eventMinutes = (list.length === 4) ? 120 : 180;
   let roundMinutes = matchMinutes + breakMinutes;
@@ -279,15 +253,7 @@ function generate(){
     let b = [list[2], list[3]];
     let bank = list.slice(4);
 
-    addPair(a[0],a[1]);
-    addPair(b[0],b[1]);
-
-    schedule.push({
-      round:r+1,
-      a,
-      b,
-      bank
-    });
+    schedule.push({round:r+1,a,b,bank});
   }
 
   update();
@@ -296,7 +262,7 @@ function generate(){
 /* ================= TIMER ================= */
 
 function startTimer(){
-  if(run) return;
+  if(run || finished) return;
 
   run = setInterval(()=>{
 
@@ -308,7 +274,7 @@ function startTimer(){
 
     if(matchTime <= 0){
       matchTime = 0;
-      nextMatch();
+      finishMatch();
       return;
     }
 
@@ -322,11 +288,25 @@ function pauseTimer(){
   run = null;
 }
 
+function finishMatch(){
+  clearInterval(run);
+  run = null;
+  finished = true;
+  update();
+}
+
+/* ================= NEXT MATCH ================= */
+
 function nextMatch(){
+
   index++;
   if(index >= schedule.length) index = 0;
+
   matchTime = matchMinutes * 60;
+  finished = false;
+
   document.getElementById("warning").style.display="none";
+
   update();
 }
 
@@ -347,13 +327,15 @@ function update(){
     `<div class="teamBox">A: ${s.a.join(" / ")}</div>
      <div class="teamBox">B: ${s.b.join(" / ")}</div>
      <div class="teamBox">BANK: ${s.bank.join(" / ") || "-"}</div>
-     <div class="teamBox">RUNDE ${s.round}/${schedule.length}</div>`;
+     <div class="teamBox">RUNDE ${s.round}/${schedule.length}</div>
+     <div class="teamBox">${finished ? "🏁 MATCH BEENDET" : ""}</div>`;
 
   document.getElementById("kioskA").textContent = "A: " + s.a.join(" / ");
   document.getElementById("kioskB").textContent = "B: " + s.b.join(" / ");
   document.getElementById("kioskBank").textContent = "BANK: " + (s.bank.join(" / ") || "-");
   document.getElementById("kioskInfo").textContent =
-    "Runde " + s.round + " / " + schedule.length;
+    "Runde " + s.round + " / " + schedule.length +
+    (finished ? " | ENDE" : "");
 }
 
 /* ================= KIOSK ================= */
@@ -380,8 +362,6 @@ function closePin(){
 function checkPin(){
   if(document.getElementById("pinInput").value === PIN){
     document.body.classList.remove("kiosk");
-  } else {
-    alert("Falsch");
   }
   closePin();
 }
