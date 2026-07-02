@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.7 FIX</title>
+<title>Padel Club Terminal V10.8</title>
 
 <style>
 body{
@@ -49,7 +49,7 @@ body{
   font-weight:900;
 }
 
-/* 👥 PLAYER UI FIX */
+/* PLAYERS */
 .playerRow{
   display:flex;
   gap:8px;
@@ -59,7 +59,6 @@ body{
 
 .playerRow input[type="text"]{
   width:140px;
-  padding:6px;
 }
 
 .playerRow input[type="checkbox"]{
@@ -147,24 +146,26 @@ body{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V10.7 FIX</div>
+  <div>🎾 V10.8</div>
   <div>
     <button onclick="enterKiosk()">Kiosk</button>
     <button onclick="generate()">Turnier</button>
   </div>
 </div>
 
-<!-- 👥 FIXED PLAYER SECTION -->
+<!-- PLAYERS -->
 <div class="section">
   <h3>👥 Spieler</h3>
   <div id="players"></div>
 </div>
 
+<!-- TIMER -->
 <div class="section">
   <h3>⏱ Timer</h3>
   <div class="timer" id="timer">18:00</div>
 </div>
 
+<!-- COURT -->
 <div class="section">
   <h3>🎾 Court</h3>
   <div id="court">Kein Turnier</div>
@@ -172,7 +173,7 @@ body{
 
 </div>
 
-<!-- 📺 KIOSK -->
+<!-- KIOSK -->
 <div id="kiosk">
 
 <div class="kioskExit">
@@ -203,6 +204,13 @@ body{
 
 <script>
 
+/* ================= CONFIG ================= */
+
+const TOTAL_TIME = 180 * 60;   // 180 min
+const MATCH_TIME = 18 * 60;    // 18 min
+
+let rounds = Math.floor(TOTAL_TIME / MATCH_TIME); // 👉 10 RUNDEN FIX
+
 /* ================= PLAYERS ================= */
 
 let players=[
@@ -217,10 +225,10 @@ let players=[
 let schedule=[];
 let index=0;
 
-let matchTime=18*60;
+let matchTime=MATCH_TIME;
 let run=null;
 
-/* ================= PLAYER UI (RESTORED FIX) ================= */
+/* ================= UI PLAYERS ================= */
 
 function renderPlayers(){
   let box=document.getElementById("players");
@@ -240,7 +248,7 @@ function renderPlayers(){
 
 renderPlayers();
 
-/* ================= TOURNAMENT ENGINE ================= */
+/* ================= GENERATE ================= */
 
 function generate(){
 
@@ -248,8 +256,6 @@ function generate(){
 
   schedule=[];
   index=0;
-
-  let rounds=6;
 
   for(let r=0;r<rounds;r++){
 
@@ -259,7 +265,12 @@ function generate(){
     let b=[list[2],list[3]];
     let bank=list.slice(4);
 
-    schedule.push({round:r+1,a,b,bank});
+    schedule.push({
+      round:r+1,
+      a,
+      b,
+      bank
+    });
   }
 
   update();
@@ -295,7 +306,7 @@ function pauseTimer(){
 function nextMatch(){
   index++;
   if(index>=schedule.length) index=0;
-  matchTime=18*60;
+  matchTime=MATCH_TIME;
   update();
 }
 
@@ -316,7 +327,7 @@ function update(){
   `A: ${s.a.join(" / ")}<br>
    B: ${s.b.join(" / ")}<br>
    BANK: ${s.bank.join(" / ")||"-"}<br>
-   Runde ${s.round}`;
+   Runde ${s.round} / ${rounds}`;
 
   document.getElementById("kioskA").textContent="A: "+s.a.join(" / ");
   document.getElementById("kioskB").textContent="B: "+s.b.join(" / ");
