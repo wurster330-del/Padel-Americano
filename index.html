@@ -2,25 +2,21 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Padel Club Terminal V10.3</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#04130d;
+  background:#03140f;
   color:white;
 }
 
-#app{
-  padding:15px;
-  max-width:1000px;
-  margin:auto;
-}
+#app{ padding:15px; max-width:1000px; margin:auto; }
 
 .panel{
-  background:#1a5335;
+  background:#185c3b;
   padding:15px;
   border-radius:12px;
   margin-bottom:15px;
@@ -28,23 +24,16 @@ body{
 
 button{
   padding:12px 16px;
+  margin:5px;
   border:none;
   border-radius:10px;
   background:#2e8b57;
   color:white;
-  margin:5px;
 }
 
 .timer{
   font-size:80px;
   text-align:center;
-  font-weight:900;
-}
-
-.warning{
-  color:red;
-  text-align:center;
-  display:none;
   font-weight:bold;
 }
 
@@ -54,17 +43,8 @@ button{
   margin:6px 0;
 }
 
-input[type="text"]{
-  flex:1;
-}
+input{ flex:1; }
 
-.teamBox{
-  text-align:center;
-  font-weight:bold;
-  margin:5px;
-}
-
-/* KIOSK */
 .kiosk #app{ display:none; }
 .kiosk #kiosk{ display:block; }
 
@@ -77,7 +57,7 @@ input[type="text"]{
 }
 
 .kioskTimer{
-  font-size:180px;
+  font-size:170px;
   color:#00ff99;
   font-weight:bold;
 }
@@ -86,30 +66,14 @@ input[type="text"]{
   font-size:40px;
 }
 
-/* CONTROL */
 .controlBar{
   position:fixed;
   bottom:0;
   width:100%;
+  background:#0d3a25;
   display:flex;
   justify-content:center;
-  background:#0d3a25;
   padding:10px;
-  gap:10px;
-}
-
-/* PIN */
-#pinOverlay{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:black;
-  z-index:9999;
-  text-align:center;
-  padding-top:120px;
 }
 </style>
 </head>
@@ -118,33 +82,31 @@ input[type="text"]{
 
 <div id="app">
 
-<h1>🎾 V10.2 LIVE</h1>
+<h1>🎾 V10.3 SMART FAIRNESS</h1>
 
 <div class="panel">
 <button onclick="enterKiosk()">📺 Kiosk</button>
 <button onclick="generate()">🏆 Turnier</button>
-<button onclick="resetStorage()">🔄 Reset</button>
 </div>
 
 <div class="panel">
-<h3>⏱ Timer</h3>
+<h2>⏱ Timer</h2>
 <div class="timer" id="timer">18:00</div>
-<div class="warning" id="warning">⚠ 30 SEKUNDEN</div>
 </div>
 
 <div class="panel">
-<h3>👥 Spieler</h3>
+<h2>👥 Spieler</h2>
 <div id="players"></div>
 </div>
 
 <div class="panel">
-<h3>📊 Statistik</h3>
-<div id="stats"></div>
+<h2>📊 Fairness</h2>
+<div id="fairness"></div>
 </div>
 
 <div class="panel">
-<h3>🎾 Court</h3>
-<div id="court">Kein Turnier</div>
+<h2>🎾 Court</h2>
+<div id="court"></div>
 </div>
 
 </div>
@@ -155,173 +117,124 @@ input[type="text"]{
   <div class="kioskTeam" id="kioskA"></div>
   <div class="kioskTeam" id="kioskB"></div>
   <div class="kioskTeam" id="kioskBank"></div>
-  <div class="kioskTeam" id="kioskInfo"></div>
-</div>
-
-<!-- CONTROL -->
-<div class="controlBar">
-<button onclick="startTimer()">▶ Start</button>
-<button onclick="pauseTimer()">⏸ Pause</button>
-<button onclick="nextMatch()">➡ Next</button>
-</div>
-
-<!-- PIN -->
-<div id="pinOverlay">
-  <h2>PIN</h2>
-  <input id="pin" type="password">
-  <button onclick="checkPin()">OK</button>
 </div>
 
 <script>
 
-/* ================= STATE ================= */
+/* ================= PLAYERS ================= */
 
-let players = [];
-let schedule = [];
-let index = 0;
+let players=[
+  {name:"Marco"},
+  {name:"Stefan"},
+  {name:"David"},
+  {name:"Tobias"},
+  {name:"Christian"},
+  {name:"Werner"}
+];
 
-let matchMinutes = 18;
-let matchTime = matchMinutes * 60;
-let run = null;
+let schedule=[];
+let index=0;
 
-/* ================= LOAD ================= */
+let stats={};
 
-function load(){
-  let data = localStorage.getItem("v102");
-  if(data){
-    let d = JSON.parse(data);
-    players = d.players;
-    schedule = d.schedule || [];
-    index = d.index || 0;
-    matchTime = d.matchTime || matchMinutes*60;
-  } else {
-    players = [
-      {name:"Marco",active:true},
-      {name:"Stefan",active:true},
-      {name:"David",active:true},
-      {name:"Tobias",active:true},
-      {name:"Christian",active:true},
-      {name:"Werner",active:true}
-    ];
-  }
-}
+/* ================= INIT STATS ================= */
 
-/* ================= SAVE ================= */
-
-function save(){
-  localStorage.setItem("v102", JSON.stringify({
-    players,schedule,index,matchTime
-  }));
-}
-
-/* ================= RENDER PLAYERS ================= */
-
-function renderPlayers(){
-  let box=document.getElementById("players");
-  box.innerHTML="";
-
-  players.forEach((p,i)=>{
-    box.innerHTML+=`
-    <div class="playerRow">
-      <input type="checkbox" ${p.active?"checked":""}
-      onchange="players[${i}].active=this.checked;save()">
-
-      <input type="text" value="${p.name}"
-      onchange="players[${i}].name=this.value;save()">
-    </div>`;
-  });
-}
-
-/* ================= STATS ================= */
-
-function renderStats(){
-  let stats={};
-
+function initStats(){
   players.forEach(p=>{
-    stats[p.name]={games:0};
+    stats[p.name]={
+      games:0,
+      bank:0,
+      partners:{},
+      opponents:{}
+    };
   });
+}
 
-  schedule.forEach(s=>{
-    [...s.a,...s.b].forEach(n=>{
-      if(stats[n]) stats[n].games++;
-    });
-  });
+/* ================= FAIRNESS SCORE ================= */
 
-  let html="";
-  for(let k in stats){
-    html+=`${k}: ${stats[k].games} Spiele<br>`;
+function score(a,b){
+
+  function s(p){
+    let x=stats[p];
+
+    return (
+      -x.games*2
+      -x.bank*3
+    );
   }
 
-  document.getElementById("stats").innerHTML=html;
+  return s(a)+s(b);
+}
+
+/* ================= BEST TEAM ================= */
+
+function bestTeams(list){
+
+  let best=null;
+  let bestScore=-99999;
+
+  for(let i=0;i<list.length;i++){
+    for(let j=i+1;j<list.length;j++){
+      let a=[list[i],list[j]];
+
+      for(let x=0;x<list.length;x++){
+        for(let y=x+1;y<list.length;y++){
+
+          if(x==i||x==j||y==i||y==j) continue;
+
+          let b=[list[x],list[y]];
+
+          let sc=score(a[0],a[1])+score(b[0],b[1]);
+
+          if(sc>bestScore){
+            bestScore=sc;
+            best={a,b};
+          }
+        }
+      }
+    }
+  }
+
+  return best;
 }
 
 /* ================= GENERATE ================= */
 
 function generate(){
-  let list=players.filter(p=>p.active).map(p=>p.name);
+
+  let list=players.map(p=>p.name);
 
   schedule=[];
+  index=0;
 
-  let rounds=8;
+  initStats();
 
-  for(let r=0;r<rounds;r++){
+  for(let r=0;r<6;r++){
 
-    list=list.sort(()=>Math.random()-0.5);
+    let best=bestTeams(list);
 
-    let a=[list[0],list[1]];
-    let b=[list[2],list[3]];
-    let bank=list.slice(4);
+    best.a.forEach(p=>stats[p].games++);
+    best.b.forEach(p=>stats[p].games++);
 
-    schedule.push({round:r+1,a,b,bank});
+    let used=new Set([...best.a,...best.b]);
+    let bank=list.filter(x=>!used.has(x));
+
+    bank.forEach(p=>stats[p].bank++);
+
+    schedule.push({
+      round:r+1,
+      a:best.a,
+      b:best.b,
+      bank
+    });
   }
 
-  save();
-  update();
-}
-
-/* ================= TIMER ================= */
-
-function startTimer(){
-  if(run) return;
-
-  run=setInterval(()=>{
-    if(matchTime>0) matchTime--;
-
-    if(matchTime<=0){
-      matchTime=0;
-      clearInterval(run);
-    }
-
-    update();
-    save();
-
-  },1000);
-}
-
-function pauseTimer(){
-  clearInterval(run);
-  run=null;
-  save();
-}
-
-/* ================= NEXT ================= */
-
-function nextMatch(){
-  index++;
-  if(index>=schedule.length) index=0;
-  matchTime=matchMinutes*60;
-  save();
   update();
 }
 
 /* ================= UPDATE ================= */
 
 function update(){
-
-  let t=Math.floor(matchTime/60)+":"+String(matchTime%60).padStart(2,"0");
-
-  document.getElementById("timer").textContent=t;
-  document.getElementById("kioskTimer").textContent=t;
 
   if(schedule.length==0) return;
 
@@ -330,43 +243,60 @@ function update(){
   document.getElementById("court").innerHTML=
   `A: ${s.a.join(" / ")}<br>
    B: ${s.b.join(" / ")}<br>
-   BANK: ${s.bank.join(" / ")||"-"}<br>
-   Runde ${s.round}`;
+   BANK: ${s.bank.join(" / ")}`;
 
   document.getElementById("kioskA").textContent="A: "+s.a.join(" / ");
   document.getElementById("kioskB").textContent="B: "+s.b.join(" / ");
-  document.getElementById("kioskBank").textContent="BANK: "+(s.bank.join(" / ")||"-");
+  document.getElementById("kioskBank").textContent="BANK: "+s.bank.join(" / ");
 
-  renderStats();
+  renderFairness();
+}
+
+/* ================= FAIRNESS UI ================= */
+
+function renderFairness(){
+
+  let html="";
+
+  players.forEach(p=>{
+    let s=stats[p.name];
+
+    let rating=
+      s.games<=2?"⭐⭐⭐⭐⭐":
+      s.games<=4?"⭐⭐⭐⭐":
+      s.games<=6?"⭐⭐⭐":"⭐⭐";
+
+    html+=`${p.name} ${rating} (G:${s.games} B:${s.bank})<br>`;
+  });
+
+  document.getElementById("fairness").innerHTML=html;
+}
+
+/* ================= PLAYERS UI ================= */
+
+function renderPlayers(){
+  let box=document.getElementById("players");
+  box.innerHTML="";
+
+  players.forEach((p,i)=>{
+    box.innerHTML+=`
+      <div class="playerRow">
+        <input value="${p.name}"
+        onchange="players[${i}].name=this.value">
+      </div>`;
+  });
 }
 
 /* ================= KIOSK ================= */
 
 function enterKiosk(){
   document.body.classList.add("kiosk");
-  document.documentElement.requestFullscreen?.();
-}
-
-/* ================= PIN ================= */
-
-function checkPin(){
-  if(document.getElementById("pin").value==="1234"){
-    document.body.classList.remove("kiosk");
-  }
-}
-
-/* ================= RESET ================= */
-
-function resetStorage(){
-  localStorage.removeItem("v102");
-  location.reload();
 }
 
 /* ================= INIT ================= */
 
-load();
 renderPlayers();
-update();
+initStats();
 
 </script>
 
