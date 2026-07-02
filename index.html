@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.7</title>
+<title>Padel Club Terminal V10.7 FIX</title>
 
 <style>
 body{
@@ -49,7 +49,7 @@ body{
   font-weight:900;
 }
 
-/* PLAYERS */
+/* 👥 PLAYER UI FIX */
 .playerRow{
   display:flex;
   gap:8px;
@@ -59,6 +59,11 @@ body{
 
 .playerRow input[type="text"]{
   width:140px;
+  padding:6px;
+}
+
+.playerRow input[type="checkbox"]{
+  transform:scale(1.1);
 }
 
 /* KIOSK */
@@ -142,13 +147,14 @@ body{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V10.7</div>
+  <div>🎾 V10.7 FIX</div>
   <div>
     <button onclick="enterKiosk()">Kiosk</button>
     <button onclick="generate()">Turnier</button>
   </div>
 </div>
 
+<!-- 👥 FIXED PLAYER SECTION -->
 <div class="section">
   <h3>👥 Spieler</h3>
   <div id="players"></div>
@@ -166,7 +172,7 @@ body{
 
 </div>
 
-<!-- KIOSK -->
+<!-- 📺 KIOSK -->
 <div id="kiosk">
 
 <div class="kioskExit">
@@ -214,115 +220,46 @@ let index=0;
 let matchTime=18*60;
 let run=null;
 
-/* ================= HISTORY ENGINE ================= */
+/* ================= PLAYER UI (RESTORED FIX) ================= */
 
-let history = {
-  team:{},
-  vs:{},
-  games:{},
-  bank:{}
-};
+function renderPlayers(){
+  let box=document.getElementById("players");
+  box.innerHTML="";
 
-function initHistory(){
-  players.forEach(p=>{
-    history.games[p.name]=0;
-    history.bank[p.name]=0;
-    history.team[p.name]={};
-    history.vs[p.name]={};
+  players.forEach((p,i)=>{
+    box.innerHTML+=`
+      <div class="playerRow">
+        <input type="checkbox" ${p.active?"checked":""}
+        onchange="players[${i}].active=this.checked">
+
+        <input type="text" value="${p.name}"
+        onchange="players[${i}].name=this.value">
+      </div>`;
   });
 }
 
-/* ================= SCORE ================= */
+renderPlayers();
 
-function pairScore(a,b){
-  return -(history.team[a]?.[b]||0)*10;
-}
-
-function playerScore(name){
-  return -(history.games[name]*3 + history.bank[name]*5);
-}
-
-/* ================= BEST MATCH ================= */
-
-function bestMatch(list){
-
-  let best=null;
-  let bestScore=-999999;
-
-  for(let i=0;i<list.length;i++){
-    for(let j=i+1;j<list.length;j++){
-      for(let x=0;x<list.length;x++){
-        for(let y=x+1;y<list.length;y++){
-
-          if([i,j].includes(x) || [i,j].includes(y)) continue;
-
-          let a=[list[i],list[j]];
-          let b=[list[x],list[y]];
-
-          let sc =
-            playerScore(a[0]) + playerScore(a[1]) +
-            playerScore(b[0]) + playerScore(b[1]) +
-            pairScore(a[0],a[1]) +
-            pairScore(b[0],b[1]);
-
-          if(sc>bestScore){
-            bestScore=sc;
-            best={a,b};
-          }
-        }
-      }
-    }
-  }
-
-  return best;
-}
-
-/* ================= GENERATE ================= */
+/* ================= TOURNAMENT ENGINE ================= */
 
 function generate(){
-
-  initHistory();
 
   let list=players.filter(p=>p.active).map(p=>p.name);
 
   schedule=[];
   index=0;
 
-  for(let r=0;r<6;r++){
+  let rounds=6;
 
-    let best=bestMatch(list);
+  for(let r=0;r<rounds;r++){
 
-    let used=new Set([...best.a,...best.b]);
-    let bank=list.filter(x=>!used.has(x));
+    list=list.sort(()=>Math.random()-0.5);
 
-    best.a.forEach(p=>{
-      history.games[p]++;
-      best.a.forEach(o=>{
-        if(p!==o){
-          history.team[p][o]=(history.team[p][o]||0)+1;
-        }
-      });
-    });
+    let a=[list[0],list[1]];
+    let b=[list[2],list[3]];
+    let bank=list.slice(4);
 
-    best.b.forEach(p=>{
-      history.games[p]++;
-      best.b.forEach(o=>{
-        if(p!==o){
-          history.team[p][o]=(history.team[p][o]||0)+1;
-        }
-      });
-    });
-
-    bank.forEach(p=>{
-      history.bank[p]++;
-    });
-
-    schedule.push({
-      round:r+1,
-      a:best.a,
-      b:best.b,
-      bank
-    });
+    schedule.push({round:r+1,a,b,bank});
   }
 
   update();
