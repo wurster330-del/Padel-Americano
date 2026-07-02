@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.6</title>
+<title>Padel Club Terminal V10.6.1</title>
 
 <style>
 body{
@@ -13,6 +13,7 @@ body{
   color:white;
 }
 
+/* APP */
 #app{
   max-width:1000px;
   margin:auto;
@@ -60,6 +61,11 @@ body{
 
 .playerRow input[type="text"]{
   width:140px;
+  padding:6px;
+}
+
+.playerRow input[type="checkbox"]{
+  transform:scale(1.1);
 }
 
 /* KIOSK */
@@ -135,6 +141,11 @@ body{
   text-align:center;
   padding-top:120px;
 }
+
+#pinOverlay input{
+  font-size:28px;
+  padding:10px;
+}
 </style>
 </head>
 
@@ -143,23 +154,26 @@ body{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V10.6</div>
+  <div>🎾 V10.6.1</div>
   <div>
     <button onclick="enterKiosk()">Kiosk</button>
     <button onclick="generate()">Turnier</button>
   </div>
 </div>
 
-<div class="section">
-  <h3>⏱ Timer</h3>
-  <div class="timer" id="timer">18:00</div>
-</div>
-
+<!-- 👥 PLAYERS (FIXED) -->
 <div class="section">
   <h3>👥 Spieler</h3>
   <div id="players"></div>
 </div>
 
+<!-- TIMER -->
+<div class="section">
+  <h3>⏱ Timer</h3>
+  <div class="timer" id="timer">18:00</div>
+</div>
+
+<!-- COURT -->
 <div class="section">
   <h3>🎾 Court</h3>
   <div id="court">Kein Turnier</div>
@@ -167,7 +181,7 @@ body{
 
 </div>
 
-<!-- KIOSK -->
+<!-- 📺 KIOSK -->
 <div id="kiosk">
 
 <div class="kioskExit">
@@ -200,7 +214,7 @@ body{
 
 /* ================= PLAYERS ================= */
 
-let players=[
+let players = [
   {name:"Marco",active:true},
   {name:"Stefan",active:true},
   {name:"David",active:true},
@@ -215,85 +229,46 @@ let index=0;
 let matchTime=18*60;
 let run=null;
 
-/* ================= STATS ================= */
+/* ================= PLAYER UI (RESTORED) ================= */
 
-let stats={};
+function renderPlayers(){
+  let box=document.getElementById("players");
+  box.innerHTML="";
 
-function initStats(){
-  stats={};
-  players.forEach(p=>{
-    stats[p.name]={games:0,banks:0};
+  players.forEach((p,i)=>{
+    box.innerHTML+=`
+      <div class="playerRow">
+        <input type="checkbox" ${p.active?"checked":""}
+        onchange="players[${i}].active=this.checked">
+
+        <input type="text" value="${p.name}"
+        onchange="players[${i}].name=this.value">
+      </div>`;
   });
 }
 
-/* ================= SCORE ================= */
+renderPlayers();
 
-function scorePlayer(name){
-  let s=stats[name];
-  return -(s.games*3 + s.banks*5);
-}
-
-/* ================= BEST MATCH ================= */
-
-function bestMatch(list){
-
-  let best=null;
-  let bestScore=-99999;
-
-  for(let i=0;i<list.length;i++){
-    for(let j=i+1;j<list.length;j++){
-      for(let x=0;x<list.length;x++){
-        for(let y=x+1;y<list.length;y++){
-
-          if(x==i||x==j||y==i||y==j) continue;
-
-          let a=[list[i],list[j]];
-          let b=[list[x],list[y]];
-
-          let sc=
-            scorePlayer(a[0])+scorePlayer(a[1])+
-            scorePlayer(b[0])+scorePlayer(b[1]);
-
-          if(sc>bestScore){
-            bestScore=sc;
-            best={a,b};
-          }
-        }
-      }
-    }
-  }
-
-  return best;
-}
-
-/* ================= GENERATE ================= */
+/* ================= TOURNAMENT ENGINE ================= */
 
 function generate(){
-
-  initStats();
 
   let list=players.filter(p=>p.active).map(p=>p.name);
 
   schedule=[];
   index=0;
 
-  for(let r=0;r<6;r++){
+  let rounds=6;
 
-    let best=bestMatch(list);
+  for(let r=0;r<rounds;r++){
 
-    let used=new Set([...best.a,...best.b]);
-    let bank=list.filter(x=>!used.has(x));
+    list=list.sort(()=>Math.random()-0.5);
 
-    best.a.forEach(p=>stats[p].games++);
-    best.b.forEach(p=>stats[p].games++);
-    bank.forEach(p=>stats[p].banks++);
+    let a=[list[0],list[1]];
+    let b=[list[2],list[3]];
+    let bank=list.slice(4);
 
-    schedule.push({
-      round:r+1,
-      a:best.a,
-      b:best.b,
-      bank
-    });
+    schedule.push({round:r+1,a,b,bank});
   }
 
   update();
