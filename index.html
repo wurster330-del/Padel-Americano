@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.5.1</title>
+<title>Padel Club Terminal V10.6</title>
 
 <style>
 body{
@@ -13,7 +13,6 @@ body{
   color:white;
 }
 
-/* APP */
 #app{
   max-width:1000px;
   margin:auto;
@@ -28,7 +27,6 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  z-index:10;
 }
 
 .topbar button{
@@ -55,14 +53,13 @@ body{
 /* PLAYERS */
 .playerRow{
   display:flex;
-  align-items:center;
   gap:8px;
-  padding:4px 0;
+  margin:4px 0;
+  align-items:center;
 }
 
 .playerRow input[type="text"]{
   width:140px;
-  padding:6px;
 }
 
 /* KIOSK */
@@ -80,29 +77,27 @@ body{
 
 .kioskTimer{
   font-size:180px;
-  font-weight:900;
   color:#00ff99;
+  font-weight:900;
 }
 
 .kioskTeam{
   font-size:42px;
-  margin:8px;
+  margin:6px;
 }
 
-/* 🔒 EXIT BUTTON FIX */
+/* EXIT */
 .kioskExit{
   position:absolute;
   top:10px;
   right:10px;
-  z-index:9999;
 }
 
 .kioskExit button{
-  font-size:14px;
-  padding:8px 10px;
-  border-radius:8px;
   background:#2e8b57;
   border:none;
+  padding:8px 10px;
+  border-radius:8px;
   color:white;
 }
 
@@ -140,11 +135,6 @@ body{
   text-align:center;
   padding-top:120px;
 }
-
-#pinOverlay input{
-  font-size:28px;
-  padding:10px;
-}
 </style>
 </head>
 
@@ -153,7 +143,7 @@ body{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V10.5.1</div>
+  <div>🎾 V10.6</div>
   <div>
     <button onclick="enterKiosk()">Kiosk</button>
     <button onclick="generate()">Turnier</button>
@@ -177,19 +167,17 @@ body{
 
 </div>
 
-<!-- 📺 KIOSK -->
+<!-- KIOSK -->
 <div id="kiosk">
 
-  <!-- 🔒 EXIT BUTTON RESTORED -->
-  <div class="kioskExit">
-    <button onclick="openPin()">🔒 Exit</button>
-  </div>
+<div class="kioskExit">
+  <button onclick="openPin()">🔒 Exit</button>
+</div>
 
-  <div class="kioskTimer" id="kioskTimer">18:00</div>
-  <div class="kioskTeam" id="kioskA"></div>
-  <div class="kioskTeam" id="kioskB"></div>
-  <div class="kioskTeam" id="kioskBank"></div>
-  <div class="kioskTeam" id="kioskInfo"></div>
+<div class="kioskTimer" id="kioskTimer">18:00</div>
+<div class="kioskTeam" id="kioskA"></div>
+<div class="kioskTeam" id="kioskB"></div>
+<div class="kioskTeam" id="kioskBank"></div>
 
 </div>
 
@@ -227,46 +215,85 @@ let index=0;
 let matchTime=18*60;
 let run=null;
 
-/* ================= UI PLAYERS ================= */
+/* ================= STATS ================= */
 
-function renderPlayers(){
-  let box=document.getElementById("players");
-  box.innerHTML="";
+let stats={};
 
-  players.forEach((p,i)=>{
-    box.innerHTML+=`
-      <div class="playerRow">
-        <input type="checkbox" ${p.active?"checked":""}
-        onchange="players[${i}].active=this.checked">
-
-        <input type="text" value="${p.name}"
-        onchange="players[${i}].name=this.value">
-      </div>`;
+function initStats(){
+  stats={};
+  players.forEach(p=>{
+    stats[p.name]={games:0,banks:0};
   });
 }
 
-renderPlayers();
+/* ================= SCORE ================= */
+
+function scorePlayer(name){
+  let s=stats[name];
+  return -(s.games*3 + s.banks*5);
+}
+
+/* ================= BEST MATCH ================= */
+
+function bestMatch(list){
+
+  let best=null;
+  let bestScore=-99999;
+
+  for(let i=0;i<list.length;i++){
+    for(let j=i+1;j<list.length;j++){
+      for(let x=0;x<list.length;x++){
+        for(let y=x+1;y<list.length;y++){
+
+          if(x==i||x==j||y==i||y==j) continue;
+
+          let a=[list[i],list[j]];
+          let b=[list[x],list[y]];
+
+          let sc=
+            scorePlayer(a[0])+scorePlayer(a[1])+
+            scorePlayer(b[0])+scorePlayer(b[1]);
+
+          if(sc>bestScore){
+            bestScore=sc;
+            best={a,b};
+          }
+        }
+      }
+    }
+  }
+
+  return best;
+}
 
 /* ================= GENERATE ================= */
 
 function generate(){
+
+  initStats();
 
   let list=players.filter(p=>p.active).map(p=>p.name);
 
   schedule=[];
   index=0;
 
-  let rounds=6;
+  for(let r=0;r<6;r++){
 
-  for(let r=0;r<rounds;r++){
+    let best=bestMatch(list);
 
-    list=list.sort(()=>Math.random()-0.5);
+    let used=new Set([...best.a,...best.b]);
+    let bank=list.filter(x=>!used.has(x));
 
-    let a=[list[0],list[1]];
-    let b=[list[2],list[3]];
-    let bank=list.slice(4);
+    best.a.forEach(p=>stats[p].games++);
+    best.b.forEach(p=>stats[p].games++);
+    bank.forEach(p=>stats[p].banks++);
 
-    schedule.push({round:r+1,a,b,bank});
+    schedule.push({
+      round:r+1,
+      a:best.a,
+      b:best.b,
+      bank
+    });
   }
 
   update();
