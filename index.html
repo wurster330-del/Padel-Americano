@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.8</title>
+<title>Padel Club Terminal V10.9</title>
 
 <style>
 body{
@@ -26,12 +26,13 @@ body{
   padding:10px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
 
 .topbar button{
   background:#2e8b57;
   border:none;
-  padding:10px 14px;
+  padding:10px 12px;
   border-radius:8px;
   color:white;
 }
@@ -63,6 +64,22 @@ body{
 
 .playerRow input[type="checkbox"]{
   transform:scale(1.1);
+}
+
+/* MODE SWITCH */
+.modeBar{
+  display:flex;
+  gap:10px;
+  margin:10px;
+}
+
+.modeBar button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#2e8b57;
+  color:white;
 }
 
 /* KIOSK */
@@ -146,17 +163,29 @@ body{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V10.8</div>
+  <div>🎾 V10.9</div>
   <div>
     <button onclick="enterKiosk()">Kiosk</button>
-    <button onclick="generate()">Turnier</button>
+    <button onclick="generate()">Start</button>
   </div>
+</div>
+
+<!-- MODE -->
+<div class="modeBar">
+  <button onclick="setMode('turnier')">🎾 Turnier</button>
+  <button onclick="setMode('gruppen')">🏷 Gruppen</button>
 </div>
 
 <!-- PLAYERS -->
 <div class="section">
   <h3>👥 Spieler</h3>
   <div id="players"></div>
+</div>
+
+<!-- GROUPS -->
+<div class="section" id="groupBox" style="display:none;">
+  <h3>🏷 Gruppen</h3>
+  <div id="groups"></div>
 </div>
 
 <!-- TIMER -->
@@ -168,7 +197,7 @@ body{
 <!-- COURT -->
 <div class="section">
   <h3>🎾 Court</h3>
-  <div id="court">Kein Turnier</div>
+  <div id="court">Kein Spiel</div>
 </div>
 
 </div>
@@ -206,10 +235,7 @@ body{
 
 /* ================= CONFIG ================= */
 
-const TOTAL_TIME = 180 * 60;   // 180 min
-const MATCH_TIME = 18 * 60;    // 18 min
-
-let rounds = Math.floor(TOTAL_TIME / MATCH_TIME); // 👉 10 RUNDEN FIX
+let mode="turnier";
 
 /* ================= PLAYERS ================= */
 
@@ -225,7 +251,7 @@ let players=[
 let schedule=[];
 let index=0;
 
-let matchTime=MATCH_TIME;
+let matchTime=18*60;
 let run=null;
 
 /* ================= UI PLAYERS ================= */
@@ -248,6 +274,42 @@ function renderPlayers(){
 
 renderPlayers();
 
+/* ================= MODE ================= */
+
+function setMode(m){
+  mode=m;
+
+  document.getElementById("groupBox").style.display =
+    m==="gruppen" ? "block" : "none";
+}
+
+/* ================= GROUPS ================= */
+
+function createGroups(list){
+
+  list=list.sort(()=>Math.random()-0.5);
+
+  let groups=[];
+
+  for(let i=0;i<list.length;i+=2){
+    groups.push([list[i],list[i+1]]);
+  }
+
+  return groups;
+}
+
+function showGroups(groups){
+
+  let box=document.getElementById("groups");
+  box.innerHTML="";
+
+  groups.forEach((g,i)=>{
+    box.innerHTML+=`
+      <div>Gruppe ${String.fromCharCode(65+i)}: ${g.join(" + ")}</div>
+    `;
+  });
+}
+
 /* ================= GENERATE ================= */
 
 function generate(){
@@ -256,6 +318,16 @@ function generate(){
 
   schedule=[];
   index=0;
+
+  if(mode==="gruppen"){
+
+    let groups=createGroups(list);
+    showGroups(groups);
+
+    return;
+  }
+
+  let rounds=10;
 
   for(let r=0;r<rounds;r++){
 
@@ -306,7 +378,7 @@ function pauseTimer(){
 function nextMatch(){
   index++;
   if(index>=schedule.length) index=0;
-  matchTime=MATCH_TIME;
+  matchTime=18*60;
   update();
 }
 
@@ -327,11 +399,7 @@ function update(){
   `A: ${s.a.join(" / ")}<br>
    B: ${s.b.join(" / ")}<br>
    BANK: ${s.bank.join(" / ")||"-"}<br>
-   Runde ${s.round} / ${rounds}`;
-
-  document.getElementById("kioskA").textContent="A: "+s.a.join(" / ");
-  document.getElementById("kioskB").textContent="B: "+s.b.join(" / ");
-  document.getElementById("kioskBank").textContent="BANK: "+(s.bank.join(" / ")||"-");
+   Runde ${s.round}`;
 }
 
 /* ================= KIOSK ================= */
