@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10 MASTER</title>
+<title>Padel Club Terminal V10.1</title>
 
 <style>
 body{
@@ -129,7 +129,7 @@ input[type="text"]{
 
 <div id="app">
 
-<h1>🎾 V10 MASTER</h1>
+<h1>🎾 V10.1 FAIRNESS</h1>
 
 <div class="panel">
 <button onclick="enterKiosk()">📺 Kiosk</button>
@@ -204,6 +204,28 @@ let matchTime = matchMinutes * 60;
 let run = null;
 let finished = false;
 
+/* ================= FAIRNESS ENGINE ================= */
+
+let playCount = {};
+let bankCount = {};
+let pairHistory = {};
+
+players.forEach(p=>{
+  playCount[p.name]=0;
+  bankCount[p.name]=0;
+});
+
+function pairKey(a,b){
+  return [a,b].sort().join("-");
+}
+
+function scorePair(a,b){
+  let key = pairKey(a,b);
+  let history = pairHistory[key] || 0;
+
+  return 100 - (history * 30);
+}
+
 /* ================= UI PLAYERS ================= */
 
 function renderPlayers(){
@@ -225,7 +247,44 @@ function renderPlayers(){
 
 renderPlayers();
 
-/* ================= GENERATE ================= */
+/* ================= GENERATE (FAIR) ================= */
+
+function bestCombination(list){
+
+  let best = null;
+  let bestScore = -999999;
+
+  for(let i=0;i<list.length;i++){
+    for(let j=i+1;j<list.length;j++){
+      let a1=list[i], a2=list[j];
+
+      for(let x=0;x<list.length;x++){
+        for(let y=x+1;y<list.length;y++){
+
+          if(x===i||x===j||y===i||y===j) continue;
+
+          let b1=list[x], b2=list[y];
+
+          let score =
+            scorePair(a1,a2) +
+            scorePair(b1,b2);
+
+          if(score > bestScore){
+            bestScore = score;
+            best = {
+              a:[a1,a2],
+              b:[b1,b2]
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return best;
+}
+
+/* ================= TURNIER ================= */
 
 function generate(){
 
@@ -240,20 +299,35 @@ function generate(){
   index = 0;
 
   let eventMinutes = (list.length === 4) ? 120 : 180;
-  let roundMinutes = matchMinutes + breakMinutes;
+  let rounds = Math.floor(eventMinutes / (matchMinutes + breakMinutes));
 
-  let rounds = Math.floor(eventMinutes / roundMinutes);
   if(rounds < 3) rounds = 3;
 
   for(let r=0;r<rounds;r++){
 
-    list = list.sort(()=>Math.random()-0.5);
+    let best = bestCombination(list);
 
-    let a = [list[0], list[1]];
-    let b = [list[2], list[3]];
-    let bank = list.slice(4);
+    let used = new Set([
+      ...best.a,
+      ...best.b
+    ]);
 
-    schedule.push({round:r+1,a,b,bank});
+    let bank = list.filter(x=>!used.has(x));
+
+    // update stats
+    best.a.forEach(p=>playCount[p]++);
+    best.b.forEach(p=>playCount[p]++);
+    bank.forEach(p=>bankCount[p]++);
+
+    pairHistory[pairKey(best.a[0],best.a[1])] = (pairHistory[pairKey(best.a[0],best.a[1])]||0)+1;
+    pairHistory[pairKey(best.b[0],best.b[1])] = (pairHistory[pairKey(best.b[0],best.b[1])]||0)+1;
+
+    schedule.push({
+      round:r+1,
+      a:best.a,
+      b:best.b,
+      bank
+    });
   }
 
   update();
@@ -285,26 +359,24 @@ function startTimer(){
 
 function pauseTimer(){
   clearInterval(run);
-  run = null;
+  run=null;
 }
 
 function finishMatch(){
   clearInterval(run);
-  run = null;
-  finished = true;
+  run=null;
+  finished=true;
   update();
 }
 
-/* ================= NEXT MATCH ================= */
+/* ================= NEXT ================= */
 
 function nextMatch(){
-
   index++;
-  if(index >= schedule.length) index = 0;
+  if(index>=schedule.length) index=0;
 
-  matchTime = matchMinutes * 60;
-  finished = false;
-
+  matchTime = matchMinutes*60;
+  finished=false;
   document.getElementById("warning").style.display="none";
 
   update();
@@ -316,26 +388,24 @@ function update(){
 
   let t = Math.floor(matchTime/60)+":"+String(matchTime%60).padStart(2,"0");
 
-  document.getElementById("timer").textContent = t;
-  document.getElementById("kioskTimer").textContent = t;
+  document.getElementById("timer").textContent=t;
+  document.getElementById("kioskTimer").textContent=t;
 
-  if(schedule.length === 0) return;
+  if(schedule.length===0) return;
 
-  let s = schedule[index];
+  let s=schedule[index];
 
-  document.getElementById("court").innerHTML =
-    `<div class="teamBox">A: ${s.a.join(" / ")}</div>
-     <div class="teamBox">B: ${s.b.join(" / ")}</div>
-     <div class="teamBox">BANK: ${s.bank.join(" / ") || "-"}</div>
-     <div class="teamBox">RUNDE ${s.round}/${schedule.length}</div>
-     <div class="teamBox">${finished ? "🏁 MATCH BEENDET" : ""}</div>`;
+  document.getElementById("court").innerHTML=
+  `<div class="teamBox">A: ${s.a.join(" / ")}</div>
+   <div class="teamBox">B: ${s.b.join(" / ")}</div>
+   <div class="teamBox">BANK: ${s.bank.join(" / ")||"-"}</div>
+   <div class="teamBox">R ${s.round}/${schedule.length}</div>
+   <div class="teamBox">${finished?"🏁 MATCH BEENDET":""}</div>`;
 
-  document.getElementById("kioskA").textContent = "A: " + s.a.join(" / ");
-  document.getElementById("kioskB").textContent = "B: " + s.b.join(" / ");
-  document.getElementById("kioskBank").textContent = "BANK: " + (s.bank.join(" / ") || "-");
-  document.getElementById("kioskInfo").textContent =
-    "Runde " + s.round + " / " + schedule.length +
-    (finished ? " | ENDE" : "");
+  document.getElementById("kioskA").textContent="A: "+s.a.join(" / ");
+  document.getElementById("kioskB").textContent="B: "+s.b.join(" / ");
+  document.getElementById("kioskBank").textContent="BANK: "+(s.bank.join(" / ")||"-");
+  document.getElementById("kioskInfo").textContent="R "+s.round+"/"+schedule.length;
 }
 
 /* ================= KIOSK ================= */
@@ -348,7 +418,7 @@ function enterKiosk(){
 
 /* ================= PIN ================= */
 
-const PIN = "1234";
+const PIN="1234";
 
 function openPin(){
   document.getElementById("pinOverlay").style.display="block";
@@ -360,7 +430,7 @@ function closePin(){
 }
 
 function checkPin(){
-  if(document.getElementById("pinInput").value === PIN){
+  if(document.getElementById("pinInput").value===PIN){
     document.body.classList.remove("kiosk");
   }
   closePin();
