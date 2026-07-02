@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.1</title>
+<title>Padel Club Terminal V10.2</title>
 
 <style>
 body{
@@ -33,7 +33,6 @@ button{
   background:#2e8b57;
   color:white;
   margin:5px;
-  font-size:16px;
 }
 
 .timer{
@@ -57,14 +56,12 @@ button{
 
 input[type="text"]{
   flex:1;
-  padding:6px;
 }
 
 .teamBox{
-  font-size:22px;
-  font-weight:900;
   text-align:center;
-  margin:6px;
+  font-weight:bold;
+  margin:5px;
 }
 
 /* KIOSK */
@@ -81,30 +78,22 @@ input[type="text"]{
 
 .kioskTimer{
   font-size:180px;
-  font-weight:900;
   color:#00ff99;
+  font-weight:bold;
 }
 
 .kioskTeam{
-  font-size:50px;
-  font-weight:900;
-  margin:15px;
-}
-
-.kioskSmall{
-  opacity:0.7;
-  font-size:24px;
+  font-size:40px;
 }
 
 /* CONTROL */
 .controlBar{
   position:fixed;
   bottom:0;
-  left:0;
   width:100%;
-  background:#0d3a25;
   display:flex;
   justify-content:center;
+  background:#0d3a25;
   padding:10px;
   gap:10px;
 }
@@ -117,7 +106,7 @@ input[type="text"]{
   left:0;
   width:100%;
   height:100%;
-  background:rgba(0,0,0,0.92);
+  background:black;
   z-index:9999;
   text-align:center;
   padding-top:120px;
@@ -129,11 +118,12 @@ input[type="text"]{
 
 <div id="app">
 
-<h1>🎾 V10.1 FAIRNESS</h1>
+<h1>🎾 V10.2 LIVE</h1>
 
 <div class="panel">
 <button onclick="enterKiosk()">📺 Kiosk</button>
-<button onclick="generate()">🏆 Turnier erstellen</button>
+<button onclick="generate()">🏆 Turnier</button>
+<button onclick="resetStorage()">🔄 Reset</button>
 </div>
 
 <div class="panel">
@@ -145,6 +135,11 @@ input[type="text"]{
 <div class="panel">
 <h3>👥 Spieler</h3>
 <div id="players"></div>
+</div>
+
+<div class="panel">
+<h3>📊 Statistik</h3>
+<div id="stats"></div>
 </div>
 
 <div class="panel">
@@ -160,7 +155,7 @@ input[type="text"]{
   <div class="kioskTeam" id="kioskA"></div>
   <div class="kioskTeam" id="kioskB"></div>
   <div class="kioskTeam" id="kioskBank"></div>
-  <div class="kioskSmall" id="kioskInfo"></div>
+  <div class="kioskTeam" id="kioskInfo"></div>
 </div>
 
 <!-- CONTROL -->
@@ -168,191 +163,137 @@ input[type="text"]{
 <button onclick="startTimer()">▶ Start</button>
 <button onclick="pauseTimer()">⏸ Pause</button>
 <button onclick="nextMatch()">➡ Next</button>
-<button onclick="openPin()">🔒 Exit</button>
 </div>
 
 <!-- PIN -->
 <div id="pinOverlay">
-  <h2>🔐 PIN</h2>
-  <input id="pinInput" type="password" style="font-size:28px;padding:10px;">
-  <br><br>
+  <h2>PIN</h2>
+  <input id="pin" type="password">
   <button onclick="checkPin()">OK</button>
-  <button onclick="closePin()">Abbrechen</button>
 </div>
 
 <script>
 
-/* ================= PLAYERS ================= */
+/* ================= STATE ================= */
 
-let players = [
-  {name:"Marco", active:true},
-  {name:"Stefan", active:true},
-  {name:"David", active:true},
-  {name:"Tobias", active:true},
-  {name:"Christian", active:true},
-  {name:"Werner", active:true}
-];
-
+let players = [];
 let schedule = [];
 let index = 0;
 
-/* ================= TIMER ================= */
-
 let matchMinutes = 18;
-let breakMinutes = 2;
 let matchTime = matchMinutes * 60;
 let run = null;
-let finished = false;
 
-/* ================= FAIRNESS ENGINE ================= */
+/* ================= LOAD ================= */
 
-let playCount = {};
-let bankCount = {};
-let pairHistory = {};
-
-players.forEach(p=>{
-  playCount[p.name]=0;
-  bankCount[p.name]=0;
-});
-
-function pairKey(a,b){
-  return [a,b].sort().join("-");
+function load(){
+  let data = localStorage.getItem("v102");
+  if(data){
+    let d = JSON.parse(data);
+    players = d.players;
+    schedule = d.schedule || [];
+    index = d.index || 0;
+    matchTime = d.matchTime || matchMinutes*60;
+  } else {
+    players = [
+      {name:"Marco",active:true},
+      {name:"Stefan",active:true},
+      {name:"David",active:true},
+      {name:"Tobias",active:true},
+      {name:"Christian",active:true},
+      {name:"Werner",active:true}
+    ];
+  }
 }
 
-function scorePair(a,b){
-  let key = pairKey(a,b);
-  let history = pairHistory[key] || 0;
+/* ================= SAVE ================= */
 
-  return 100 - (history * 30);
+function save(){
+  localStorage.setItem("v102", JSON.stringify({
+    players,schedule,index,matchTime
+  }));
 }
 
-/* ================= UI PLAYERS ================= */
+/* ================= RENDER PLAYERS ================= */
 
 function renderPlayers(){
-  let box = document.getElementById("players");
-  box.innerHTML = "";
+  let box=document.getElementById("players");
+  box.innerHTML="";
 
   players.forEach((p,i)=>{
-    box.innerHTML += `
-      <div class="playerRow">
-        <input type="checkbox" ${p.active?"checked":""}
-          onchange="players[${i}].active=this.checked">
+    box.innerHTML+=`
+    <div class="playerRow">
+      <input type="checkbox" ${p.active?"checked":""}
+      onchange="players[${i}].active=this.checked;save()">
 
-        <input type="text" value="${p.name}"
-          onchange="players[${i}].name=this.value">
-      </div>
-    `;
+      <input type="text" value="${p.name}"
+      onchange="players[${i}].name=this.value;save()">
+    </div>`;
   });
 }
 
-renderPlayers();
+/* ================= STATS ================= */
 
-/* ================= GENERATE (FAIR) ================= */
+function renderStats(){
+  let stats={};
 
-function bestCombination(list){
+  players.forEach(p=>{
+    stats[p.name]={games:0};
+  });
 
-  let best = null;
-  let bestScore = -999999;
+  schedule.forEach(s=>{
+    [...s.a,...s.b].forEach(n=>{
+      if(stats[n]) stats[n].games++;
+    });
+  });
 
-  for(let i=0;i<list.length;i++){
-    for(let j=i+1;j<list.length;j++){
-      let a1=list[i], a2=list[j];
-
-      for(let x=0;x<list.length;x++){
-        for(let y=x+1;y<list.length;y++){
-
-          if(x===i||x===j||y===i||y===j) continue;
-
-          let b1=list[x], b2=list[y];
-
-          let score =
-            scorePair(a1,a2) +
-            scorePair(b1,b2);
-
-          if(score > bestScore){
-            bestScore = score;
-            best = {
-              a:[a1,a2],
-              b:[b1,b2]
-            };
-          }
-        }
-      }
-    }
+  let html="";
+  for(let k in stats){
+    html+=`${k}: ${stats[k].games} Spiele<br>`;
   }
 
-  return best;
+  document.getElementById("stats").innerHTML=html;
 }
 
-/* ================= TURNIER ================= */
+/* ================= GENERATE ================= */
 
 function generate(){
+  let list=players.filter(p=>p.active).map(p=>p.name);
 
-  let list = players.filter(p=>p.active).map(p=>p.name);
+  schedule=[];
 
-  if(list.length < 4){
-    alert("Mindestens 4 Spieler nötig");
-    return;
-  }
-
-  schedule = [];
-  index = 0;
-
-  let eventMinutes = (list.length === 4) ? 120 : 180;
-  let rounds = Math.floor(eventMinutes / (matchMinutes + breakMinutes));
-
-  if(rounds < 3) rounds = 3;
+  let rounds=8;
 
   for(let r=0;r<rounds;r++){
 
-    let best = bestCombination(list);
+    list=list.sort(()=>Math.random()-0.5);
 
-    let used = new Set([
-      ...best.a,
-      ...best.b
-    ]);
+    let a=[list[0],list[1]];
+    let b=[list[2],list[3]];
+    let bank=list.slice(4);
 
-    let bank = list.filter(x=>!used.has(x));
-
-    // update stats
-    best.a.forEach(p=>playCount[p]++);
-    best.b.forEach(p=>playCount[p]++);
-    bank.forEach(p=>bankCount[p]++);
-
-    pairHistory[pairKey(best.a[0],best.a[1])] = (pairHistory[pairKey(best.a[0],best.a[1])]||0)+1;
-    pairHistory[pairKey(best.b[0],best.b[1])] = (pairHistory[pairKey(best.b[0],best.b[1])]||0)+1;
-
-    schedule.push({
-      round:r+1,
-      a:best.a,
-      b:best.b,
-      bank
-    });
+    schedule.push({round:r+1,a,b,bank});
   }
 
+  save();
   update();
 }
 
 /* ================= TIMER ================= */
 
 function startTimer(){
-  if(run || finished) return;
+  if(run) return;
 
-  run = setInterval(()=>{
+  run=setInterval(()=>{
+    if(matchTime>0) matchTime--;
 
-    if(matchTime > 0) matchTime--;
-
-    if(matchTime === 30){
-      document.getElementById("warning").style.display="block";
-    }
-
-    if(matchTime <= 0){
-      matchTime = 0;
-      finishMatch();
-      return;
+    if(matchTime<=0){
+      matchTime=0;
+      clearInterval(run);
     }
 
     update();
+    save();
 
   },1000);
 }
@@ -360,13 +301,7 @@ function startTimer(){
 function pauseTimer(){
   clearInterval(run);
   run=null;
-}
-
-function finishMatch(){
-  clearInterval(run);
-  run=null;
-  finished=true;
-  update();
+  save();
 }
 
 /* ================= NEXT ================= */
@@ -374,11 +309,8 @@ function finishMatch(){
 function nextMatch(){
   index++;
   if(index>=schedule.length) index=0;
-
-  matchTime = matchMinutes*60;
-  finished=false;
-  document.getElementById("warning").style.display="none";
-
+  matchTime=matchMinutes*60;
+  save();
   update();
 }
 
@@ -386,26 +318,26 @@ function nextMatch(){
 
 function update(){
 
-  let t = Math.floor(matchTime/60)+":"+String(matchTime%60).padStart(2,"0");
+  let t=Math.floor(matchTime/60)+":"+String(matchTime%60).padStart(2,"0");
 
   document.getElementById("timer").textContent=t;
   document.getElementById("kioskTimer").textContent=t;
 
-  if(schedule.length===0) return;
+  if(schedule.length==0) return;
 
   let s=schedule[index];
 
   document.getElementById("court").innerHTML=
-  `<div class="teamBox">A: ${s.a.join(" / ")}</div>
-   <div class="teamBox">B: ${s.b.join(" / ")}</div>
-   <div class="teamBox">BANK: ${s.bank.join(" / ")||"-"}</div>
-   <div class="teamBox">R ${s.round}/${schedule.length}</div>
-   <div class="teamBox">${finished?"🏁 MATCH BEENDET":""}</div>`;
+  `A: ${s.a.join(" / ")}<br>
+   B: ${s.b.join(" / ")}<br>
+   BANK: ${s.bank.join(" / ")||"-"}<br>
+   Runde ${s.round}`;
 
   document.getElementById("kioskA").textContent="A: "+s.a.join(" / ");
   document.getElementById("kioskB").textContent="B: "+s.b.join(" / ");
   document.getElementById("kioskBank").textContent="BANK: "+(s.bank.join(" / ")||"-");
-  document.getElementById("kioskInfo").textContent="R "+s.round+"/"+schedule.length;
+
+  renderStats();
 }
 
 /* ================= KIOSK ================= */
@@ -413,28 +345,28 @@ function update(){
 function enterKiosk(){
   document.body.classList.add("kiosk");
   document.documentElement.requestFullscreen?.();
-  update();
 }
 
 /* ================= PIN ================= */
 
-const PIN="1234";
-
-function openPin(){
-  document.getElementById("pinOverlay").style.display="block";
-}
-
-function closePin(){
-  document.getElementById("pinOverlay").style.display="none";
-  document.getElementById("pinInput").value="";
-}
-
 function checkPin(){
-  if(document.getElementById("pinInput").value===PIN){
+  if(document.getElementById("pin").value==="1234"){
     document.body.classList.remove("kiosk");
   }
-  closePin();
 }
+
+/* ================= RESET ================= */
+
+function resetStorage(){
+  localStorage.removeItem("v102");
+  location.reload();
+}
+
+/* ================= INIT ================= */
+
+load();
+renderPlayers();
+update();
 
 </script>
 
