@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.5</title>
+<title>Padel Club Terminal V10.5.1</title>
 
 <style>
 body{
@@ -13,14 +13,13 @@ body{
   color:white;
 }
 
-/* 🧠 APP FRAME */
+/* APP */
 #app{
   max-width:1000px;
   margin:auto;
   padding-bottom:80px;
 }
 
-/* 🟢 TOP BAR (NEU) */
 .topbar{
   position:sticky;
   top:0;
@@ -40,7 +39,6 @@ body{
   color:white;
 }
 
-/* SECTIONS */
 .section{
   background:#185c3b;
   margin:10px;
@@ -48,14 +46,13 @@ body{
   border-radius:12px;
 }
 
-/* TIMER */
 .timer{
   font-size:80px;
   text-align:center;
   font-weight:900;
 }
 
-/* PLAYER LIST (CLEAN APP STYLE) */
+/* PLAYERS */
 .playerRow{
   display:flex;
   align-items:center;
@@ -66,7 +63,6 @@ body{
 .playerRow input[type="text"]{
   width:140px;
   padding:6px;
-  font-size:14px;
 }
 
 /* KIOSK */
@@ -79,6 +75,7 @@ body{
   background:black;
   text-align:center;
   padding-top:40px;
+  position:relative;
 }
 
 .kioskTimer{
@@ -92,7 +89,24 @@ body{
   margin:8px;
 }
 
-/* CONTROL BAR */
+/* 🔒 EXIT BUTTON FIX */
+.kioskExit{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:9999;
+}
+
+.kioskExit button{
+  font-size:14px;
+  padding:8px 10px;
+  border-radius:8px;
+  background:#2e8b57;
+  border:none;
+  color:white;
+}
+
+/* CONTROL */
 .controlBar{
   position:fixed;
   bottom:0;
@@ -138,27 +152,24 @@ body{
 
 <div id="app">
 
-<!-- 🟢 TOP BAR -->
 <div class="topbar">
-  <div>🎾 V10.5</div>
+  <div>🎾 V10.5.1</div>
   <div>
     <button onclick="enterKiosk()">Kiosk</button>
     <button onclick="generate()">Turnier</button>
   </div>
 </div>
 
-<!-- TIMER -->
 <div class="section">
+  <h3>⏱ Timer</h3>
   <div class="timer" id="timer">18:00</div>
 </div>
 
-<!-- PLAYERS -->
 <div class="section">
   <h3>👥 Spieler</h3>
   <div id="players"></div>
 </div>
 
-<!-- COURT -->
 <div class="section">
   <h3>🎾 Court</h3>
   <div id="court">Kein Turnier</div>
@@ -168,10 +179,18 @@ body{
 
 <!-- 📺 KIOSK -->
 <div id="kiosk">
+
+  <!-- 🔒 EXIT BUTTON RESTORED -->
+  <div class="kioskExit">
+    <button onclick="openPin()">🔒 Exit</button>
+  </div>
+
   <div class="kioskTimer" id="kioskTimer">18:00</div>
   <div class="kioskTeam" id="kioskA"></div>
   <div class="kioskTeam" id="kioskB"></div>
   <div class="kioskTeam" id="kioskBank"></div>
+  <div class="kioskTeam" id="kioskInfo"></div>
+
 </div>
 
 <!-- CONTROL -->
@@ -208,7 +227,7 @@ let index=0;
 let matchTime=18*60;
 let run=null;
 
-/* ================= UI ================= */
+/* ================= UI PLAYERS ================= */
 
 function renderPlayers(){
   let box=document.getElementById("players");
@@ -319,6 +338,10 @@ function enterKiosk(){
 }
 
 /* ================= PIN ================= */
+
+function openPin(){
+  document.getElementById("pinOverlay").style.display="block";
+}
 
 function checkPin(){
   if(document.getElementById("pin").value==="1234"){
