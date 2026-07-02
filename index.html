@@ -3,76 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Terminal V10.4.2</title>
+<title>Padel Club Terminal V10.5</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#03140f;
+  background:#02140e;
   color:white;
 }
 
+/* 🧠 APP FRAME */
 #app{
-  padding:10px;
   max-width:1000px;
   margin:auto;
+  padding-bottom:80px;
 }
 
-h1{
-  text-align:center;
-  margin:8px 0;
+/* 🟢 TOP BAR (NEU) */
+.topbar{
+  position:sticky;
+  top:0;
+  background:#0f3b26;
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:10;
 }
 
-/* 🔧 FIX: weniger Abstand */
-h2{
-  margin:0 0 6px 0;
-}
-
-.panel{
-  background:#185c3b;
-  padding:8px 10px 10px 10px;
-  border-radius:12px;
-  margin-bottom:10px;
-}
-
-/* Buttons iPad */
-button{
-  padding:14px 16px;
-  margin:5px;
-  border:none;
-  border-radius:10px;
+.topbar button{
   background:#2e8b57;
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
   color:white;
-  font-size:16px;
 }
 
-/* Timer */
+/* SECTIONS */
+.section{
+  background:#185c3b;
+  margin:10px;
+  padding:10px;
+  border-radius:12px;
+}
+
+/* TIMER */
 .timer{
-  font-size:85px;
+  font-size:80px;
   text-align:center;
   font-weight:900;
-  margin:5px 0;
 }
 
-/* 🔧 FIX: Spieler kompakt */
+/* PLAYER LIST (CLEAN APP STYLE) */
 .playerRow{
   display:flex;
   align-items:center;
-  gap:6px;
-  margin:2px 0;
+  gap:8px;
+  padding:4px 0;
 }
 
-/* 🔧 FIX: Name Feld schmäler */
 .playerRow input[type="text"]{
-  flex:0 0 150px;
+  width:140px;
   padding:6px;
-  font-size:15px;
-}
-
-/* Checkbox kleiner Touch */
-.playerRow input[type="checkbox"]{
-  transform:scale(1.1);
+  font-size:14px;
 }
 
 /* KIOSK */
@@ -84,36 +78,39 @@ button{
   height:100vh;
   background:black;
   text-align:center;
-  padding-top:30px;
+  padding-top:40px;
 }
 
 .kioskTimer{
-  font-size:170px;
+  font-size:180px;
   font-weight:900;
   color:#00ff99;
-  margin-bottom:10px;
 }
 
 .kioskTeam{
   font-size:42px;
-  margin:6px;
+  margin:8px;
 }
 
-/* Control Bar */
+/* CONTROL BAR */
 .controlBar{
   position:fixed;
   bottom:0;
   width:100%;
   background:#0d3a25;
   display:flex;
-  justify-content:center;
-  padding:8px;
-  gap:8px;
+  justify-content:space-around;
+  padding:10px;
 }
 
 .controlBar button{
   flex:1;
-  max-width:140px;
+  margin:0 5px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#2e8b57;
+  color:white;
 }
 
 /* PIN */
@@ -141,26 +138,30 @@ button{
 
 <div id="app">
 
-<h1>🎾 V10.4.2</h1>
-
-<div class="panel">
-<button onclick="enterKiosk()">📺 Kiosk</button>
-<button onclick="generate()">🏆 Turnier</button>
+<!-- 🟢 TOP BAR -->
+<div class="topbar">
+  <div>🎾 V10.5</div>
+  <div>
+    <button onclick="enterKiosk()">Kiosk</button>
+    <button onclick="generate()">Turnier</button>
+  </div>
 </div>
 
-<div class="panel">
-<h2>⏱ Timer</h2>
-<div class="timer" id="timer">18:00</div>
+<!-- TIMER -->
+<div class="section">
+  <div class="timer" id="timer">18:00</div>
 </div>
 
-<div class="panel">
-<h2>👥 Spieler</h2>
-<div id="players"></div>
+<!-- PLAYERS -->
+<div class="section">
+  <h3>👥 Spieler</h3>
+  <div id="players"></div>
 </div>
 
-<div class="panel">
-<h2>🎾 Court</h2>
-<div id="court">Kein Turnier</div>
+<!-- COURT -->
+<div class="section">
+  <h3>🎾 Court</h3>
+  <div id="court">Kein Turnier</div>
 </div>
 
 </div>
@@ -171,18 +172,13 @@ button{
   <div class="kioskTeam" id="kioskA"></div>
   <div class="kioskTeam" id="kioskB"></div>
   <div class="kioskTeam" id="kioskBank"></div>
-  <div class="kioskTeam" id="kioskInfo"></div>
-
-  <div style="position:fixed;top:10px;right:10px;">
-    <button onclick="openPin()">🔒</button>
-  </div>
 </div>
 
 <!-- CONTROL -->
 <div class="controlBar">
-<button onclick="startTimer()">▶ Start</button>
-<button onclick="pauseTimer()">⏸ Pause</button>
-<button onclick="nextMatch()">➡ Next</button>
+  <button onclick="startTimer()">▶ Start</button>
+  <button onclick="pauseTimer()">⏸ Pause</button>
+  <button onclick="nextMatch()">➡ Next</button>
 </div>
 
 <!-- PIN -->
@@ -197,7 +193,7 @@ button{
 
 /* ================= PLAYERS ================= */
 
-let players = [
+let players=[
   {name:"Marco",active:true},
   {name:"Stefan",active:true},
   {name:"David",active:true},
@@ -324,14 +320,11 @@ function enterKiosk(){
 
 /* ================= PIN ================= */
 
-function openPin(){
-  document.getElementById("pinOverlay").style.display="block";
-}
-
 function checkPin(){
   if(document.getElementById("pin").value==="1234"){
     document.body.classList.remove("kiosk");
   }
+  document.getElementById("pin").value="";
   document.getElementById("pinOverlay").style.display="none";
 }
 
