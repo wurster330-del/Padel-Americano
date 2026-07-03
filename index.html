@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V12 FINAL</title>
+<title>Padel Club Manager V12 FINAL STABLE</title>
 
 <style>
 body{
@@ -79,7 +79,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V12 FINAL</div>
+  <div>🎾 V12 FINAL STABLE</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
@@ -178,7 +178,35 @@ let timeLeft=0;
 let finished=false;
 
 /* =====================
-   HISTORY (TURNIER)
+   BANK SYSTEM FIX
+===================== */
+
+let lastBank=[];
+
+function isBlocked(p){
+  return lastBank.includes(p);
+}
+
+function pickBank(pool,count){
+
+  let available = pool.filter(p => !isBlocked(p));
+
+  if(available.length < count){
+    available = [...pool];
+    lastBank = [];
+  }
+
+  let bank = available
+    .sort(()=>Math.random()-0.5)
+    .slice(0,count);
+
+  lastBank = bank;
+
+  return bank;
+}
+
+/* =====================
+   MATCH HISTORY (TURNIER)
 ===================== */
 
 let matchHistory={};
@@ -194,8 +222,8 @@ function matchPenalty(A,B){
 }
 
 function addHistory(A,B){
-  let key = matchKey(A,B);
-  matchHistory[key] = (matchHistory[key] || 0) + 1;
+  let key=matchKey(A,B);
+  matchHistory[key]=(matchHistory[key]||0)+1;
 }
 
 /* =====================
@@ -285,13 +313,17 @@ function buildTurnier(){
   }
 
   let used=[...bestA,...bestB];
-  let bank=pool.filter(p=>!used.includes(p));
+  let bankPool=pool.filter(p=>!used.includes(p));
+
+  let bankCount = pool.length===6 ? 2 : (pool.length===5 ? 1 : 0);
+
+  let bank = pickBank(bankPool,bankCount);
 
   return {a:bestA,b:bestB,bank};
 }
 
 /* =====================
-   GROUP FIX (FIXED TEAMS)
+   GROUP FIX (stable teams)
 ===================== */
 
 let groupTeams=null;
@@ -347,6 +379,7 @@ function generate(){
   index=0;
 
   groupTeams=null;
+  lastBank=[];
 
   let total=parseInt(document.getElementById("totalTime").value);
   let match=parseInt(document.getElementById("matchTime").value);
@@ -438,7 +471,7 @@ function updateTimer(){
 }
 
 /* =====================
-   NEXT MATCH + HISTORY
+   NEXT MATCH
 ===================== */
 
 function nextMatch(){
@@ -450,6 +483,8 @@ function nextMatch(){
   if(mode==="turnier"){
     addHistory(s.a,s.b);
   }
+
+  lastBank = s.bank || [];
 
   index++;
 
