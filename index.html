@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0014.4.1 200PX TIMER</title>
+<title>Padel Club Manager V11 MASTER 0015</title>
 
 <style>
 body{
@@ -80,11 +80,11 @@ button{
 }
 
 /* =========================
-   🔥 200PX SCOREBOARD TIMER
+   TIMER (200px SCOREBOARD)
 ========================= */
 
 #timerBox{
-  font-size:200px;   /* 🔥 ULTRA SIZE */
+  font-size:200px;
   font-weight:900;
   color:#00ff99;
 
@@ -114,7 +114,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0014.4.1 ULTRA TIMER</div>
+  <div>🎾 V11 MASTER 0015 MANUAL CONTROL</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -166,7 +166,6 @@ button{
 
 <h1>🎾 KIOSK</h1>
 
-<!-- TIMER -->
 <div id="timerBox">⏱ 00:00</div>
 
 <div class="kioskBox" id="teams"></div>
@@ -203,11 +202,12 @@ let index=0;
 let groups=null;
 
 /* =========================
-   TIMER
+   TIMER STATE
 ========================= */
 
 let timer=null;
 let timeLeft=0;
+let roundFinished=false;
 
 /* =========================
    UI
@@ -270,11 +270,9 @@ function getSystemMode(){
 ========================= */
 
 function calcRounds(){
-
-  let total = parseInt(document.getElementById("total").value);
-  let match = parseInt(document.getElementById("match").value);
-
-  return Math.max(1, Math.floor(total / match));
+  let total=parseInt(document.getElementById("total").value);
+  let match=parseInt(document.getElementById("match").value);
+  return Math.max(1, Math.floor(total/match));
 }
 
 /* =========================
@@ -291,22 +289,6 @@ function buildGroups(){
     [list[2],list[3]],
     [list[4],list[5]]
   ];
-}
-
-/* =========================
-   HYBRID
-========================= */
-
-function hybridMatch(){
-
-  let all = groups.flat();
-  let p = [...all].sort(()=>Math.random()-0.5);
-
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:p.slice(4)
-  };
 }
 
 /* =========================
@@ -333,28 +315,50 @@ function buildTeams(list){
   return {a:[p[0],p[1]],b:[p[2],p[3]],bank:p.slice(4)};
 }
 
+function hybridMatch(){
+
+  let all=groups.flat();
+  let p=[...all].sort(()=>Math.random()-0.5);
+
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:p.slice(4)
+  };
+}
+
 /* =========================
-   TIMER ENGINE
+   TIMER ENGINE (0015)
 ========================= */
 
 function startTimer(){
 
-  let match = parseInt(document.getElementById("match").value);
+  let match=parseInt(document.getElementById("match").value);
 
-  timeLeft = match * 60;
+  timeLeft=match*60;
+  roundFinished=false;
 
   clearInterval(timer);
 
   updateTimerDisplay();
 
-  timer = setInterval(()=>{
+  timer=setInterval(()=>{
 
     timeLeft--;
 
     updateTimerDisplay();
 
-    if(timeLeft <= 0){
+    if(timeLeft<=0){
+
       clearInterval(timer);
+
+      timeLeft=0;
+
+      updateTimerDisplay();
+
+      roundFinished=true;   // 🔴 MATCH ENDE
+
+      updateRoundStatus();
     }
 
   },1000);
@@ -362,13 +366,47 @@ function startTimer(){
 
 function updateTimerDisplay(){
 
-  let min = Math.floor(timeLeft / 60);
-  let sec = timeLeft % 60;
+  let min=Math.floor(timeLeft/60);
+  let sec=timeLeft%60;
+  if(sec<10) sec="0"+sec;
 
-  if(sec < 10) sec = "0" + sec;
-
-  document.getElementById("timerBox").innerHTML =
+  document.getElementById("timerBox").innerHTML=
     `⏱ ${min}:${sec}`;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+function updateRoundStatus(){
+
+  document.getElementById("roundInfo").innerHTML=
+    `Runde ${index+1}/${schedule.length}<br>🔴 MATCH ENDE`;
+}
+
+/* =========================
+   CONTROL FLOW
+========================= */
+
+function startGame(){
+
+  if(!roundFinished && timeLeft>0) return;
+
+  startTimer();
+  update();
+}
+
+function nextGame(){
+
+  if(!roundFinished) return;
+
+  index++;
+
+  if(index>=schedule.length) index=0;
+
+  roundFinished=false;
+
+  update();
 }
 
 /* =========================
@@ -388,24 +426,16 @@ function generate(){
   if(system==="PURE_MATCH"){
     for(let r=0;r<rounds;r++) schedule.push(buildPureMatch(list));
   }
-
   else if(system==="ROTATION_5"){
     for(let r=0;r<rounds;r++) schedule.push(buildRotation5(list));
   }
-
   else if(system==="ROTATION_6"){
     for(let r=0;r<rounds;r++) schedule.push(buildRotation6(list));
   }
-
   else if(system==="GROUP_MODE"){
-
     if(!groups) buildGroups();
-
-    for(let r=0;r<rounds;r++){
-      schedule.push(hybridMatch());
-    }
+    for(let r=0;r<rounds;r++) schedule.push(hybridMatch());
   }
-
   else{
     for(let r=0;r<rounds;r++) schedule.push(buildTeams(list));
   }
@@ -439,25 +469,8 @@ function render(){
 function enterKiosk(){document.body.classList.add("kioskMode");}
 function exitKiosk(){document.body.classList.remove("kioskMode");}
 
-function startGame(){
-  index=0;
-  startTimer();
-  update();
-}
-
-function nextGame(){
-
-  index++;
-
-  if(index>=schedule.length) index=0;
-
-  startTimer();
-
-  update();
-}
-
 /* =========================
-   UPDATE
+   UPDATE UI
 ========================= */
 
 function update(){
@@ -472,7 +485,9 @@ function update(){
     `Bank: ${s.bank.length?s.bank.join(", "):"keine"}`;
 
   document.getElementById("roundInfo").innerHTML=
-    `Runde ${index+1}/${schedule.length}`;
+    roundFinished
+      ? `Runde ${index+1}/${schedule.length}<br>🟡 BEREIT`
+      : `Runde ${index+1}/${schedule.length}`;
 }
 
 /* INIT */
