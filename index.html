@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0006.1</title>
+<title>Padel Club Manager V11.0 Build 0007 FIX</title>
 
 <style>
 body{
@@ -28,6 +28,7 @@ body{
   justify-content:space-between;
 }
 
+/* BUTTONS */
 button{
   border:none;
   padding:12px 14px;
@@ -37,12 +38,19 @@ button{
   cursor:pointer;
   font-weight:bold;
   background:#1f6f4a;
-  transition:0.2s;
 }
 
-button:hover{
-  transform:scale(1.03);
-  filter:brightness(1.2);
+/* MODE */
+.mode-btn.active{
+  box-shadow:0 0 10px #00ff99;
+}
+
+.mode-btn.turnier.active{
+  background:#2e8b57;
+}
+
+.mode-btn.gruppen.active{
+  background:#1e90ff;
 }
 
 .section{
@@ -50,6 +58,16 @@ button:hover{
   margin:10px;
   padding:10px;
   border-radius:10px;
+}
+
+.playerRow{
+  display:flex;
+  gap:8px;
+  margin:5px 0;
+}
+
+.playerRow input[type="text"]{
+  width:140px;
 }
 
 /* KIOSK */
@@ -67,7 +85,6 @@ button:hover{
 .kioskTimer{
   font-size:140px;
   color:#00ff99;
-  font-weight:bold;
 }
 
 .kioskBox{
@@ -96,7 +113,7 @@ button:hover{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0006.1 CLEAN TURNIER</div>
+  <div>🎾 Build 0007 FIX RESTORE</div>
   <div>
     <button onclick="enterKiosk()">▶ Kiosk</button>
   </div>
@@ -126,7 +143,21 @@ button:hover{
 <div id="rounds">Runden: -</div>
 </div>
 
-<!-- PLAYERS -->
+<!-- MODE RESTORED -->
+<div class="section">
+<h3>🎛 Modus</h3>
+
+<button id="btnTurnier"
+class="mode-btn turnier active"
+onclick="setMode('turnier')">🏆 Turniermodus</button>
+
+<button id="btnGruppen"
+class="mode-btn gruppen"
+onclick="setMode('gruppen')">👥 Gruppenmodus</button>
+
+</div>
+
+<!-- PLAYERS RESTORED -->
 <div class="section">
 <h3>👥 Spieler</h3>
 <div id="players"></div>
@@ -134,7 +165,7 @@ button:hover{
 
 <!-- PREVIEW -->
 <div class="section">
-<h3>📊 Spielplan</h3>
+<h3>📊 Vorschau</h3>
 <div id="preview">Kein Spielplan</div>
 </div>
 
@@ -168,6 +199,8 @@ button:hover{
 
 <script>
 
+let mode="turnier";
+
 let players=[
   {name:"Marco",active:true},
   {name:"Stefan",active:true},
@@ -182,13 +215,43 @@ let index=0;
 let matchTime=0;
 let timer=null;
 
-/* PLAYERS */
+/* MODE */
+function setMode(m){
+
+  mode=m;
+
+  document.getElementById("btnTurnier").classList.remove("active");
+  document.getElementById("btnGruppen").classList.remove("active");
+
+  if(m==="turnier"){
+    document.getElementById("btnTurnier").classList.add("active");
+  }
+
+  if(m==="gruppen"){
+    document.getElementById("btnGruppen").classList.add("active");
+  }
+
+  generate();
+}
+
+/* PLAYERS RESTORED (CHECKBOX + EDIT) */
 function renderPlayers(){
+
   let box=document.getElementById("players");
   box.innerHTML="";
+
   players.forEach((p,i)=>{
     box.innerHTML+=`
-      <div>${p.name}</div>`;
+      <div class="playerRow">
+        <input type="checkbox"
+        ${p.active?"checked":""}
+        onchange="players[${i}].active=this.checked">
+
+        <input type="text"
+        value="${p.name}"
+        onchange="players[${i}].name=this.value">
+      </div>
+    `;
   });
 }
 renderPlayers();
@@ -200,7 +263,7 @@ function calcRounds(){
   return Math.floor(total/match);
 }
 
-/* SIMPLE FAIR ROTATION */
+/* TURNIER */
 function buildSchedule(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
@@ -225,9 +288,49 @@ function buildSchedule(){
   }
 }
 
+/* GRUPPEN */
+function buildGroupSchedule(){
+
+  let list=players.filter(p=>p.active).map(p=>p.name);
+  schedule=[];
+
+  let rounds=calcRounds();
+
+  for(let r=0;r<rounds;r++){
+
+    let rotated=[...list];
+
+    for(let i=0;i<r;i++){
+      rotated.push(rotated.shift());
+    }
+
+    let g1=[rotated[0],rotated[1]];
+    let g2=[rotated[2],rotated[3]];
+    let g3=[rotated[4],rotated[5]];
+
+    let pattern=[
+      [g1,g2],
+      [g1,g3],
+      [g2,g3]
+    ];
+
+    let p=pattern[r%3];
+
+    schedule.push({
+      a:p[0],
+      b:p[1],
+      bank:[g1,g2,g3].flat().filter(x=>!p[0].includes(x) && !p[1].includes(x)),
+      round:r+1
+    });
+  }
+}
+
 /* GENERATE */
 function generate(){
-  buildSchedule();
+
+  if(mode==="turnier") buildSchedule();
+  if(mode==="gruppen") buildGroupSchedule();
+
   index=0;
   renderPreview();
   update();
