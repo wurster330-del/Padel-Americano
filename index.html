@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0014.3 TIMER FIX</title>
+<title>Padel Club Manager V11 MASTER 0014.4 TIMER FIX</title>
 
 <style>
 body{
@@ -76,11 +76,32 @@ button{
   margin:6px;
 }
 
+/* =========================
+   🔥 FAR VISIBILITY TIMER FIX
+========================= */
+
 #timerBox{
-  font-size:32px;
-  font-weight:bold;
+  font-size:82px;              /* ≈ 60mm+ visuell */
+  font-weight:900;
   color:#00ff99;
-  margin:10px;
+  background:rgba(0,0,0,0.75);
+  padding:20px 35px;
+  border-radius:18px;
+
+  text-align:center;
+  width:100%;
+
+  text-shadow:
+    0 0 12px #00ff99,
+    0 0 28px #00ff99;
+
+  letter-spacing:4px;
+
+  font-variant-numeric: tabular-nums;
+
+  border-bottom:3px solid #00ff99;
+
+  margin-bottom:15px;
 }
 </style>
 </head>
@@ -90,7 +111,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0014.3 TIMER FIX</div>
+  <div>🎾 V11 MASTER 0014.4 TIMER FIX</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -142,6 +163,7 @@ button{
 
 <h1>🎾 KIOSK</h1>
 
+<!-- 🔥 TIMER (3–5m sichtbar) -->
 <div id="timerBox">⏱ 00:00</div>
 
 <div class="kioskBox" id="teams"></div>
@@ -185,7 +207,7 @@ let timer=null;
 let timeLeft=0;
 
 /* =========================
-   PLAYERS UI
+   UI
 ========================= */
 
 function renderPlayers(){
@@ -253,7 +275,7 @@ function calcRounds(){
 }
 
 /* =========================
-   GROUPS FIX
+   GROUPS
 ========================= */
 
 function buildGroups(){
@@ -289,35 +311,27 @@ function hybridMatch(){
 ========================= */
 
 function buildPureMatch(list){
-
   let p=[...list].sort(()=>Math.random()-0.5);
-
   return {a:[p[0],p[1]],b:[p[2],p[3]],bank:[]};
 }
 
 function buildRotation5(list){
-
   let p=[...list].sort(()=>Math.random()-0.5);
-
   return {a:[p[0],p[1]],b:[p[2],p[3]],bank:[p[4]]};
 }
 
 function buildRotation6(list){
-
   let p=[...list].sort(()=>Math.random()-0.5);
-
   return {a:[p[0],p[1]],b:[p[2],p[3]],bank:[p[4],p[5]]};
 }
 
 function buildTeams(list){
-
   let p=[...list].sort(()=>Math.random()-0.5);
-
   return {a:[p[0],p[1]],b:[p[2],p[3]],bank:p.slice(4)};
 }
 
 /* =========================
-   TIMER ENGINE (FIXED)
+   TIMER ENGINE
 ========================= */
 
 function startTimer(){
@@ -440,7 +454,7 @@ function nextGame(){
 }
 
 /* =========================
-   KIOSK UPDATE
+   UPDATE
 ========================= */
 
 function update(){
