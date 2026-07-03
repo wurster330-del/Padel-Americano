@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0012.2 STRUCTURE FIX</title>
+<title>Padel Club Manager V11 MASTER 0013 SMART MODE</title>
 
 <style>
 body{
@@ -59,14 +59,6 @@ button{
   margin:5px 0;
 }
 
-#fairnessBox{
-  background:#0b2d1d;
-  padding:10px;
-  margin-top:10px;
-  border-radius:10px;
-  font-size:14px;
-}
-
 /* KIOSK */
 .kioskMode #app{ display:none; }
 .kioskMode #kiosk{ display:block; }
@@ -77,11 +69,6 @@ button{
   background:black;
   text-align:center;
   padding-top:25px;
-}
-
-.kioskTimer{
-  font-size:140px;
-  color:#00ff99;
 }
 
 .kioskBox{
@@ -96,36 +83,16 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0012.2 STRUCTURE FIX</div>
+  <div>🎾 V11 MASTER 0013 SMART MODE ENGINE</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
-</div>
-
-<!-- SETTINGS -->
-<div class="section">
-<h3>⚙️ Setup</h3>
-
-<label>Gesamtzeit:</label>
-<select id="total">
-  <option value="120">120</option>
-  <option value="180" selected>180</option>
-</select>
-
-<br><br>
-
-<label>Spielzeit:</label>
-<select id="match">
-  <option value="15">15</option>
-  <option value="18" selected>18</option>
-  <option value="20">20</option>
-</select>
 </div>
 
 <!-- MODE -->
 <div class="section">
-<h3>🎛 Modus</h3>
+<h3>🎛 Modus (nur Anzeige)</h3>
 
-<button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier (FRE)</button>
-<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen (Hybrid)</button>
+<button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier</button>
+<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen</button>
 
 </div>
 
@@ -138,11 +105,7 @@ button{
 <!-- PREVIEW -->
 <div class="section">
 <h3>📊 Spielplan</h3>
-
 <div id="preview"></div>
-
-<div id="fairnessBox">System bereit</div>
-
 </div>
 
 </div>
@@ -150,11 +113,10 @@ button{
 <!-- KIOSK -->
 <div id="kiosk">
 
-<div class="kioskTimer" id="ktimer">00:00</div>
+<h1>🎾 KIOSK</h1>
 
 <div class="kioskBox" id="teams"></div>
 <div class="kioskBox" id="bank"></div>
-<div class="kioskBox" id="nextGame"></div>
 <div class="kioskBox" id="roundInfo"></div>
 
 <br>
@@ -208,7 +170,7 @@ function renderPlayers(){
 }
 
 /* =========================
-   MODE SWITCH
+   MODE UI (only visual)
 ========================= */
 
 function setMode(m){
@@ -227,31 +189,76 @@ function setMode(m){
 }
 
 /* =========================
-   SAFE TEAM BUILDER (STABIL)
+   SMART MODE ENGINE
 ========================= */
+
+function getSystemMode(){
+
+  let count = players.filter(p=>p.active).length;
+
+  if(count <= 4) return "PURE_MATCH";
+  if(count === 5) return "ROTATION_5";
+  if(count === 6 && mode==="gruppen") return "GROUP_MODE";
+  if(count === 6) return "ROTATION_6";
+
+  return "FRE_FULL";
+}
+
+/* =========================
+   BUILDERS
+========================= */
+
+function buildPureMatch(list){
+
+  let p=[...list].sort(()=>Math.random()-0.5);
+
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:[]
+  };
+}
+
+function buildRotation5(list){
+
+  let p=[...list].sort(()=>Math.random()-0.5);
+
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:[p[4]]
+  };
+}
+
+function buildRotation6(list){
+
+  let p=[...list].sort(()=>Math.random()-0.5);
+
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:[p[4],p[5]]
+  };
+}
 
 function buildTeams(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  let a=[p[0],p[1]||p[0]];
-  let b=[p[2],p[3]||p[2]];
-
-  let used=new Set([...a,...b]);
-
-  let bank=p.filter(x=>!used.has(x));
-
-  return {a,b,bank};
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:p.slice(4)
+  };
 }
 
 /* =========================
-   GROUP LOGIC (FIXED)
+   GROUPS
 ========================= */
 
 function buildGroups(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
-
   list=list.sort(()=>Math.random()-0.5);
 
   groups=[
@@ -279,7 +286,7 @@ function groupMatch(r){
 }
 
 /* =========================
-   GENERATE CORE
+   GENERATE CORE (FIXED)
 ========================= */
 
 function generate(){
@@ -288,36 +295,33 @@ function generate(){
   index=0;
 
   let list=players.filter(p=>p.active).map(p=>p.name);
-  let rounds=calcRounds();
+  let rounds=3;
 
-  if(mode==="turnier"){
+  let system=getSystemMode();
 
-    for(let r=0;r<rounds;r++){
-      schedule.push(buildTeams(list));
-    }
+  if(system==="PURE_MATCH"){
+    for(let r=0;r<rounds;r++) schedule.push(buildPureMatch(list));
   }
 
-  if(mode==="gruppen"){
+  else if(system==="ROTATION_5"){
+    for(let r=0;r<rounds;r++) schedule.push(buildRotation5(list));
+  }
 
+  else if(system==="ROTATION_6"){
+    for(let r=0;r<rounds;r++) schedule.push(buildRotation6(list));
+  }
+
+  else if(system==="GROUP_MODE"){
     buildGroups();
+    for(let r=0;r<rounds;r++) schedule.push(groupMatch(r));
+  }
 
-    for(let r=0;r<rounds;r++){
-      schedule.push(groupMatch(r));
-    }
+  else{
+    for(let r=0;r<rounds;r++) schedule.push(buildTeams(list));
   }
 
   render();
   update();
-}
-
-/* =========================
-   CALC
-========================= */
-
-function calcRounds(){
-  let total=parseInt(document.getElementById("total").value);
-  let match=parseInt(document.getElementById("match").value);
-  return Math.floor(total/match);
 }
 
 /* =========================
