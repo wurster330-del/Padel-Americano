@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0004.1</title>
+<title>Padel Club Manager V11.0 Build 0004.2</title>
 
 <style>
 body{
@@ -29,13 +29,32 @@ body{
 }
 
 button{
-  background:#2e8b57;
   border:none;
   padding:10px;
   border-radius:8px;
   color:white;
   margin:2px;
   cursor:pointer;
+}
+
+/* MODE BUTTONS */
+.mode-btn{
+  background:#2e8b57;
+  opacity:0.6;
+  transition:0.2s;
+}
+
+.mode-btn.active{
+  opacity:1;
+  box-shadow:0 0 12px #00ff99;
+}
+
+.mode-btn.turnier.active{
+  background:#2e8b57;
+}
+
+.mode-btn.gruppen.active{
+  background:#1e90ff;
 }
 
 .section{
@@ -99,7 +118,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0004.1 FIX</div>
+  <div>🎾 Build 0004.2 MODE FIX</div>
   <div>
     <button onclick="enterKiosk()">▶ Kiosk</button>
   </div>
@@ -129,11 +148,18 @@ button{
 <div id="rounds">Runden: -</div>
 </div>
 
-<!-- MODE BUTTONS (FIXED) -->
+<!-- MODE -->
 <div class="section">
 <h3>🎛 Modus</h3>
-<button onclick="mode='turnier'; generate();">🏆 Turniermodus</button>
-<button onclick="mode='gruppen'; generate();">👥 Gruppenmodus</button>
+
+<button id="btnTurnier"
+class="mode-btn turnier active"
+onclick="setMode('turnier')">🏆 Turniermodus</button>
+
+<button id="btnGruppen"
+class="mode-btn gruppen"
+onclick="setMode('gruppen')">👥 Gruppenmodus</button>
+
 </div>
 
 <!-- PLAYERS -->
@@ -194,6 +220,25 @@ let index=0;
 let matchTime=0;
 let timer=null;
 
+/* MODE SWITCH */
+function setMode(m){
+
+  mode=m;
+
+  document.getElementById("btnTurnier").classList.remove("active");
+  document.getElementById("btnGruppen").classList.remove("active");
+
+  if(m==="turnier"){
+    document.getElementById("btnTurnier").classList.add("active");
+  }
+
+  if(m==="gruppen"){
+    document.getElementById("btnGruppen").classList.add("active");
+  }
+
+  generate();
+}
+
 /* PLAYERS */
 function renderPlayers(){
   let box=document.getElementById("players");
@@ -222,7 +267,7 @@ function shuffle(arr){
   return arr.sort(()=>Math.random()-0.5);
 }
 
-/* SMART TURNIER ENGINE */
+/* TURNIER */
 function buildSchedule(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
@@ -243,7 +288,7 @@ function buildSchedule(){
   }
 }
 
-/* GROUP MODE */
+/* GRUPPEN */
 function buildGroupSchedule(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
@@ -278,7 +323,7 @@ function buildGroupSchedule(){
   }
 }
 
-/* MASTER GENERATE */
+/* GENERATE */
 function generate(){
 
   if(mode==="turnier") buildSchedule();
@@ -287,7 +332,7 @@ function generate(){
   renderPreview();
 }
 
-/* PREVIEW FIX */
+/* PREVIEW */
 function renderPreview(){
 
   if(!schedule.length){
@@ -307,7 +352,12 @@ function renderPreview(){
   document.getElementById("preview").innerHTML=html;
 }
 
-/* START GAME */
+/* KIOSK */
+function enterKiosk(){
+  document.body.classList.add("kioskMode");
+}
+
+/* GAME */
 function startGame(){
   index=0;
   matchTime=parseInt(document.getElementById("match").value)*60;
@@ -315,8 +365,16 @@ function startGame(){
   startTimer();
 }
 
+function nextGame(){
+  index++;
+  if(index>=schedule.length) index=0;
+  matchTime=parseInt(document.getElementById("match").value)*60;
+  update();
+}
+
 /* TIMER */
 function startTimer(){
+
   if(timer) return;
 
   timer=setInterval(()=>{
@@ -332,15 +390,7 @@ function startTimer(){
   },1000);
 }
 
-/* NEXT */
-function nextGame(){
-  index++;
-  if(index>=schedule.length) index=0;
-  matchTime=parseInt(document.getElementById("match").value)*60;
-  update();
-}
-
-/* UPDATE KIOSK */
+/* UPDATE */
 function update(){
 
   let s=schedule[index];
@@ -361,17 +411,11 @@ function update(){
     : "Nächstes Spiel: -";
 }
 
-/* KIOSK */
-function enterKiosk(){
-  document.body.classList.add("kioskMode");
-}
-
 /* EXIT */
 function openExit(){
   document.getElementById("pinOverlay").style.display="block";
 }
 
-/* PIN */
 function checkPin(){
   if(document.getElementById("pin").value==="1234"){
     document.body.classList.remove("kioskMode");
