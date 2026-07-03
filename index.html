@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER FINAL</title>
+<title>Padel Manager FIX 5.1</title>
 
 <style>
 body{
@@ -13,15 +13,9 @@ body{
   color:white;
 }
 
-#app{
-  max-width:1000px;
-  margin:auto;
-  padding-bottom:80px;
-}
+#app{max-width:900px;margin:auto;padding-bottom:80px;}
 
 .topbar{
-  position:sticky;
-  top:0;
   background:#0f3b26;
   padding:10px;
   display:flex;
@@ -29,24 +23,17 @@ body{
 }
 
 button{
-  border:none;
-  padding:22px 28px;
-  border-radius:14px;
-  font-size:20px;
-  color:#fff;
-  margin:10px;
-  cursor:pointer;
+  padding:18px 22px;
+  margin:8px;
   font-weight:bold;
+  border:none;
+  border-radius:10px;
   background:#1f6f4a;
-  min-width:140px;
+  color:white;
+  cursor:pointer;
 }
 
-.mode-btn.active{
-  box-shadow:0 0 10px #00ff99;
-}
-
-.mode-btn.turnier.active{ background:#2e8b57; }
-.mode-btn.gruppen.active{ background:#1e90ff; }
+.mode-btn.active{box-shadow:0 0 10px #00ff99;}
 
 .section{
   background:#185c3b;
@@ -55,40 +42,25 @@ button{
   border-radius:10px;
 }
 
-.playerRow{
-  display:flex;
-  gap:8px;
-  margin:5px 0;
-}
+.playerRow{display:flex;gap:8px;margin:5px 0;}
 
 /* KIOSK */
-.kioskMode #app{ display:none; }
-.kioskMode #kiosk{ display:block; }
+.kioskMode #app{display:none;}
+.kioskMode #kiosk{display:block;}
 
 #kiosk{
   display:none;
   height:100vh;
   background:black;
   text-align:center;
-  padding-top:25px;
+  padding-top:30px;
 }
 
 /* TIMER */
 #timerBox{
-  font-size:200px;
+  font-size:180px;
   font-weight:900;
   color:#00ff99;
-  background:rgba(0,0,0,0.85);
-  text-align:center;
-  width:100%;
-  padding:40px 0;
-  letter-spacing:6px;
-  text-shadow:
-    0 0 20px #00ff99,
-    0 0 40px #00ff99,
-    0 0 70px #00ff99;
-  font-variant-numeric: tabular-nums;
-  border-bottom:4px solid #00ff99;
 }
 </style>
 </head>
@@ -98,48 +70,28 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER FINAL (5 PLAYER FIX)</div>
-  <button onclick="enterKiosk()">▶ Kiosk</button>
-</div>
-
-<!-- SETUP -->
-<div class="section">
-<h3>⚙️ Setup</h3>
-
-<label>Gesamtzeit:</label>
-<select id="total">
-  <option value="120">120 min</option>
-  <option value="180" selected>180 min</option>
-</select>
-
-<br><br>
-
-<label>Spielzeit:</label>
-<select id="match">
-  <option value="15">15 min</option>
-  <option value="18" selected>18 min</option>
-  <option value="20">20 min</option>
-</select>
+  <div>🎾 FIX 5.1</div>
+  <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
 <!-- MODE -->
 <div class="section">
-<h3>🎛 Modus</h3>
+<h3>Modus</h3>
 
-<button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier</button>
-<button id="btnGruppen" class="mode-btn gruppen active" onclick="setMode('gruppen')">👥 Gruppen</button>
+<button id="btnTurnier" class="mode-btn active" onclick="setMode('turnier')">Turnier</button>
+<button id="btnGruppen" class="mode-btn" onclick="setMode('gruppen')">Gruppen</button>
 
 </div>
 
 <!-- PLAYERS -->
 <div class="section">
-<h3>👥 Spieler</h3>
+<h3>Spieler</h3>
 <div id="players"></div>
 </div>
 
-<!-- PREVIEW -->
+<!-- PLAN -->
 <div class="section">
-<h3>📊 Spielplan</h3>
+<h3>Spielplan</h3>
 <div id="preview"></div>
 </div>
 
@@ -152,24 +104,19 @@ button{
 
 <div id="timerBox">⏱ 00:00</div>
 
-<div id="teams" style="font-size:26px;margin:10px;"></div>
-<div id="bank" style="font-size:22px;margin:10px;"></div>
-<div id="roundInfo" style="font-size:22px;margin:10px;"></div>
+<div id="teams"></div>
+<div id="bank"></div>
+<div id="roundInfo"></div>
 
 <br>
 
-<button onclick="startGame()">▶ Start</button>
-<button onclick="nextGame()">➡ Next</button>
-<button onclick="exitKiosk()">⛔ Exit</button>
+<button onclick="exitKiosk()">Exit</button>
 
 </div>
 
 <script>
 
-/* =========================
-   STATE
-========================= */
-
+/* STATE */
 let mode="turnier";
 
 let players=[
@@ -177,7 +124,7 @@ let players=[
   {name:"Stefan",active:true},
   {name:"David",active:true},
   {name:"Tobias",active:true},
-  {name:"Christian",active:true},
+  {name:"Chris",active:true},
   {name:"Werner",active:true}
 ];
 
@@ -185,20 +132,14 @@ let schedule=[];
 let index=0;
 
 /* =========================
-   TIMER
-========================= */
-
-let timer=null;
-let timeLeft=0;
-let roundFinished=false;
-
-/* =========================
-   PLAYERS
+   UI FIX
 ========================= */
 
 function renderPlayers(){
+
   let box=document.getElementById("players");
   box.innerHTML="";
+
   players.forEach((p,i)=>{
     box.innerHTML+=`
       <div class="playerRow">
@@ -214,92 +155,81 @@ function renderPlayers(){
 }
 
 /* =========================
-   MODE
+   MODE FIX (TURNIER + GRUPPEN)
 ========================= */
 
 function setMode(m){
+
   mode=m;
 
   document.getElementById("btnTurnier").classList.remove("active");
   document.getElementById("btnGruppen").classList.remove("active");
 
-  document.getElementById("btnTurnier").classList.add("active");
+  if(m==="turnier"){
+    document.getElementById("btnTurnier").classList.add("active");
+  } else {
+    document.getElementById("btnGruppen").classList.add("active");
+  }
 
   generate();
 }
 
 /* =========================
-   ACTIVE PLAYERS
+   KIOSK FIX
 ========================= */
 
-function getActivePlayers(){
+function enterKiosk(){
+  document.body.classList.add("kioskMode");
+}
+
+function exitKiosk(){
+  document.body.classList.remove("kioskMode");
+}
+
+/* =========================
+   PLAYERS ACTIVE
+========================= */
+
+function list(){
   return players.filter(p=>p.active).map(p=>p.name);
 }
 
 /* =========================
-   TURNIER FIX (5 PLAYER BUG FIX)
+   MATCH LOGIC (FIXED 5 PLAYER)
 ========================= */
 
-function buildTurnierMatch(){
+function match(){
 
-  let list = getActivePlayers();
+  let l=list();
 
-  // 4 Spieler
-  if(list.length === 4){
-    return {
-      a:[list[0],list[1]],
-      b:[list[2],list[3]],
-      bank:[]
-    };
+  if(l.length===4){
+    return {a:[l[0],l[1]],b:[l[2],l[3]],bank:[]};
   }
 
-  // 🔥 5 Spieler FIX (nur 1 Bank!)
-  if(list.length === 5){
-
-    let s = [...list].sort(()=>Math.random()-0.5);
-
-    return {
-      a:[s[0],s[1]],
-      b:[s[2],s[3]],
-      bank:[s[4]]
-    };
+  if(l.length===5){
+    let s=[...l].sort(()=>Math.random()-0.5);
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4]]};
   }
 
-  // 6 Spieler
-  if(list.length === 6){
-
-    let s = [...list].sort(()=>Math.random()-0.5);
-
-    return {
-      a:[s[0],s[1]],
-      b:[s[2],s[3]],
-      bank:[s[4],s[5]]
-    };
+  if(l.length===6){
+    let s=[...l].sort(()=>Math.random()-0.5);
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4],s[5]]};
   }
+
+  return {a:[],b:[],bank:[]};
 }
 
 /* =========================
-   GENERATE
+   GENERATE FIX
 ========================= */
-
-function calcRounds(){
-  let total=parseInt(document.getElementById("total").value);
-  let match=parseInt(document.getElementById("match").value);
-  return Math.max(1, Math.floor(total/match));
-}
 
 function generate(){
 
   schedule=[];
   index=0;
 
-  let rounds=calcRounds();
-
-  for(let r=0;r<rounds;r++){
-
-    if(mode==="turnier"){
-      schedule.push(buildTurnierMatch());
-    }
+  for(let i=0;i<5;i++){
+    schedule.push(match());
   }
 
   render();
@@ -307,7 +237,7 @@ function generate(){
 }
 
 /* =========================
-   RENDER
+   RENDER FIX
 ========================= */
 
 function render(){
@@ -317,7 +247,7 @@ function render(){
   schedule.forEach((s,i)=>{
     html+=`
       R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
-      🪑 Bank: ${s.bank.length?s.bank.join(", "):"keine"}<br><br>
+      Bank: ${s.bank.join(", ") || "keine"}<br><br>
     `;
   });
 
@@ -325,70 +255,7 @@ function render(){
 }
 
 /* =========================
-   TIMER
-========================= */
-
-function startTimer(){
-
-  let match=parseInt(document.getElementById("match").value);
-
-  timeLeft=match*60;
-  roundFinished=false;
-
-  clearInterval(timer);
-
-  updateTimerDisplay();
-
-  timer=setInterval(()=>{
-
-    timeLeft--;
-
-    updateTimerDisplay();
-
-    if(timeLeft<=0){
-
-      clearInterval(timer);
-
-      timeLeft=0;
-
-      updateTimerDisplay();
-
-      roundFinished=true;
-    }
-
-  },1000);
-}
-
-function updateTimerDisplay(){
-
-  let min=Math.floor(timeLeft/60);
-  let sec=timeLeft%60;
-  if(sec<10) sec="0"+sec;
-
-  document.getElementById("timerBox").innerHTML=
-    `⏱ ${min}:${sec}`;
-}
-
-/* =========================
-   CONTROL
-========================= */
-
-function startGame(){
-  if(!roundFinished && timeLeft>0) return;
-  startTimer();
-  update();
-}
-
-function nextGame(){
-  if(!roundFinished) return;
-  index++;
-  if(index>=schedule.length) index=0;
-  roundFinished=false;
-  update();
-}
-
-/* =========================
-   UPDATE
+   UPDATE KIOSK
 ========================= */
 
 function update(){
@@ -400,16 +267,13 @@ function update(){
     `A: ${s.a.join(" / ")}<br>B: ${s.b.join(" / ")}`;
 
   document.getElementById("bank").innerHTML=
-    `Bank: ${s.bank.length?s.bank.join(", "):"keine"}`;
+    `Bank: ${s.bank.join(", ") || "keine"}`;
 
   document.getElementById("roundInfo").innerHTML=
     `Runde ${index+1}/${schedule.length}`;
 }
 
-/* =========================
-   INIT
-========================= */
-
+/* INIT */
 renderPlayers();
 generate();
 
