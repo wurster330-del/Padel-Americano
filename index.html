@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V12 FAIR</title>
+<title>Padel Club Manager V12 GROUP FIX</title>
 
 <style>
 body{
@@ -79,7 +79,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V12 FAIR BANK ROTATION</div>
+  <div>🎾 V12 GROUP FIX</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
@@ -168,6 +168,12 @@ let schedule=[];
 let index=0;
 
 /* =====================
+   GROUP STATE (FIXED TEAMS)
+===================== */
+
+let groupTeams=null;
+
+/* =====================
    SYSTEM
 ===================== */
 
@@ -176,12 +182,6 @@ let lock=false;
 let timer=null;
 let timeLeft=0;
 let finished=false;
-
-/* =====================
-   BANK MEMORY (NEU)
-===================== */
-
-let lastBank=[];
 
 /* =====================
    PLAYERS
@@ -210,7 +210,7 @@ function active(){
 }
 
 /* =====================
-   MODE
+   MODE SWITCH
 ===================== */
 
 function setMode(m){
@@ -232,113 +232,70 @@ function setMode(m){
 }
 
 /* =====================
-   BANK ROTATION FIX
-===================== */
-
-function pickBank(pool,count){
-
-  let available = pool.filter(p => !lastBank.includes(p));
-
-  if(available.length < count){
-    available = [...pool];
-    lastBank = [];
-  }
-
-  let bank = available
-    .sort(()=>Math.random()-0.5)
-    .slice(0,count);
-
-  lastBank = bank;
-
-  return bank;
-}
-
-/* =====================
-   TURNIER
+   TURNIER (simple stable)
 ===================== */
 
 function buildTurnier(){
 
   let l=active();
-  let pool=[...l];
 
-  pool.sort(()=>Math.random()-0.5);
+  let s=[...l].sort(()=>Math.random()-0.5);
 
-  let bestA=null;
-  let bestB=null;
-  let bestScore=999999;
+  if(l.length===4)
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[]};
 
-  for(let i=0;i<pool.length;i++){
-    for(let j=i+1;j<pool.length;j++){
-      for(let k=0;k<pool.length;k++){
-        for(let m=k+1;m<pool.length;m++){
+  if(l.length===5)
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4]]};
 
-          let A=[pool[i],pool[j]];
-          let B=[pool[k],pool[m]];
+  if(l.length===6)
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4],s[5]]};
 
-          let used=new Set([...A,...B]);
-          if(used.size<4) continue;
-
-          let score=0;
-
-          score += pairPenalty(A);
-          score += pairPenalty(B);
-
-          if(score < bestScore){
-            bestScore=score;
-            bestA=A;
-            bestB=B;
-          }
-        }
-      }
-    }
-  }
-
-  let used=[...bestA,...bestB];
-  let bankPool=pool.filter(p=>!used.includes(p));
-
-  let bankCount = pool.length===6 ? 2 : (pool.length===5 ? 1 : 0);
-
-  let bank = pickBank(bankPool,bankCount);
-
-  return {a:bestA,b:bestB,bank};
-}
-
-/* penalty = keine Pair-History im Minimalmodus */
-function pairPenalty(team){
-  return 0;
+  return {a:[],b:[],bank:[]};
 }
 
 /* =====================
-   GRUPPE
+   GROUP TEAM GENERATION (ONCE)
+===================== */
+
+function generateGroupTeams(){
+
+  let l=active();
+
+  if(l.length===4){
+    return [[l[0],l[1]],[l[2],l[3]]];
+  }
+
+  if(l.length===6){
+    return [[l[0],l[1]],[l[2],l[3]],[l[4],l[5]]];
+  }
+
+  return [];
+}
+
+/* =====================
+   GROUP FIXED LOGIC
 ===================== */
 
 function buildGruppe(){
 
-  let l=active();
-
-  if(l.length===4)
-    return {a:[l[0],l[1]],b:[l[2],l[3]],bank:[]};
-
-  if(l.length===5){
-    let s=[...l].sort(()=>Math.random()-0.5);
-    return {
-      a:[s[0],s[1]],
-      b:[s[2],s[3]],
-      bank: pickBank([s[4]],1)
-    };
+  if(!groupTeams){
+    groupTeams = generateGroupTeams();
   }
 
-  if(l.length===6){
-    let s=[...l].sort(()=>Math.random()-0.5);
+  let t=groupTeams;
 
-    let used=[s[0],s[1],s[2],s[3]];
-    let bankPool=[s[4],s[5]];
+  if(t.length===2){
+    return {a:t[0],b:t[1],bank:[]};
+  }
+
+  if(t.length===3){
+
+    let order=[0,1,2].sort(()=>Math.random()-0.5);
 
     return {
-      a:[s[0],s[1]],
-      b:[s[2],s[3]],
-      bank: pickBank(bankPool,2)
+      a:t[order[0]],
+      b:t[order[1]],
+      bank:[...t[order[2]]]
     };
   }
 
@@ -355,6 +312,8 @@ function generate(){
 
   schedule=[];
   index=0;
+
+  groupTeams=null;
 
   let total=parseInt(document.getElementById("totalTime").value);
   let match=parseInt(document.getElementById("matchTime").value);
