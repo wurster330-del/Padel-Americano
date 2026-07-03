@@ -79,7 +79,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V12 FAIR ROTATION</div>
+  <div>🎾 V12 FAIR BANK ROTATION</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
@@ -178,27 +178,10 @@ let timeLeft=0;
 let finished=false;
 
 /* =====================
-   FAIRNESS ENGINE
+   BANK MEMORY (NEU)
 ===================== */
 
-let pairHistory={};
-
-function pairKey(a,b){
-  return [a,b].sort().join("-");
-}
-
-function pairScore(a,b){
-  return pairHistory[pairKey(a,b)] || 0;
-}
-
-function updateHistory(team){
-  for(let i=0;i<team.length;i++){
-    for(let j=i+1;j<team.length;j++){
-      let key=pairKey(team[i],team[j]);
-      pairHistory[key]=(pairHistory[key]||0)+1;
-    }
-  }
-}
+let lastBank=[];
 
 /* =====================
    PLAYERS
@@ -249,7 +232,29 @@ function setMode(m){
 }
 
 /* =====================
-   TURNIER FAIR ENGINE
+   BANK ROTATION FIX
+===================== */
+
+function pickBank(pool,count){
+
+  let available = pool.filter(p => !lastBank.includes(p));
+
+  if(available.length < count){
+    available = [...pool];
+    lastBank = [];
+  }
+
+  let bank = available
+    .sort(()=>Math.random()-0.5)
+    .slice(0,count);
+
+  lastBank = bank;
+
+  return bank;
+}
+
+/* =====================
+   TURNIER
 ===================== */
 
 function buildTurnier(){
@@ -257,11 +262,11 @@ function buildTurnier(){
   let l=active();
   let pool=[...l];
 
+  pool.sort(()=>Math.random()-0.5);
+
   let bestA=null;
   let bestB=null;
   let bestScore=999999;
-
-  pool.sort(()=>Math.random()-0.5);
 
   for(let i=0;i<pool.length;i++){
     for(let j=i+1;j<pool.length;j++){
@@ -274,11 +279,12 @@ function buildTurnier(){
           let used=new Set([...A,...B]);
           if(used.size<4) continue;
 
-          let score=
-            pairScore(A[0],A[1])+
-            pairScore(B[0],B[1]);
+          let score=0;
 
-          if(score<bestScore){
+          score += pairPenalty(A);
+          score += pairPenalty(B);
+
+          if(score < bestScore){
             bestScore=score;
             bestA=A;
             bestB=B;
@@ -289,9 +295,18 @@ function buildTurnier(){
   }
 
   let used=[...bestA,...bestB];
-  let bank=pool.filter(p=>!used.includes(p));
+  let bankPool=pool.filter(p=>!used.includes(p));
 
-  return {a:bestA||[],b:bestB||[],bank};
+  let bankCount = pool.length===6 ? 2 : (pool.length===5 ? 1 : 0);
+
+  let bank = pickBank(bankPool,bankCount);
+
+  return {a:bestA,b:bestB,bank};
+}
+
+/* penalty = keine Pair-History im Minimalmodus */
+function pairPenalty(team){
+  return 0;
 }
 
 /* =====================
@@ -307,12 +322,24 @@ function buildGruppe(){
 
   if(l.length===5){
     let s=[...l].sort(()=>Math.random()-0.5);
-    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4]]};
+    return {
+      a:[s[0],s[1]],
+      b:[s[2],s[3]],
+      bank: pickBank([s[4]],1)
+    };
   }
 
   if(l.length===6){
     let s=[...l].sort(()=>Math.random()-0.5);
-    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4],s[5]]};
+
+    let used=[s[0],s[1],s[2],s[3]];
+    let bankPool=[s[4],s[5]];
+
+    return {
+      a:[s[0],s[1]],
+      b:[s[2],s[3]],
+      bank: pickBank(bankPool,2)
+    };
   }
 
   return {a:[],b:[],bank:[]};
@@ -414,22 +441,22 @@ function updateTimer(){
   let s=timeLeft%60;
   if(s<10) s="0"+s;
 
-  document.getElementById("timerBox").innerHTML=`⏱ ${m}:${s}`;
+  document.getElementById("timerBox").innerHTML=
+    `⏱ ${m}:${s}`;
 }
 
 /* =====================
-   NEXT MATCH
+   NEXT
 ===================== */
 
 function nextMatch(){
 
   if(!finished) return;
 
-  updateHistory(schedule[index].a);
-  updateHistory(schedule[index].b);
-
   index++;
-  if(index>=schedule.length) index=0;
+
+  if(index>=schedule.length)
+    index=0;
 
   finished=false;
 
@@ -437,7 +464,7 @@ function nextMatch(){
 }
 
 /* =====================
-   UPDATE KIOSK
+   UPDATE
 ===================== */
 
 function update(){
