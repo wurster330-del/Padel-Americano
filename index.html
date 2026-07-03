@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -13,13 +13,8 @@ body{
   color:white;
 }
 
-#app{
-  max-width:1000px;
-  margin:auto;
-  padding-bottom:80px;
-}
+#app{max-width:1000px;margin:auto;padding-bottom:80px;}
 
-/* TOPBAR */
 .topbar{
   position:sticky;
   top:0;
@@ -27,31 +22,24 @@ body{
   padding:10px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
 }
 
-/* BUTTONS */
 button{
   padding:16px 20px;
   margin:6px;
   border:none;
   border-radius:12px;
+  font-size:18px;
   font-weight:bold;
   background:#1f6f4a;
   color:white;
   cursor:pointer;
-  font-size:18px;
-}
-
-button:active{
-  transform:scale(0.98);
 }
 
 .mode-btn.active{
   box-shadow:0 0 12px #00ff99;
 }
 
-/* SECTIONS */
 .section{
   background:#184d35;
   margin:10px;
@@ -77,7 +65,6 @@ button:active{
   padding-top:20px;
 }
 
-/* TIMER */
 #timerBox{
   font-size:200px;
   font-weight:900;
@@ -100,7 +87,7 @@ button:active{
 <div class="section">
 <h3>⚙️ Setup</h3>
 
-<label>Gesamtzeit Spielabend:</label><br>
+<label>Gesamtzeit:</label><br>
 <select id="totalTime">
   <option value="120">120 min</option>
   <option value="180" selected>180 min</option>
@@ -117,7 +104,7 @@ button:active{
 
 </div>
 
-<!-- MODUS -->
+<!-- MODE -->
 <div class="section">
 <h3>Modus</h3>
 
@@ -126,13 +113,13 @@ button:active{
 
 </div>
 
-<!-- SPIELER -->
+<!-- PLAYERS -->
 <div class="section">
 <h3>Spieler</h3>
 <div id="players"></div>
 </div>
 
-<!-- SPIELPLAN -->
+<!-- PLAN -->
 <div class="section">
 <h3>Spielplan</h3>
 <div id="preview"></div>
@@ -149,7 +136,6 @@ button:active{
 
 <div id="modeBox"></div>
 <div id="roundBox"></div>
-
 <div id="teamsBox"></div>
 <div id="bankBox"></div>
 
@@ -163,9 +149,9 @@ button:active{
 
 <script>
 
-/* =========================
+/* =====================
    STATE
-========================= */
+===================== */
 
 let mode="turnier";
 
@@ -181,24 +167,24 @@ let players=[
 let schedule=[];
 let index=0;
 
-/* =========================
-   FLAGS
-========================= */
+/* =====================
+   LOCKS
+===================== */
 
 let freeze=false;
 let lock=false;
 
-/* =========================
+/* =====================
    TIMER
-========================= */
+===================== */
 
 let timer=null;
 let timeLeft=0;
 let finished=false;
 
-/* =========================
+/* =====================
    PLAYERS
-========================= */
+===================== */
 
 function renderPlayers(){
   let box=document.getElementById("players");
@@ -218,17 +204,17 @@ function renderPlayers(){
   });
 }
 
-/* =========================
-   ACTIVE LIST
-========================= */
+/* =====================
+   ACTIVE PLAYERS
+===================== */
 
 function active(){
   return players.filter(p=>p.active).map(p=>p.name);
 }
 
-/* =========================
-   MODE SWITCH
-========================= */
+/* =====================
+   MODE
+===================== */
 
 function setMode(m){
 
@@ -239,22 +225,25 @@ function setMode(m){
   document.getElementById("btnTurnier").classList.remove("active");
   document.getElementById("btnGruppen").classList.remove("active");
 
-  document.getElementById("btnTurnier").classList.add("active");
+  if(m==="turnier")
+    document.getElementById("btnTurnier").classList.add("active");
+
+  if(m==="gruppen")
+    document.getElementById("btnGruppen").classList.add("active");
 
   generate();
 }
 
-/* =========================
-   MATCH ENGINE
-========================= */
+/* =====================
+   TURNIER
+===================== */
 
-function match(){
+function buildTurnier(){
 
   let l=active();
 
-  if(l.length===4){
+  if(l.length===4)
     return {a:[l[0],l[1]],b:[l[2],l[3]],bank:[]};
-  }
 
   if(l.length===5){
     let s=[...l].sort(()=>Math.random()-0.5);
@@ -269,9 +258,33 @@ function match(){
   return {a:[],b:[],bank:[]};
 }
 
-/* =========================
+/* =====================
+   GRUPPE
+===================== */
+
+function buildGruppe(){
+
+  let l=active();
+
+  if(l.length===4)
+    return {a:[l[0],l[1]],b:[l[2],l[3]],bank:[]};
+
+  if(l.length===5){
+    let s=[...l].sort(()=>Math.random()-0.5);
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4]]};
+  }
+
+  if(l.length===6){
+    let s=[...l].sort(()=>Math.random()-0.5);
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4],s[5]]};
+  }
+
+  return {a:[],b:[],bank:[]};
+}
+
+/* =====================
    GENERATE
-========================= */
+===================== */
 
 function generate(){
 
@@ -281,21 +294,26 @@ function generate(){
   index=0;
 
   let total=parseInt(document.getElementById("totalTime").value);
-  let matchT=parseInt(document.getElementById("matchTime").value);
+  let match=parseInt(document.getElementById("matchTime").value);
 
-  let rounds=Math.max(1,Math.floor(total/matchT));
+  let rounds=Math.max(1,Math.floor(total/match));
 
   for(let i=0;i<rounds;i++){
-    schedule.push(match());
+
+    if(mode==="turnier")
+      schedule.push(buildTurnier());
+
+    if(mode==="gruppen")
+      schedule.push(buildGruppe());
   }
 
   render();
   update();
 }
 
-/* =========================
+/* =====================
    RENDER
-========================= */
+===================== */
 
 function render(){
 
@@ -304,16 +322,16 @@ function render(){
   schedule.forEach((s,i)=>{
     html+=`
       R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
-      🪑 ${s.bank.join(", ") || "keine"}<br><br>
+      Bank: ${s.bank.join(", ") || "keine"}<br><br>
     `;
   });
 
   document.getElementById("preview").innerHTML=html;
 }
 
-/* =========================
+/* =====================
    KIOSK
-========================= */
+===================== */
 
 function enterKiosk(){
   document.body.classList.add("kioskMode");
@@ -323,9 +341,9 @@ function exitKiosk(){
   document.body.classList.remove("kioskMode");
 }
 
-/* =========================
+/* =====================
    TIMER
-========================= */
+===================== */
 
 function startTimer(){
 
@@ -344,7 +362,6 @@ function startTimer(){
   timer=setInterval(()=>{
 
     timeLeft--;
-
     updateTimer();
 
     if(timeLeft<=0){
@@ -364,9 +381,9 @@ function updateTimer(){
   document.getElementById("timerBox").innerHTML=`⏱ ${m}:${s}`;
 }
 
-/* =========================
-   NEXT MATCH
-========================= */
+/* =====================
+   NEXT
+===================== */
 
 function nextMatch(){
 
@@ -374,16 +391,17 @@ function nextMatch(){
 
   index++;
 
-  if(index>=schedule.length) index=0;
+  if(index>=schedule.length)
+    index=0;
 
   finished=false;
 
   update();
 }
 
-/* =========================
+/* =====================
    UPDATE KIOSK
-========================= */
+===================== */
 
 function update(){
 
@@ -403,9 +421,9 @@ function update(){
     `Bank: ${s.bank.join(", ") || "keine"}`;
 }
 
-/* =========================
+/* =====================
    INIT
-========================= */
+===================== */
 
 renderPlayers();
 generate();
