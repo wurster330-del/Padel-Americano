@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0005</title>
+<title>Padel Club Manager V11.0 Build 0006.1</title>
 
 <style>
 body{
@@ -28,7 +28,6 @@ body{
   justify-content:space-between;
 }
 
-/* BUTTONS */
 button{
   border:none;
   padding:12px 14px;
@@ -46,41 +45,11 @@ button:hover{
   filter:brightness(1.2);
 }
 
-/* MODE */
-.mode-btn{
-  background:#2e8b57;
-  opacity:0.7;
-}
-
-.mode-btn.active{
-  opacity:1;
-  box-shadow:0 0 10px #00ff99;
-}
-
-.mode-btn.turnier.active{
-  background:#2e8b57;
-}
-
-.mode-btn.gruppen.active{
-  background:#1e90ff;
-}
-
-/* SECTIONS */
 .section{
   background:#185c3b;
   margin:10px;
   padding:10px;
   border-radius:10px;
-}
-
-.playerRow{
-  display:flex;
-  gap:8px;
-  margin:5px 0;
-}
-
-.playerRow input[type="text"]{
-  width:140px;
 }
 
 /* KIOSK */
@@ -127,7 +96,7 @@ button:hover{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0005 FAIR ENGINE</div>
+  <div>🎾 Build 0006.1 CLEAN TURNIER</div>
   <div>
     <button onclick="enterKiosk()">▶ Kiosk</button>
   </div>
@@ -157,20 +126,6 @@ button:hover{
 <div id="rounds">Runden: -</div>
 </div>
 
-<!-- MODE -->
-<div class="section">
-<h3>🎛 Modus</h3>
-
-<button id="btnTurnier"
-class="mode-btn turnier active"
-onclick="setMode('turnier')">🏆 Turniermodus</button>
-
-<button id="btnGruppen"
-class="mode-btn gruppen"
-onclick="setMode('gruppen')">👥 Gruppenmodus</button>
-
-</div>
-
 <!-- PLAYERS -->
 <div class="section">
 <h3>👥 Spieler</h3>
@@ -179,7 +134,7 @@ onclick="setMode('gruppen')">👥 Gruppenmodus</button>
 
 <!-- PREVIEW -->
 <div class="section">
-<h3>📊 Vorschau</h3>
+<h3>📊 Spielplan</h3>
 <div id="preview">Kein Spielplan</div>
 </div>
 
@@ -213,8 +168,6 @@ onclick="setMode('gruppen')">👥 Gruppenmodus</button>
 
 <script>
 
-let mode="turnier";
-
 let players=[
   {name:"Marco",active:true},
   {name:"Stefan",active:true},
@@ -229,37 +182,13 @@ let index=0;
 let matchTime=0;
 let timer=null;
 
-/* MODE */
-function setMode(m){
-
-  mode=m;
-
-  document.getElementById("btnTurnier").classList.remove("active");
-  document.getElementById("btnGruppen").classList.remove("active");
-
-  if(m==="turnier"){
-    document.getElementById("btnTurnier").classList.add("active");
-  }
-
-  if(m==="gruppen"){
-    document.getElementById("btnGruppen").classList.add("active");
-  }
-
-  generate();
-}
-
 /* PLAYERS */
 function renderPlayers(){
   let box=document.getElementById("players");
   box.innerHTML="";
   players.forEach((p,i)=>{
     box.innerHTML+=`
-      <div class="playerRow">
-        <input type="checkbox" ${p.active?"checked":""}
-        onchange="players[${i}].active=this.checked">
-        <input type="text" value="${p.name}"
-        onchange="players[${i}].name=this.value">
-      </div>`;
+      <div>${p.name}</div>`;
   });
 }
 renderPlayers();
@@ -271,29 +200,21 @@ function calcRounds(){
   return Math.floor(total/match);
 }
 
-/* FAIR ROTATION ENGINE */
-function fairList(list,round){
-
-  let rotated=[...list];
-
-  for(let i=0;i<round;i++){
-    rotated.push(rotated.shift());
-  }
-
-  return rotated;
-}
-
-/* TURNIER */
+/* SIMPLE FAIR ROTATION */
 function buildSchedule(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
-  let rounds=calcRounds();
-
   schedule=[];
+
+  let rounds=calcRounds();
 
   for(let r=0;r<rounds;r++){
 
-    let rotated=fairList(list,r);
+    let rotated=[...list];
+
+    for(let i=0;i<r;i++){
+      rotated.push(rotated.shift());
+    }
 
     schedule.push({
       a:[rotated[0],rotated[1]],
@@ -304,46 +225,12 @@ function buildSchedule(){
   }
 }
 
-/* GRUPPEN */
-function buildGroupSchedule(){
-
-  let list=players.filter(p=>p.active).map(p=>p.name);
-  let rounds=calcRounds();
-
-  schedule=[];
-
-  for(let r=0;r<rounds;r++){
-
-    let rotated=fairList(list,r);
-
-    let g1=[rotated[0],rotated[1]];
-    let g2=[rotated[2],rotated[3]];
-    let g3=[rotated[4],rotated[5]];
-
-    let pattern=[
-      [g1,g2],
-      [g1,g3],
-      [g2,g3]
-    ];
-
-    let p=pattern[r%3];
-
-    schedule.push({
-      a:p[0],
-      b:p[1],
-      bank:[g1,g2,g3].flat().filter(x=>!p[0].includes(x) && !p[1].includes(x)),
-      round:r+1
-    });
-  }
-}
-
 /* GENERATE */
 function generate(){
-
-  if(mode==="turnier") buildSchedule();
-  if(mode==="gruppen") buildGroupSchedule();
-
+  buildSchedule();
+  index=0;
   renderPreview();
+  update();
 }
 
 /* PREVIEW */
@@ -354,7 +241,7 @@ function renderPreview(){
     return;
   }
 
-  let html="<b>Fairer Spielplan</b><br><br>";
+  let html="<b>Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
     html+=`
@@ -437,6 +324,9 @@ function checkPin(){
   document.getElementById("pin").value="";
   document.getElementById("pinOverlay").style.display="none";
 }
+
+/* INIT */
+generate();
 
 </script>
 
