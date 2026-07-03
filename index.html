@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0011.1 FIX</title>
+<title>Padel Club Manager V11 MASTER 0012 FRE v3</title>
 
 <style>
 body{
@@ -65,7 +65,12 @@ button{
   margin-top:10px;
   border-radius:10px;
   font-size:14px;
-  color:#b6ffda;
+}
+
+#optBtn{
+  background:#ffb300;
+  color:black;
+  font-weight:bold;
 }
 
 /* KIOSK */
@@ -97,7 +102,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0011.1 FIX</div>
+  <div>🎾 V11 MASTER 0012 FRE v3</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -139,9 +144,13 @@ button{
 <!-- PREVIEW -->
 <div class="section">
 <h3>📊 Spielplan</h3>
+
 <div id="preview"></div>
 
-<div id="fairnessBox">FRE FIX: bereit</div>
+<div id="fairnessBox">FRE v3: noch keine Bewertung</div>
+
+<button id="optBtn" onclick="optimize()">⚡ Spielplan optimieren</button>
+
 </div>
 
 </div>
@@ -185,19 +194,12 @@ let schedule=[];
 let index=0;
 
 /* =========================
-   GROUP STORAGE (FIX)
-========================= */
-
-let fixedGroups=null;
-
-/* =========================
-   UI PLAYERS
+   UI
 ========================= */
 
 function renderPlayers(){
   let box=document.getElementById("players");
   box.innerHTML="";
-
   players.forEach((p,i)=>{
     box.innerHTML+=`
       <div class="playerRow">
@@ -208,8 +210,7 @@ function renderPlayers(){
         <input type="text"
         value="${p.name}"
         onchange="players[${i}].name=this.value">
-      </div>
-    `;
+      </div>`;
   });
 }
 
@@ -233,59 +234,77 @@ function setMode(m){
 }
 
 /* =========================
-   SAFE TEAM BUILDER (FIX)
+   SIMPLE TEAM BUILDER
 ========================= */
 
-function buildSafeTeams(list){
+function buildTeams(list){
 
-  let pool=[...list].sort(()=>Math.random()-0.5);
+  let p=[...list].sort(()=>Math.random()-0.5);
 
-  let a=[pool[0],pool[1]||pool[0]];
-
-  let b=[pool[2],pool[3]||pool[2]];
-
-  let bank=pool.slice(4);
+  let a=[p[0],p[1]];
+  let b=[p[2],p[3]];
+  let bank=p.slice(4);
 
   return {a,b,bank};
 }
 
 /* =========================
-   FIXED GROUPS (IMPORTANT FIX)
+   GROUP FIX
 ========================= */
 
-function buildGroups(){
+let groups=null;
 
+function buildGroups(){
   let list=players.filter(p=>p.active).map(p=>p.name);
   list=list.sort(()=>Math.random()-0.5);
 
-  fixedGroups=[
+  groups=[
     [list[0],list[1]],
     [list[2],list[3]],
     [list[4],list[5]]
   ];
 }
 
-function groupMatch(round){
+function groupMatch(r){
 
-  let g=fixedGroups;
-
-  let pattern=[
-    [g[0],g[1]],
-    [g[0],g[2]],
-    [g[1],g[2]]
+  let p=[
+    [groups[0],groups[1]],
+    [groups[0],groups[2]],
+    [groups[1],groups[2]]
   ];
 
-  let p=pattern[round%pattern.length];
+  let sel=p[r%3];
 
-  let all=g.flat();
+  let bank=groups.flat().filter(x=>!sel[0].includes(x)&&!sel[1].includes(x));
 
-  let bank=all.filter(x=>!p[0].includes(x)&&!p[1].includes(x));
-
-  return {a:p[0],b:p[1],bank};
+  return {a:sel[0],b:sel[1],bank};
 }
 
 /* =========================
-   GENERATOR FIXED
+   FRE v3 SCORE
+========================= */
+
+function score(schedule){
+
+  let map={};
+
+  schedule.forEach(s=>{
+    s.bank.forEach(p=>{
+      map[p]=(map[p]||0)+1;
+    });
+  });
+
+  let values=Object.values(map);
+
+  let avg=values.reduce((a,b)=>a+b,0)/values.length;
+
+  let variance=values.reduce((a,b)=>a+Math.pow(b-avg,2),0);
+
+  return 100 - variance; // simple fairness score
+}
+
+/* =========================
+   GENERATE
 ========================= */
 
 function generate(){
@@ -294,30 +313,55 @@ function generate(){
   index=0;
 
   let list=players.filter(p=>p.active).map(p=>p.name);
-
   let rounds=calcRounds();
 
   if(mode==="gruppen"){
     buildGroups();
-
     for(let r=0;r<rounds;r++){
       schedule.push(groupMatch(r));
     }
   }
 
   if(mode==="turnier"){
-
     for(let r=0;r<rounds;r++){
-      schedule.push(buildSafeTeams(list));
+      schedule.push(buildTeams(list));
     }
   }
 
-  renderPreview();
+  render();
   update();
 }
 
 /* =========================
-   CORE
+   OPTIMIZER
+========================= */
+
+function optimize(){
+
+  let best=null;
+  let bestScore=-999;
+
+  for(let i=0;i<20;i++){
+
+    generate();
+
+    let s=score(schedule);
+
+    if(s>bestScore){
+      bestScore=s;
+      best=JSON.parse(JSON.stringify(schedule));
+    }
+  }
+
+  schedule=best;
+
+  renderFairness(bestScore);
+  render();
+  update();
+}
+
+/* =========================
+   CALC
 ========================= */
 
 function calcRounds(){
@@ -327,10 +371,10 @@ function calcRounds(){
 }
 
 /* =========================
-   PREVIEW
+   RENDER
 ========================= */
 
-function renderPreview(){
+function render(){
 
   let html="<b>Spielplan</b><br><br>";
 
@@ -342,31 +386,26 @@ function renderPreview(){
 }
 
 /* =========================
-   KIOSK
+   FAIRNESS DISPLAY
 ========================= */
 
-function enterKiosk(){
-  document.body.classList.add("kioskMode");
-}
+function renderFairness(s){
 
-function exitKiosk(){
-  document.body.classList.remove("kioskMode");
+  let c=s>85?"🟢":s>70?"🟡":"🔴";
+
+  document.getElementById("fairnessBox").innerHTML=
+    `${c} FRE v3 Fairness Score: ${Math.round(s)}%`;
 }
 
 /* =========================
-   FLOW
+   KIOSK
 ========================= */
 
-function startGame(){
-  index=0;
-  update();
-}
+function enterKiosk(){document.body.classList.add("kioskMode");}
+function exitKiosk(){document.body.classList.remove("kioskMode");}
 
-function nextGame(){
-  index++;
-  if(index>=schedule.length) index=0;
-  update();
-}
+function startGame(){index=0;update();}
+function nextGame(){index++;if(index>=schedule.length)index=0;update();}
 
 function update(){
 
