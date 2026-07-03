@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0004</title>
+<title>Padel Club Manager V11.0 Build 0004.1</title>
 
 <style>
 body{
@@ -35,6 +35,7 @@ button{
   border-radius:8px;
   color:white;
   margin:2px;
+  cursor:pointer;
 }
 
 .section{
@@ -98,12 +99,13 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0004</div>
+  <div>🎾 Build 0004.1 FIX</div>
   <div>
     <button onclick="enterKiosk()">▶ Kiosk</button>
   </div>
 </div>
 
+<!-- SETTINGS -->
 <div class="section">
 <h3>⚙️ Setup</h3>
 
@@ -127,14 +129,23 @@ button{
 <div id="rounds">Runden: -</div>
 </div>
 
+<!-- MODE BUTTONS (FIXED) -->
+<div class="section">
+<h3>🎛 Modus</h3>
+<button onclick="mode='turnier'; generate();">🏆 Turniermodus</button>
+<button onclick="mode='gruppen'; generate();">👥 Gruppenmodus</button>
+</div>
+
+<!-- PLAYERS -->
 <div class="section">
 <h3>👥 Spieler</h3>
 <div id="players"></div>
 </div>
 
+<!-- PREVIEW -->
 <div class="section">
 <h3>📊 Vorschau</h3>
-<div id="preview"></div>
+<div id="preview">Kein Spielplan</div>
 </div>
 
 </div>
@@ -167,6 +178,8 @@ button{
 
 <script>
 
+let mode="turnier";
+
 let players=[
   {name:"Marco",active:true},
   {name:"Stefan",active:true},
@@ -177,7 +190,6 @@ let players=[
 ];
 
 let schedule=[];
-let history=new Set();
 let index=0;
 let matchTime=0;
 let timer=null;
@@ -198,103 +210,104 @@ function renderPlayers(){
 }
 renderPlayers();
 
-/* ROUND COUNT */
+/* ROUNDS */
 function calcRounds(){
   let total=parseInt(document.getElementById("total").value);
   let match=parseInt(document.getElementById("match").value);
   return Math.floor(total/match);
 }
 
-/* KEY FOR MATCH */
-function key(a,b){
-  return [...a,...b].sort().join("-");
+/* SHUFFLE */
+function shuffle(arr){
+  return arr.sort(()=>Math.random()-0.5);
 }
 
-/* CHECK DUPLICATES */
-function isNew(a,b){
-  return !history.has(key(a,b));
-}
-
-/* ADD HISTORY */
-function addHistory(a,b){
-  history.add(key(a,b));
-}
-
-/* SMART MATCH MAKER */
+/* SMART TURNIER ENGINE */
 function buildSchedule(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
   let rounds=calcRounds();
 
   schedule=[];
-  history=new Set();
 
   for(let r=0;r<rounds;r++){
 
-    let best=null;
-
-    // try combinations
-    for(let i=0;i<list.length;i++){
-      for(let j=i+1;j<list.length;j++){
-        for(let k=0;k<list.length;k++){
-          for(let l=k+1;l<list.length;l++){
-
-            let a=[list[i],list[j]];
-            let b=[list[k],list[l]];
-
-            if(a.join()==b.join()) continue;
-
-            if(isNew(a,b)){
-              best={a,b};
-              break;
-            }
-          }
-        }
-        if(best) break;
-      }
-      if(best) break;
-    }
-
-    if(!best){
-      best={
-        a:[list[0],list[1]],
-        b:[list[2],list[3]]
-      };
-    }
-
-    addHistory(best.a,best.b);
+    list=shuffle(list);
 
     schedule.push({
-      a:best.a,
-      b:best.b,
-      bank:list.filter(x=>!best.a.includes(x)&&!best.b.includes(x)),
+      a:[list[0],list[1]],
+      b:[list[2],list[3]],
+      bank:list.slice(4),
       round:r+1
     });
   }
 }
 
-/* GENERATE */
+/* GROUP MODE */
+function buildGroupSchedule(){
+
+  let list=players.filter(p=>p.active).map(p=>p.name);
+  list=shuffle(list);
+
+  let g1=[list[0],list[1]];
+  let g2=[list[2],list[3]];
+  let g3=[list[4],list[5]];
+
+  let rounds=calcRounds();
+
+  schedule=[];
+
+  let pattern=[
+    [g1,g2],
+    [g1,g3],
+    [g2,g3]
+  ];
+
+  for(let r=0;r<rounds;r++){
+
+    let p=pattern[r%3];
+
+    schedule.push({
+      a:p[0],
+      b:p[1],
+      bank:[g1,g2,g3]
+        .filter(x=>x!==p[0] && x!==p[1])
+        .flat(),
+      round:r+1
+    });
+  }
+}
+
+/* MASTER GENERATE */
 function generate(){
-  buildSchedule();
+
+  if(mode==="turnier") buildSchedule();
+  if(mode==="gruppen") buildGroupSchedule();
+
   renderPreview();
 }
 
-/* PREVIEW */
+/* PREVIEW FIX */
 function renderPreview(){
 
-  let html="<b>Intelligente Spielplanung</b><br><br>";
+  if(!schedule.length){
+    document.getElementById("preview").innerHTML="Kein Spielplan";
+    return;
+  }
+
+  let html="<b>Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
     html+=`
       Runde ${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
-      Bank: ${s.bank.join(", ")}<br><br>
+      Bank: ${s.bank.join(", ")||"-"}<br><br>
     `;
   });
 
   document.getElementById("preview").innerHTML=html;
 }
 
-/* START */
+/* START GAME */
 function startGame(){
   index=0;
   matchTime=parseInt(document.getElementById("match").value)*60;
@@ -327,7 +340,7 @@ function nextGame(){
   update();
 }
 
-/* UPDATE */
+/* UPDATE KIOSK */
 function update(){
 
   let s=schedule[index];
