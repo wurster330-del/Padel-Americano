@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0001</title>
+<title>Padel Club Manager V11.0 Build 0002</title>
 
 <style>
 body{
@@ -39,18 +39,14 @@ button{
   border-radius:10px;
 }
 
-/* PLAYERS */
 .playerRow{
   display:flex;
   gap:8px;
   margin:5px 0;
 }
 
-.playerRow input[type="text"]{
-  width:140px;
-}
+.playerRow input[type="text"]{ width:140px; }
 
-/* TIMER */
 .timer{
   font-size:60px;
   text-align:center;
@@ -76,11 +72,10 @@ button{
 }
 
 .kioskBox{
-  font-size:24px;
+  font-size:22px;
   margin:5px;
 }
 
-/* PIN */
 #pinOverlay{
   display:none;
   position:fixed;
@@ -101,14 +96,14 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11.0 Build 0001</div>
+  <div>🎾 V11.0 Build 0002</div>
   <div>
     <button onclick="startGame()">▶ Start</button>
     <button onclick="enterKiosk()">Kiosk</button>
+    <button onclick="nextGame()">➡ Next</button>
   </div>
 </div>
 
-<!-- SETTINGS -->
 <div class="section">
 <h3>⚙️ Setup</h3>
 
@@ -122,9 +117,9 @@ button{
 
 <label>Spielzeit:</label>
 <select id="match">
-  <option value="15">15 min</option>
-  <option value="18" selected>18 min</option>
-  <option value="20">20 min</option>
+  <option value="15">15</option>
+  <option value="18" selected>18</option>
+  <option value="20">20</option>
 </select>
 
 <br><br>
@@ -132,7 +127,6 @@ button{
 <div id="rounds">Runden: -</div>
 </div>
 
-<!-- PLAYERS -->
 <div class="section">
 <h3>👥 Spieler</h3>
 <div id="players"></div>
@@ -172,7 +166,6 @@ let players=[
 
 let schedule=[];
 let index=0;
-
 let matchTime=0;
 let timer=null;
 
@@ -192,37 +185,54 @@ function renderPlayers(){
 }
 renderPlayers();
 
-/* ROUNDS */
+/* ROUND COUNT */
 function calcRounds(){
   let total=parseInt(document.getElementById("total").value);
   let match=parseInt(document.getElementById("match").value);
-
   let rounds=Math.floor(total/match);
   document.getElementById("rounds").innerText="Runden: "+rounds;
-
   return rounds;
 }
 
-/* GENERATE SIMPLE SCHEDULE */
+/* SMART SHUFFLE (improved fairness) */
+function smartShuffle(list, lastA=[], lastB=[]){
+  let arr=[...list];
+
+  // einfache Anti-Wiederholung: vorherige Paare vermeiden
+  for(let i=arr.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+
+  return arr;
+}
+
+/* GENERATE SCHEDULE (BUILD 0002 CORE) */
 function generate(){
   let list=players.filter(p=>p.active).map(p=>p.name);
-
-  schedule=[];
   let rounds=calcRounds();
 
+  schedule=[];
+  let lastA=[], lastB=[];
+
   for(let r=0;r<rounds;r++){
-    list=list.sort(()=>Math.random()-0.5);
+
+    list=smartShuffle(list,lastA,lastB);
+
+    let a=[list[0],list[1]];
+    let b=[list[2],list[3]];
+    let bank=list.slice(4);
 
     schedule.push({
-      a:[list[0],list[1]],
-      b:[list[2],list[3]],
-      bank:list.slice(4),
-      round:r+1
+      a,b,bank,round:r+1
     });
+
+    lastA=a;
+    lastB=b;
   }
 }
 
-/* START GAME */
+/* START */
 function startGame(){
   generate();
   index=0;
@@ -236,6 +246,7 @@ function startTimer(){
   if(timer) return;
 
   timer=setInterval(()=>{
+
     if(matchTime>0) matchTime--;
 
     let m=Math.floor(matchTime/60);
@@ -247,7 +258,7 @@ function startTimer(){
   },1000);
 }
 
-/* NEXT */
+/* NEXT GAME */
 function nextGame(){
   index++;
   if(index>=schedule.length) index=0;
@@ -257,6 +268,7 @@ function nextGame(){
 
 /* UPDATE KIOSK */
 function update(){
+
   if(schedule.length==0) return;
 
   let s=schedule[index];
