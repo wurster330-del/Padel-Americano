@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0014.1 HYBRID FIX</title>
+<title>Padel Club Manager V11 MASTER 0014.2 TIMER FIX</title>
 
 <style>
 body{
@@ -83,7 +83,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0014.1 HYBRID FIX</div>
+  <div>🎾 V11 MASTER 0014.2 TIMER FIX</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -112,7 +112,7 @@ button{
 <h3>🎛 Modus</h3>
 
 <button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier</button>
-<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen (Hybrid)</button>
+<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen</button>
 
 </div>
 
@@ -169,6 +169,13 @@ let index=0;
 let groups=null;
 
 /* =========================
+   TIMER (NEW)
+========================= */
+
+let timer=null;
+let timeLeft=0;
+
+/* =========================
    UI
 ========================= */
 
@@ -209,7 +216,7 @@ function setMode(m){
 }
 
 /* =========================
-   SMART MODE ENGINE
+   SMART ENGINE
 ========================= */
 
 function getSystemMode(){
@@ -225,7 +232,7 @@ function getSystemMode(){
 }
 
 /* =========================
-   TIME
+   TIME ENGINE
 ========================= */
 
 function calcRounds(){
@@ -237,7 +244,7 @@ function calcRounds(){
 }
 
 /* =========================
-   GROUPS FIX (STABLE)
+   GROUPS FIX
 ========================= */
 
 function buildGroups(){
@@ -253,7 +260,7 @@ function buildGroups(){
 }
 
 /* =========================
-   HYBRID FIX (IMPORTANT)
+   HYBRID FIX
 ========================= */
 
 function hybridMatch(){
@@ -317,7 +324,44 @@ function buildTeams(list){
 }
 
 /* =========================
-   GENERATE (FIXED HYBRID)
+   TIMER FUNCTIONS
+========================= */
+
+function startTimer(){
+
+  let match = parseInt(document.getElementById("match").value);
+
+  timeLeft = match * 60;
+
+  clearInterval(timer);
+
+  timer = setInterval(()=>{
+    timeLeft--;
+
+    updateTimerDisplay();
+
+    if(timeLeft <= 0){
+      clearInterval(timer);
+    }
+
+  },1000);
+}
+
+function updateTimerDisplay(){
+
+  let min = Math.floor(timeLeft / 60);
+  let sec = timeLeft % 60;
+
+  if(sec < 10) sec = "0" + sec;
+
+  let s = schedule[index];
+
+  document.getElementById("roundInfo").innerHTML =
+    `Runde ${index+1}/${schedule.length}<br>⏱ ${min}:${sec}`;
+}
+
+/* =========================
+   GENERATE
 ========================= */
 
 function generate(){
@@ -344,7 +388,7 @@ function generate(){
 
   else if(system==="GROUP_MODE"){
 
-    if(!groups) buildGroups(); // 🔥 FIX: nur 1x erstellen
+    if(!groups) buildGroups();
 
     for(let r=0;r<rounds;r++){
       schedule.push(hybridMatch());
@@ -384,8 +428,22 @@ function render(){
 function enterKiosk(){document.body.classList.add("kioskMode");}
 function exitKiosk(){document.body.classList.remove("kioskMode");}
 
-function startGame(){index=0;update();}
-function nextGame(){index++;if(index>=schedule.length)index=0;update();}
+function startGame(){
+  index=0;
+  startTimer();
+  update();
+}
+
+function nextGame(){
+
+  index++;
+
+  if(index>=schedule.length) index=0;
+
+  startTimer();
+
+  update();
+}
 
 function update(){
 
@@ -398,8 +456,12 @@ function update(){
   document.getElementById("bank").innerHTML=
     `Bank: ${s.bank.length?s.bank.join(", "):"keine"}`;
 
+  let min = Math.floor(timeLeft/60);
+  let sec = timeLeft%60;
+  if(sec<10) sec="0"+sec;
+
   document.getElementById("roundInfo").innerHTML=
-    `Runde ${index+1}/${schedule.length}`;
+    `Runde ${index+1}/${schedule.length}<br>⏱ ${min}:${sec}`;
 }
 
 /* INIT */
