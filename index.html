@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0013 SMART MODE</title>
+<title>Padel Club Manager V11 MASTER 0013.1 FIX</title>
 
 <style>
 body{
@@ -83,13 +83,33 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0013 SMART MODE ENGINE</div>
+  <div>🎾 V11 MASTER 0013.1 FIX</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
+</div>
+
+<!-- SETUP (RESTORED) -->
+<div class="section">
+<h3>⚙️ Setup</h3>
+
+<label>Gesamtzeit:</label>
+<select id="total">
+  <option value="120">120 min</option>
+  <option value="180" selected>180 min</option>
+</select>
+
+<br><br>
+
+<label>Spielzeit:</label>
+<select id="match">
+  <option value="15">15 min</option>
+  <option value="18" selected>18 min</option>
+  <option value="20">20 min</option>
+</select>
 </div>
 
 <!-- MODE -->
 <div class="section">
-<h3>🎛 Modus (nur Anzeige)</h3>
+<h3>🎛 Modus</h3>
 
 <button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier</button>
 <button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen</button>
@@ -170,7 +190,7 @@ function renderPlayers(){
 }
 
 /* =========================
-   MODE UI (only visual)
+   MODE SWITCH
 ========================= */
 
 function setMode(m){
@@ -202,6 +222,18 @@ function getSystemMode(){
   if(count === 6) return "ROTATION_6";
 
   return "FRE_FULL";
+}
+
+/* =========================
+   TIME FIX (RESTORED)
+========================= */
+
+function calcRounds(){
+
+  let total = parseInt(document.getElementById("total").value);
+  let match = parseInt(document.getElementById("match").value);
+
+  return Math.max(1, Math.floor(total / match));
 }
 
 /* =========================
@@ -286,7 +318,7 @@ function groupMatch(r){
 }
 
 /* =========================
-   GENERATE CORE (FIXED)
+   GENERATE CORE
 ========================= */
 
 function generate(){
@@ -295,7 +327,7 @@ function generate(){
   index=0;
 
   let list=players.filter(p=>p.active).map(p=>p.name);
-  let rounds=3;
+  let rounds=calcRounds();
 
   let system=getSystemMode();
 
