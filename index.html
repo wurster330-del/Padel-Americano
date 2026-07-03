@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Padel Club Manager V11.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Padel Club Manager V11.0 Build 0001</title>
 
 <style>
 body{
@@ -13,11 +13,7 @@ body{
   color:white;
 }
 
-#app{
-  max-width:1000px;
-  margin:auto;
-  padding-bottom:90px;
-}
+#app{ max-width:1000px; margin:auto; padding-bottom:80px; }
 
 .topbar{
   position:sticky;
@@ -26,13 +22,12 @@ body{
   padding:10px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
 }
 
-.topbar button{
+button{
   background:#2e8b57;
   border:none;
-  padding:10px 12px;
+  padding:10px;
   border-radius:8px;
   color:white;
 }
@@ -41,49 +36,25 @@ body{
   background:#185c3b;
   margin:10px;
   padding:10px;
-  border-radius:12px;
+  border-radius:10px;
 }
 
+/* PLAYERS */
 .playerRow{
   display:flex;
   gap:8px;
-  margin:4px 0;
-  align-items:center;
+  margin:5px 0;
 }
 
 .playerRow input[type="text"]{
   width:140px;
 }
 
-.playerRow input[type="checkbox"]{
-  transform:scale(1.1);
-}
-
 /* TIMER */
-.timerBox{
+.timer{
   font-size:60px;
   text-align:center;
-  font-weight:900;
-}
-
-/* CONTROL */
-.controlBar{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  background:#0d3a25;
-  display:flex;
-  gap:5px;
-  padding:10px;
-}
-
-.controlBar button{
-  flex:1;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:#2e8b57;
-  color:white;
+  font-weight:bold;
 }
 
 /* KIOSK */
@@ -95,19 +66,18 @@ body{
   height:100vh;
   background:black;
   text-align:center;
-  padding-top:40px;
-  position:relative;
+  padding-top:30px;
 }
 
 .kioskTimer{
-  font-size:150px;
+  font-size:140px;
   color:#00ff99;
-  font-weight:900;
+  font-weight:bold;
 }
 
-.kioskInfo{
-  font-size:28px;
-  margin:6px;
+.kioskBox{
+  font-size:24px;
+  margin:5px;
 }
 
 /* PIN */
@@ -119,9 +89,9 @@ body{
   width:100%;
   height:100%;
   background:black;
-  z-index:9999;
   text-align:center;
   padding-top:120px;
+  z-index:9999;
 }
 </style>
 </head>
@@ -131,48 +101,41 @@ body{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11.0 BS1</div>
+  <div>🎾 V11.0 Build 0001</div>
   <div>
+    <button onclick="startGame()">▶ Start</button>
     <button onclick="enterKiosk()">Kiosk</button>
-    <button onclick="startGame()">▶ Spiel starten</button>
   </div>
 </div>
 
 <!-- SETTINGS -->
 <div class="section">
-  <h3>⚙️ Setup</h3>
+<h3>⚙️ Setup</h3>
 
-  <label>Gesamtzeit:</label>
-  <select id="totalTime">
-    <option value="120">120 Minuten</option>
-    <option value="180" selected>180 Minuten</option>
-  </select>
+<label>Gesamtzeit:</label>
+<select id="total">
+  <option value="120">120 min</option>
+  <option value="180" selected>180 min</option>
+</select>
 
-  <br><br>
+<br><br>
 
-  <label>Spielzeit:</label>
-  <select id="matchTime">
-    <option value="15">15 min</option>
-    <option value="18" selected>18 min</option>
-    <option value="20">20 min</option>
-  </select>
+<label>Spielzeit:</label>
+<select id="match">
+  <option value="15">15 min</option>
+  <option value="18" selected>18 min</option>
+  <option value="20">20 min</option>
+</select>
 
-  <br><br>
+<br><br>
 
-  <div id="roundInfo">Runden: -</div>
+<div id="rounds">Runden: -</div>
 </div>
 
 <!-- PLAYERS -->
 <div class="section">
-  <h3>👥 Spieler</h3>
-  <div id="players"></div>
-</div>
-
-<!-- MODE -->
-<div class="section">
-  <h3>🎛 Modus</h3>
-  <button onclick="mode='turnier'">Turnier</button>
-  <button onclick="mode='gruppen'">Gruppen</button>
+<h3>👥 Spieler</h3>
+<div id="players"></div>
 </div>
 
 </div>
@@ -180,33 +143,23 @@ body{
 <!-- KIOSK -->
 <div id="kiosk">
 
-<div class="kioskTimer" id="kioskTimer">00:00</div>
+<div class="kioskTimer" id="ktimer">00:00</div>
 
-<div class="kioskInfo" id="kioskInfo">Bereit</div>
-
-<div class="kioskInfo" id="kioskTeams"></div>
+<div class="kioskBox" id="teams"></div>
+<div class="kioskBox" id="bank"></div>
+<div class="kioskBox" id="roundInfo"></div>
 
 </div>
 
 <!-- PIN -->
 <div id="pinOverlay">
-  <h2>PIN</h2>
-  <input id="pin" type="password">
-  <br><br>
-  <button onclick="checkPin()">OK</button>
-</div>
-
-<!-- CONTROL -->
-<div class="controlBar">
-  <button onclick="updateRounds()">🔄 Berechnen</button>
-  <button onclick="pauseTimer()">⏸ Pause</button>
+<h2>PIN</h2>
+<input id="pin" type="password">
+<br><br>
+<button onclick="checkPin()">OK</button>
 </div>
 
 <script>
-
-/* ================= STATE ================= */
-
-let mode="turnier";
 
 let players=[
   {name:"Marco",active:true},
@@ -217,96 +170,113 @@ let players=[
   {name:"Werner",active:true}
 ];
 
-let totalSeconds=0;
-let matchSeconds=0;
-let run=null;
+let schedule=[];
+let index=0;
 
-/* ================= PLAYERS ================= */
+let matchTime=0;
+let timer=null;
 
+/* PLAYERS */
 function renderPlayers(){
   let box=document.getElementById("players");
   box.innerHTML="";
-
   players.forEach((p,i)=>{
     box.innerHTML+=`
       <div class="playerRow">
         <input type="checkbox" ${p.active?"checked":""}
         onchange="players[${i}].active=this.checked">
-
         <input type="text" value="${p.name}"
         onchange="players[${i}].name=this.value">
       </div>`;
   });
 }
-
 renderPlayers();
 
-/* ================= ROUNDS ================= */
-
-function updateRounds(){
-
-  let total=parseInt(document.getElementById("totalTime").value);
-  let match=parseInt(document.getElementById("matchTime").value);
+/* ROUNDS */
+function calcRounds(){
+  let total=parseInt(document.getElementById("total").value);
+  let match=parseInt(document.getElementById("match").value);
 
   let rounds=Math.floor(total/match);
+  document.getElementById("rounds").innerText="Runden: "+rounds;
 
-  document.getElementById("roundInfo").innerText=
-    "Runden: " + rounds;
-
-  totalSeconds=total*60;
-  matchSeconds=match*60;
+  return rounds;
 }
 
-/* initial */
-updateRounds();
+/* GENERATE SIMPLE SCHEDULE */
+function generate(){
+  let list=players.filter(p=>p.active).map(p=>p.name);
 
-/* ================= GAME ================= */
+  schedule=[];
+  let rounds=calcRounds();
 
+  for(let r=0;r<rounds;r++){
+    list=list.sort(()=>Math.random()-0.5);
+
+    schedule.push({
+      a:[list[0],list[1]],
+      b:[list[2],list[3]],
+      bank:list.slice(4),
+      round:r+1
+    });
+  }
+}
+
+/* START GAME */
 function startGame(){
-
-  updateRounds();
-
-  document.getElementById("kioskInfo").innerText=
-    "Turnier gestartet ("+mode+")";
-
+  generate();
+  index=0;
+  matchTime=parseInt(document.getElementById("match").value)*60;
+  update();
   startTimer();
 }
 
-/* ================= TIMER ================= */
-
+/* TIMER */
 function startTimer(){
+  if(timer) return;
 
-  if(run) return;
+  timer=setInterval(()=>{
+    if(matchTime>0) matchTime--;
 
-  run=setInterval(()=>{
+    let m=Math.floor(matchTime/60);
+    let s=matchTime%60;
 
-    if(matchSeconds>0) matchSeconds--;
-
-    let m=Math.floor(matchSeconds/60);
-    let s=matchSeconds%60;
-
-    let t=m+":"+String(s).padStart(2,"0");
-
-    document.getElementById("kioskTimer").innerText=t;
+    document.getElementById("ktimer").innerText=
+      m+":"+String(s).padStart(2,"0");
 
   },1000);
 }
 
-function pauseTimer(){
-  clearInterval(run);
-  run=null;
+/* NEXT */
+function nextGame(){
+  index++;
+  if(index>=schedule.length) index=0;
+  matchTime=parseInt(document.getElementById("match").value)*60;
+  update();
 }
 
-/* ================= KIOSK ================= */
+/* UPDATE KIOSK */
+function update(){
+  if(schedule.length==0) return;
 
+  let s=schedule[index];
+
+  document.getElementById("teams").innerHTML=
+    "A: "+s.a.join(" / ")+"<br>B: "+s.b.join(" / ");
+
+  document.getElementById("bank").innerHTML=
+    "Bank: "+(s.bank.join(", ")||"-");
+
+  document.getElementById("roundInfo").innerHTML=
+    "Runde "+(index+1)+" / "+schedule.length;
+}
+
+/* KIOSK */
 function enterKiosk(){
   document.body.classList.add("kiosk");
 }
 
-function openPin(){
-  document.getElementById("pinOverlay").style.display="block";
-}
-
+/* PIN */
 function checkPin(){
   if(document.getElementById("pin").value==="1234"){
     document.body.classList.remove("kiosk");
