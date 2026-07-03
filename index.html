@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0014 TIME INTELLIGENCE</title>
+<title>Padel Club Manager V11 MASTER 0014.1 HYBRID FIX</title>
 
 <style>
 body{
@@ -71,12 +71,6 @@ button{
   padding-top:25px;
 }
 
-.kioskTimer{
-  font-size:120px;
-  color:#00ff99;
-  margin-bottom:10px;
-}
-
 .kioskBox{
   font-size:22px;
   margin:6px;
@@ -89,7 +83,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0014 TIME INTELLIGENCE ENGINE</div>
+  <div>🎾 V11 MASTER 0014.1 HYBRID FIX</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -118,7 +112,7 @@ button{
 <h3>🎛 Modus</h3>
 
 <button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier</button>
-<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen</button>
+<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen (Hybrid)</button>
 
 </div>
 
@@ -139,7 +133,7 @@ button{
 <!-- KIOSK -->
 <div id="kiosk">
 
-<div class="kioskTimer" id="kioskTimer">00:00</div>
+<h1>🎾 KIOSK</h1>
 
 <div class="kioskBox" id="teams"></div>
 <div class="kioskBox" id="bank"></div>
@@ -172,8 +166,7 @@ let players=[
 
 let schedule=[];
 let index=0;
-let timer=null;
-let remaining=0;
+let groups=null;
 
 /* =========================
    UI
@@ -216,7 +209,7 @@ function setMode(m){
 }
 
 /* =========================
-   SMART ENGINE
+   SMART MODE ENGINE
 ========================= */
 
 function getSystemMode(){
@@ -232,59 +225,20 @@ function getSystemMode(){
 }
 
 /* =========================
-   TIME ENGINE
+   TIME
 ========================= */
 
-function calcTimePlan(){
+function calcRounds(){
 
   let total = parseInt(document.getElementById("total").value);
   let match = parseInt(document.getElementById("match").value);
 
-  return {
-    rounds: Math.max(1, Math.floor(total / match)),
-    rest: total % match,
-    total,
-    match
-  };
+  return Math.max(1, Math.floor(total / match));
 }
 
 /* =========================
-   BUILDERS
+   GROUPS FIX (STABLE)
 ========================= */
-
-function buildPureMatch(list){
-
-  let p=[...list].sort(()=>Math.random()-0.5);
-
-  return { a:[p[0],p[1]], b:[p[2],p[3]], bank:[] };
-}
-
-function buildRotation5(list){
-
-  let p=[...list].sort(()=>Math.random()-0.5);
-
-  return { a:[p[0],p[1]], b:[p[2],p[3]], bank:[p[4]] };
-}
-
-function buildRotation6(list){
-
-  let p=[...list].sort(()=>Math.random()-0.5);
-
-  return { a:[p[0],p[1]], b:[p[2],p[3]], bank:[p[4],p[5]] };
-}
-
-function buildTeams(list){
-
-  let p=[...list].sort(()=>Math.random()-0.5);
-
-  return { a:[p[0],p[1]], b:[p[2],p[3]], bank:p.slice(4) };
-}
-
-/* =========================
-   GROUPS
-========================= */
-
-let groups=null;
 
 function buildGroups(){
 
@@ -298,25 +252,72 @@ function buildGroups(){
   ];
 }
 
-function groupMatch(r){
+/* =========================
+   HYBRID FIX (IMPORTANT)
+========================= */
 
-  let pattern=[
-    [groups[0],groups[1]],
-    [groups[0],groups[2]],
-    [groups[1],groups[2]]
-  ];
+function hybridMatch(){
 
-  let sel=pattern[r%pattern.length];
+  let all = groups.flat();
+  let p = [...all].sort(()=>Math.random()-0.5);
 
-  let all=groups.flat();
-
-  let bank=all.filter(x=>!sel[0].includes(x)&&!sel[1].includes(x));
-
-  return {a:sel[0],b:sel[1],bank};
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:p.slice(4)
+  };
 }
 
 /* =========================
-   GENERATE
+   BUILDERS
+========================= */
+
+function buildPureMatch(list){
+
+  let p=[...list].sort(()=>Math.random()-0.5);
+
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:[]
+  };
+}
+
+function buildRotation5(list){
+
+  let p=[...list].sort(()=>Math.random()-0.5);
+
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:[p[4]]
+  };
+}
+
+function buildRotation6(list){
+
+  let p=[...list].sort(()=>Math.random()-0.5);
+
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:[p[4],p[5]]
+  };
+}
+
+function buildTeams(list){
+
+  let p=[...list].sort(()=>Math.random()-0.5);
+
+  return {
+    a:[p[0],p[1]],
+    b:[p[2],p[3]],
+    bank:p.slice(4)
+  };
+}
+
+/* =========================
+   GENERATE (FIXED HYBRID)
 ========================= */
 
 function generate(){
@@ -325,16 +326,33 @@ function generate(){
   index=0;
 
   let list=players.filter(p=>p.active).map(p=>p.name);
+  let rounds=calcRounds();
+
   let system=getSystemMode();
-  let time=calcTimePlan();
 
-  for(let r=0;r<time.rounds;r++){
+  if(system==="PURE_MATCH"){
+    for(let r=0;r<rounds;r++) schedule.push(buildPureMatch(list));
+  }
 
-    if(system==="PURE_MATCH") schedule.push(buildPureMatch(list));
-    else if(system==="ROTATION_5") schedule.push(buildRotation5(list));
-    else if(system==="ROTATION_6") schedule.push(buildRotation6(list));
-    else if(system==="GROUP_MODE"){ buildGroups(); schedule.push(groupMatch(r)); }
-    else schedule.push(buildTeams(list));
+  else if(system==="ROTATION_5"){
+    for(let r=0;r<rounds;r++) schedule.push(buildRotation5(list));
+  }
+
+  else if(system==="ROTATION_6"){
+    for(let r=0;r<rounds;r++) schedule.push(buildRotation6(list));
+  }
+
+  else if(system==="GROUP_MODE"){
+
+    if(!groups) buildGroups(); // 🔥 FIX: nur 1x erstellen
+
+    for(let r=0;r<rounds;r++){
+      schedule.push(hybridMatch());
+    }
+  }
+
+  else{
+    for(let r=0;r<rounds;r++) schedule.push(buildTeams(list));
   }
 
   render();
@@ -347,8 +365,6 @@ function generate(){
 
 function render(){
 
-  let time=calcTimePlan();
-
   let html="<b>Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
@@ -358,77 +374,18 @@ function render(){
     `;
   });
 
-  html+=`
-  <hr>
-  ⏱ Gesamt: ${time.total} min<br>
-  🎾 Match: ${time.match} min<br>
-  🔁 Runden: ${time.rounds}<br>
-  ⏳ Rest: ${time.rest} min
-  `;
-
   document.getElementById("preview").innerHTML=html;
 }
 
 /* =========================
-   KIOSK + TIMER
+   KIOSK
 ========================= */
 
-function enterKiosk(){
-  document.body.classList.add("kioskMode");
-}
+function enterKiosk(){document.body.classList.add("kioskMode");}
+function exitKiosk(){document.body.classList.remove("kioskMode");}
 
-function exitKiosk(){
-  document.body.classList.remove("kioskMode");
-  stopTimer();
-}
-
-function startGame(){
-  index=0;
-  startTimer();
-  update();
-}
-
-function nextGame(){
-  index++;
-  if(index>=schedule.length) index=0;
-  resetTimer();
-  update();
-}
-
-/* TIMER */
-
-function startTimer(){
-
-  stopTimer();
-
-  let time=parseInt(document.getElementById("match").value)*60;
-  remaining=time;
-
-  timer=setInterval(()=>{
-
-    remaining--;
-
-    let min=Math.floor(remaining/60);
-    let sec=remaining%60;
-
-    document.getElementById("kioskTimer").innerText=
-      `${String(min).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
-
-    if(remaining<=0){
-      stopTimer();
-    }
-
-  },1000);
-}
-
-function resetTimer(){
-  startTimer();
-}
-
-function stopTimer(){
-  if(timer) clearInterval(timer);
-  timer=null;
-}
+function startGame(){index=0;update();}
+function nextGame(){index++;if(index>=schedule.length)index=0;update();}
 
 function update(){
 
