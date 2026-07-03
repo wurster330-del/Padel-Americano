@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Manager FIX 5.2</title>
+<title>Padel Manager V11 FINAL MASTER</title>
 
 <style>
 body{
@@ -13,7 +13,11 @@ body{
   color:white;
 }
 
-#app{max-width:900px;margin:auto;padding-bottom:80px;}
+#app{
+  max-width:900px;
+  margin:auto;
+  padding-bottom:80px;
+}
 
 .topbar{
   background:#0f3b26;
@@ -33,7 +37,9 @@ button{
   cursor:pointer;
 }
 
-.mode-btn.active{box-shadow:0 0 10px #00ff99;}
+.mode-btn.active{
+  box-shadow:0 0 10px #00ff99;
+}
 
 .section{
   background:#185c3b;
@@ -53,10 +59,9 @@ button{
   height:100vh;
   background:black;
   text-align:center;
-  padding-top:30px;
+  padding-top:20px;
 }
 
-/* TIMER */
 #timerBox{
   font-size:180px;
   font-weight:900;
@@ -70,13 +75,13 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 FIX 5.2</div>
+  <div>🎾 V11 FINAL MASTER</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
-<!-- ⚙️ SETTINGS FIX -->
+<!-- ⚙️ SETUP -->
 <div class="section">
-<h3>⚙️ Spielzeit Setup</h3>
+<h3>⚙️ Setup</h3>
 
 <label>Gesamtzeit Spielabend:</label><br>
 <select id="totalTime">
@@ -92,15 +97,14 @@ button{
   <option value="18" selected>18 min</option>
   <option value="20">20 min</option>
 </select>
-
 </div>
 
 <!-- MODE -->
 <div class="section">
 <h3>Modus</h3>
 
-<button id="btnTurnier" class="mode-btn active" onclick="setMode('turnier')">Turnier</button>
-<button id="btnGruppen" class="mode-btn" onclick="setMode('gruppen')">Gruppen</button>
+<button id="btnTurnier" class="mode-btn active" onclick="setMode('turnier')">🏆 Turnier</button>
+<button id="btnGruppen" class="mode-btn" onclick="setMode('gruppen')">👥 Gruppen</button>
 
 </div>
 
@@ -124,6 +128,10 @@ button{
 <h1>🎾 KIOSK</h1>
 
 <div id="timerBox">⏱ 00:00</div>
+
+<div id="modeBox"></div>
+<div id="lockBox"></div>
+<div id="freezeBox"></div>
 
 <div id="teams"></div>
 <div id="bank"></div>
@@ -158,7 +166,14 @@ let schedule=[];
 let index=0;
 
 /* =========================
-   TIMER STATE
+   SYSTEM FLAGS
+========================= */
+
+let modeLock=false;
+let freezePlan=false;
+
+/* =========================
+   TIMER
 ========================= */
 
 let timer=null;
@@ -189,17 +204,26 @@ function renderPlayers(){
 }
 
 /* =========================
-   MODE
+   MODE (LOCKED)
 ========================= */
 
 function setMode(m){
+
+  if(modeLock){
+    alert("⚠️ Modus gesperrt");
+    return;
+  }
 
   mode=m;
 
   document.getElementById("btnTurnier").classList.remove("active");
   document.getElementById("btnGruppen").classList.remove("active");
 
-  document.getElementById("btnTurnier").classList.add("active");
+  if(m==="turnier"){
+    document.getElementById("btnTurnier").classList.add("active");
+  } else {
+    document.getElementById("btnGruppen").classList.add("active");
+  }
 
   generate();
 }
@@ -213,7 +237,7 @@ function list(){
 }
 
 /* =========================
-   MATCH LOGIC (5 PLAYER FIX STABLE)
+   MATCH LOGIC (5 PLAYER FIX)
 ========================= */
 
 function match(){
@@ -238,10 +262,15 @@ function match(){
 }
 
 /* =========================
-   GENERATE (FIXED)
+   GENERATE (FREEZE SAFE)
 ========================= */
 
 function generate(){
+
+  if(freezePlan){
+    alert("🧊 Spielplan ist fixiert");
+    return;
+  }
 
   schedule=[];
   index=0;
@@ -260,28 +289,25 @@ function generate(){
 }
 
 /* =========================
-   RENDER
+   KIOSK
 ========================= */
 
-function render(){
+function enterKiosk(){
+  document.body.classList.add("kioskMode");
+}
 
-  let html="<b>Spielplan</b><br><br>";
-
-  schedule.forEach((s,i)=>{
-    html+=`
-      R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
-      🪑 Bank: ${s.bank.join(", ") || "keine"}<br><br>
-    `;
-  });
-
-  document.getElementById("preview").innerHTML=html;
+function exitKiosk(){
+  document.body.classList.remove("kioskMode");
 }
 
 /* =========================
-   TIMER (MATCH TIME FIX)
+   TIMER + FREEZE START
 ========================= */
 
 function startTimer(){
+
+  freezePlan=true;   // 🧊 LOCK TURNIER
+  modeLock=true;
 
   let matchT=parseInt(document.getElementById("matchTime").value);
 
@@ -310,6 +336,10 @@ function startTimer(){
   },1000);
 }
 
+/* =========================
+   TIMER UI
+========================= */
+
 function updateTimer(){
 
   let m=Math.floor(timeLeft/60);
@@ -321,10 +351,11 @@ function updateTimer(){
 }
 
 /* =========================
-   CONTROL
+   NEXT MATCH
 ========================= */
 
 function next(){
+
   if(!roundFinished) return;
 
   index++;
@@ -336,7 +367,7 @@ function next(){
 }
 
 /* =========================
-   UPDATE
+   UPDATE KIOSK
 ========================= */
 
 function update(){
@@ -352,21 +383,21 @@ function update(){
 
   document.getElementById("roundInfo").innerHTML=
     `Runde ${index+1}/${schedule.length}`;
+
+  document.getElementById("modeBox").innerHTML=
+    (mode==="turnier") ? "🏆 TURNIER MODUS" : "👥 GRUPPEN MODUS";
+
+  document.getElementById("lockBox").innerHTML=
+    modeLock ? "🔒 MODUS GESPERRT" : "🔓 MODUS FREI";
+
+  document.getElementById("freezeBox").innerHTML=
+    freezePlan ? "🧊 SPIELPLAN GEFROREN" : "🟢 SPIELPLAN AKTIV";
 }
 
 /* =========================
-   KIOSK
+   INIT
 ========================= */
 
-function enterKiosk(){
-  document.body.classList.add("kioskMode");
-}
-
-function exitKiosk(){
-  document.body.classList.remove("kioskMode");
-}
-
-/* INIT */
 renderPlayers();
 generate();
 
