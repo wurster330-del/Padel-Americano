@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0003</title>
+<title>Padel Club Manager V11.0 Build 0003.1</title>
 
 <style>
 body{
@@ -54,30 +54,16 @@ button{
   width:140px;
 }
 
-/* START MENU ACTIVE ALWAYS */
+/* KIOSK */
+.kioskMode #app{ display:none; }
+.kioskMode #kiosk{ display:block; }
+
 #kiosk{
   display:none;
   height:100vh;
   background:black;
   text-align:center;
   padding-top:25px;
-}
-
-.kiosk #app{
-  display:block;
-}
-
-.kiosk #kiosk{
-  display:none;
-}
-
-/* KIOSK ACTIVE */
-.kioskMode #app{
-  display:none;
-}
-
-.kioskMode #kiosk{
-  display:block;
 }
 
 .kioskTimer{
@@ -113,9 +99,9 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0003</div>
+  <div>🎾 Build 0003.1 FIX</div>
   <div>
-    <button onclick="enterKiosk()">▶ Zum Kiosk</button>
+    <button onclick="enterKiosk()">▶ Kiosk</button>
   </div>
 </div>
 
@@ -146,8 +132,8 @@ button{
 <!-- MODE -->
 <div class="section">
 <h3>🎛 Modus</h3>
-<button onclick="mode='turnier'; renderGroups();">Turnier</button>
-<button onclick="mode='gruppen'; renderGroups();">Gruppen</button>
+<button onclick="mode='turnier'; generate();">Turniermodus</button>
+<button onclick="mode='gruppen'; generate();">Gruppenmodus</button>
 </div>
 
 <!-- PLAYERS -->
@@ -160,7 +146,6 @@ button{
 <div class="section">
 <h3>📊 Vorschau</h3>
 <div id="preview"></div>
-<button onclick="generate()">🎲 Neu berechnen</button>
 </div>
 
 </div>
@@ -204,7 +189,6 @@ let players=[
   {name:"Werner",active:true}
 ];
 
-let groups=[];
 let schedule=[];
 let index=0;
 let matchTime=0;
@@ -235,27 +219,59 @@ function calcRounds(){
   return rounds;
 }
 
-/* GROUPS */
-function generateGroups(){
-  let list=players.filter(p=>p.active).map(p=>p.name);
-  list=list.sort(()=>Math.random()-0.5);
-
-  groups=[
-    {a:list[0],b:list[1]},
-    {a:list[2],b:list[3]},
-    {a:list[4],b:list[5]}
-  ];
+/* SHUFFLE */
+function shuffle(arr){
+  return arr.sort(()=>Math.random()-0.5);
 }
 
-/* TURNIER */
-function generateTournament(){
+/* GROUP MODE -> schedule */
+function generateGroups(){
+
   let list=players.filter(p=>p.active).map(p=>p.name);
+  list=shuffle(list);
+
+  let g1=[list[0],list[1]];
+  let g2=[list[2],list[3]];
+  let g3=[list[4],list[5]];
+
+  let rounds=calcRounds();
+
+  schedule=[];
+
+  let pattern=[
+    [g1,g2],
+    [g1,g3],
+    [g2,g3]
+  ];
+
+  for(let r=0;r<rounds;r++){
+
+    let p=pattern[r%3];
+
+    schedule.push({
+      a:p[0],
+      b:p[1],
+      bank:[g1,g2,g3]
+        .filter(x=>x!==p[0] && x!==p[1])
+        .flat(),
+      round:r+1
+    });
+  }
+}
+
+/* TURNIER MODE */
+function generateTournament(){
+
+  let list=players.filter(p=>p.active).map(p=>p.name);
+  list=shuffle(list);
+
   let rounds=calcRounds();
 
   schedule=[];
 
   for(let r=0;r<rounds;r++){
-    list=list.sort(()=>Math.random()-0.5);
+
+    list=shuffle(list);
 
     schedule.push({
       a:[list[0],list[1]],
@@ -266,34 +282,36 @@ function generateTournament(){
   }
 }
 
-/* PREVIEW */
+/* MASTER GENERATE */
 function generate(){
   if(mode==="gruppen") generateGroups();
   else generateTournament();
 
-  renderGroups();
+  renderPreview();
 }
 
-/* PREVIEW UI */
-function renderGroups(){
+/* PREVIEW FIX */
+function renderPreview(){
 
   let html="";
 
-  if(mode==="gruppen" && groups.length){
-    html="<b>Gruppenmodus</b><br><br>";
-    groups.forEach((g,i)=>{
-      html+="Gruppe "+String.fromCharCode(65+i)+": "+g.a+" / "+g.b+"<br>";
-    });
-  }
+  if(!schedule.length){
+    html="Kein Spielplan";
+  } else {
+    html="<b>Spielplan</b><br><br>";
 
-  if(mode==="turnier"){
-    html="<b>Turniermodus</b><br><br>";
+    schedule.forEach((s,i)=>{
+      html+=`
+        Runde ${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
+        Bank: ${s.bank.join(", ")}<br><br>
+      `;
+    });
   }
 
   document.getElementById("preview").innerHTML=html;
 }
 
-/* START GAME (only kiosk) */
+/* START */
 function startGame(){
   index=0;
   matchTime=parseInt(document.getElementById("match").value)*60;
@@ -329,7 +347,7 @@ function nextGame(){
 /* UPDATE KIOSK */
 function update(){
 
-  if(schedule.length==0) return;
+  if(!schedule.length) return;
 
   let s=schedule[index];
 
