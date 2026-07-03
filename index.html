@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0012 FRE v3</title>
+<title>Padel Club Manager V11 MASTER 0012.2 STRUCTURE FIX</title>
 
 <style>
 body{
@@ -67,12 +67,6 @@ button{
   font-size:14px;
 }
 
-#optBtn{
-  background:#ffb300;
-  color:black;
-  font-weight:bold;
-}
-
 /* KIOSK */
 .kioskMode #app{ display:none; }
 .kioskMode #kiosk{ display:block; }
@@ -102,7 +96,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0012 FRE v3</div>
+  <div>🎾 V11 MASTER 0012.2 STRUCTURE FIX</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -130,8 +124,8 @@ button{
 <div class="section">
 <h3>🎛 Modus</h3>
 
-<button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier</button>
-<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen</button>
+<button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier (FRE)</button>
+<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen (Hybrid)</button>
 
 </div>
 
@@ -147,9 +141,7 @@ button{
 
 <div id="preview"></div>
 
-<div id="fairnessBox">FRE v3: noch keine Bewertung</div>
-
-<button id="optBtn" onclick="optimize()">⚡ Spielplan optimieren</button>
+<div id="fairnessBox">System bereit</div>
 
 </div>
 
@@ -192,6 +184,7 @@ let players=[
 
 let schedule=[];
 let index=0;
+let groups=null;
 
 /* =========================
    UI
@@ -215,7 +208,7 @@ function renderPlayers(){
 }
 
 /* =========================
-   MODE
+   MODE SWITCH
 ========================= */
 
 function setMode(m){
@@ -234,28 +227,31 @@ function setMode(m){
 }
 
 /* =========================
-   SIMPLE TEAM BUILDER
+   SAFE TEAM BUILDER (STABIL)
 ========================= */
 
 function buildTeams(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  let a=[p[0],p[1]];
-  let b=[p[2],p[3]];
-  let bank=p.slice(4);
+  let a=[p[0],p[1]||p[0]];
+  let b=[p[2],p[3]||p[2]];
+
+  let used=new Set([...a,...b]);
+
+  let bank=p.filter(x=>!used.has(x));
 
   return {a,b,bank};
 }
 
 /* =========================
-   GROUP FIX
+   GROUP LOGIC (FIXED)
 ========================= */
 
-let groups=null;
-
 function buildGroups(){
+
   let list=players.filter(p=>p.active).map(p=>p.name);
+
   list=list.sort(()=>Math.random()-0.5);
 
   groups=[
@@ -267,44 +263,23 @@ function buildGroups(){
 
 function groupMatch(r){
 
-  let p=[
+  let pattern=[
     [groups[0],groups[1]],
     [groups[0],groups[2]],
     [groups[1],groups[2]]
   ];
 
-  let sel=p[r%3];
+  let sel=pattern[r%pattern.length];
 
-  let bank=groups.flat().filter(x=>!sel[0].includes(x)&&!sel[1].includes(x));
+  let all=groups.flat();
+
+  let bank=all.filter(x=>!sel[0].includes(x)&&!sel[1].includes(x));
 
   return {a:sel[0],b:sel[1],bank};
 }
 
 /* =========================
-   FRE v3 SCORE
-========================= */
-
-function score(schedule){
-
-  let map={};
-
-  schedule.forEach(s=>{
-    s.bank.forEach(p=>{
-      map[p]=(map[p]||0)+1;
-    });
-  });
-
-  let values=Object.values(map);
-
-  let avg=values.reduce((a,b)=>a+b,0)/values.length;
-
-  let variance=values.reduce((a,b)=>a+Math.pow(b-avg,2),0);
-
-  return 100 - variance; // simple fairness score
-}
-
-/* =========================
-   GENERATE
+   GENERATE CORE
 ========================= */
 
 function generate(){
@@ -315,47 +290,22 @@ function generate(){
   let list=players.filter(p=>p.active).map(p=>p.name);
   let rounds=calcRounds();
 
-  if(mode==="gruppen"){
-    buildGroups();
-    for(let r=0;r<rounds;r++){
-      schedule.push(groupMatch(r));
-    }
-  }
-
   if(mode==="turnier"){
+
     for(let r=0;r<rounds;r++){
       schedule.push(buildTeams(list));
     }
   }
 
-  render();
-  update();
-}
+  if(mode==="gruppen"){
 
-/* =========================
-   OPTIMIZER
-========================= */
+    buildGroups();
 
-function optimize(){
-
-  let best=null;
-  let bestScore=-999;
-
-  for(let i=0;i<20;i++){
-
-    generate();
-
-    let s=score(schedule);
-
-    if(s>bestScore){
-      bestScore=s;
-      best=JSON.parse(JSON.stringify(schedule));
+    for(let r=0;r<rounds;r++){
+      schedule.push(groupMatch(r));
     }
   }
 
-  schedule=best;
-
-  renderFairness(bestScore);
   render();
   update();
 }
@@ -379,22 +329,13 @@ function render(){
   let html="<b>Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
-    html+=`R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>`;
+    html+=`
+      R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
+      🪑 Bank: ${s.bank.length?s.bank.join(", "):"keine"}<br><br>
+    `;
   });
 
   document.getElementById("preview").innerHTML=html;
-}
-
-/* =========================
-   FAIRNESS DISPLAY
-========================= */
-
-function renderFairness(s){
-
-  let c=s>85?"🟢":s>70?"🟡":"🔴";
-
-  document.getElementById("fairnessBox").innerHTML=
-    `${c} FRE v3 Fairness Score: ${Math.round(s)}%`;
 }
 
 /* =========================
@@ -416,7 +357,7 @@ function update(){
     `A: ${s.a.join(" / ")}<br>B: ${s.b.join(" / ")}`;
 
   document.getElementById("bank").innerHTML=
-    `Bank: ${s.bank.join(", ")}`;
+    `Bank: ${s.bank.length?s.bank.join(", "):"keine"}`;
 
   document.getElementById("roundInfo").innerHTML=
     `Runde ${index+1}/${schedule.length}`;
