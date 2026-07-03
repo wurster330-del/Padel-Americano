@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0002</title>
+<title>Padel Club Manager V11.0 Build 0002.1</title>
 
 <style>
 body{
@@ -13,7 +13,11 @@ body{
   color:white;
 }
 
-#app{ max-width:1000px; margin:auto; padding-bottom:80px; }
+#app{
+  max-width:1000px;
+  margin:auto;
+  padding-bottom:80px;
+}
 
 .topbar{
   position:sticky;
@@ -30,6 +34,7 @@ button{
   padding:10px;
   border-radius:8px;
   color:white;
+  margin:2px;
 }
 
 .section{
@@ -45,12 +50,8 @@ button{
   margin:5px 0;
 }
 
-.playerRow input[type="text"]{ width:140px; }
-
-.timer{
-  font-size:60px;
-  text-align:center;
-  font-weight:bold;
+.playerRow input[type="text"]{
+  width:140px;
 }
 
 /* KIOSK */
@@ -62,7 +63,7 @@ button{
   height:100vh;
   background:black;
   text-align:center;
-  padding-top:30px;
+  padding-top:25px;
 }
 
 .kioskTimer{
@@ -73,9 +74,10 @@ button{
 
 .kioskBox{
   font-size:22px;
-  margin:5px;
+  margin:6px;
 }
 
+/* PIN */
 #pinOverlay{
   display:none;
   position:fixed;
@@ -96,11 +98,10 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11.0 Build 0002</div>
+  <div>🎾 Build 0002.1</div>
   <div>
     <button onclick="startGame()">▶ Start</button>
     <button onclick="enterKiosk()">Kiosk</button>
-    <button onclick="nextGame()">➡ Next</button>
   </div>
 </div>
 
@@ -141,7 +142,14 @@ button{
 
 <div class="kioskBox" id="teams"></div>
 <div class="kioskBox" id="bank"></div>
+<div class="kioskBox" id="nextGame"></div>
 <div class="kioskBox" id="roundInfo"></div>
+
+<br>
+
+<button onclick="startGame()">▶ Start</button>
+<button onclick="nextGame()">➡ Next</button>
+<button onclick="openExit()">⛔ Exit</button>
 
 </div>
 
@@ -178,6 +186,7 @@ function renderPlayers(){
       <div class="playerRow">
         <input type="checkbox" ${p.active?"checked":""}
         onchange="players[${i}].active=this.checked">
+
         <input type="text" value="${p.name}"
         onchange="players[${i}].name=this.value">
       </div>`;
@@ -185,7 +194,7 @@ function renderPlayers(){
 }
 renderPlayers();
 
-/* ROUND COUNT */
+/* ROUNDS */
 function calcRounds(){
   let total=parseInt(document.getElementById("total").value);
   let match=parseInt(document.getElementById("match").value);
@@ -194,41 +203,36 @@ function calcRounds(){
   return rounds;
 }
 
-/* SMART SHUFFLE (improved fairness) */
-function smartShuffle(list, lastA=[], lastB=[]){
-  let arr=[...list];
-
-  // einfache Anti-Wiederholung: vorherige Paare vermeiden
+/* SHUFFLE */
+function shuffle(arr){
   for(let i=arr.length-1;i>0;i--){
     let j=Math.floor(Math.random()*(i+1));
     [arr[i],arr[j]]=[arr[j],arr[i]];
   }
-
   return arr;
 }
 
-/* GENERATE SCHEDULE (BUILD 0002 CORE) */
+/* GENERATE SCHEDULE */
 function generate(){
   let list=players.filter(p=>p.active).map(p=>p.name);
   let rounds=calcRounds();
 
   schedule=[];
-  let lastA=[], lastB=[];
+  let last=[];
 
   for(let r=0;r<rounds;r++){
 
-    list=smartShuffle(list,lastA,lastB);
+    let mix=shuffle([...list]);
 
-    let a=[list[0],list[1]];
-    let b=[list[2],list[3]];
-    let bank=list.slice(4);
+    let a=[mix[0],mix[1]];
+    let b=[mix[2],mix[3]];
+    let bank=mix.slice(4);
 
     schedule.push({
       a,b,bank,round:r+1
     });
 
-    lastA=a;
-    lastB=b;
+    last=mix;
   }
 }
 
@@ -258,7 +262,7 @@ function startTimer(){
   },1000);
 }
 
-/* NEXT GAME */
+/* NEXT */
 function nextGame(){
   index++;
   if(index>=schedule.length) index=0;
@@ -266,7 +270,7 @@ function nextGame(){
   update();
 }
 
-/* UPDATE KIOSK */
+/* UPDATE */
 function update(){
 
   if(schedule.length==0) return;
@@ -281,11 +285,21 @@ function update(){
 
   document.getElementById("roundInfo").innerHTML=
     "Runde "+(index+1)+" / "+schedule.length;
+
+  document.getElementById("nextGame").innerHTML=
+    schedule[index+1]
+    ? "Nächstes Spiel: "+schedule[index+1].a.join(" / ")+" vs "+schedule[index+1].b.join(" / ")
+    : "Nächstes Spiel: -";
 }
 
 /* KIOSK */
 function enterKiosk(){
   document.body.classList.add("kiosk");
+}
+
+/* EXIT */
+function openExit(){
+  document.getElementById("pinOverlay").style.display="block";
 }
 
 /* PIN */
