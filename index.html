@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0015.1</title>
+<title>Padel Club Manager V11 MASTER FINAL</title>
 
 <style>
 body{
@@ -28,10 +28,6 @@ body{
   justify-content:space-between;
 }
 
-/* =========================
-   TOUCH BUTTONS (UPGRADED)
-========================= */
-
 button{
   border:none;
   padding:22px 28px;
@@ -43,14 +39,6 @@ button{
   font-weight:bold;
   background:#1f6f4a;
   min-width:140px;
-}
-
-/* KIOSK BUTTONS BIGGER */
-#kiosk button{
-  font-size:32px;
-  padding:30px 40px;
-  min-width:220px;
-  border-radius:18px;
 }
 
 .mode-btn.active{
@@ -73,26 +61,19 @@ button{
   margin:5px 0;
 }
 
-/* =========================
-   KIOSK MODE
-========================= */
-
+/* KIOSK */
 .kioskMode #app{ display:none; }
 .kioskMode #kiosk{ display:block; }
 
 #kiosk{
   display:none;
   height:100vh;
-  background:#000;
-  color:#fff;
+  background:black;
   text-align:center;
   padding-top:25px;
 }
 
-/* =========================
-   TIMER 200px SCOREBOARD
-========================= */
-
+/* TIMER */
 #timerBox{
   font-size:200px;
   font-weight:900;
@@ -117,7 +98,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0015.1 FINAL</div>
+  <div>🎾 V11 MASTER FINAL (5 PLAYER FIX)</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -171,15 +152,14 @@ button{
 
 <div id="timerBox">⏱ 00:00</div>
 
-<div class="kioskBox" id="teams"></div>
-<div class="kioskBox" id="bank"></div>
-<div class="kioskBox" id="roundInfo"></div>
+<div id="teams" style="font-size:26px;margin:10px;"></div>
+<div id="bank" style="font-size:22px;margin:10px;"></div>
+<div id="roundInfo" style="font-size:22px;margin:10px;"></div>
 
 <br>
 
 <button onclick="startGame()">▶ Start</button>
 <button onclick="nextGame()">➡ Next</button>
-<button onclick="toggleTheme()">🌗 Theme</button>
 <button onclick="exitKiosk()">⛔ Exit</button>
 
 </div>
@@ -203,7 +183,6 @@ let players=[
 
 let schedule=[];
 let index=0;
-let groups=null;
 
 /* =========================
    TIMER
@@ -214,62 +193,7 @@ let timeLeft=0;
 let roundFinished=false;
 
 /* =========================
-   AUDIO ENGINE
-========================= */
-
-let audioCtx;
-
-function initAudio(){
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-
-function playGong(){
-
-  if(!audioCtx) initAudio();
-
-  let osc = audioCtx.createOscillator();
-  let gain = audioCtx.createGain();
-
-  osc.type = "sine";
-  osc.frequency.value = 220;
-
-  gain.gain.value = 0.8;
-
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.start();
-
-  setTimeout(()=>{
-    osc.frequency.value = 110;
-  },200);
-
-  setTimeout(()=>{
-    osc.stop();
-  },600);
-}
-
-/* =========================
-   THEME
-========================= */
-
-let theme="dark";
-
-function toggleTheme(){
-
-  theme = (theme==="dark") ? "light" : "dark";
-
-  if(theme==="light"){
-    document.getElementById("kiosk").style.background="#f2f2f2";
-    document.getElementById("kiosk").style.color="#000";
-  } else {
-    document.getElementById("kiosk").style.background="#000";
-    document.getElementById("kiosk").style.color="#fff";
-  }
-}
-
-/* =========================
-   UI
+   PLAYERS
 ========================= */
 
 function renderPlayers(){
@@ -299,72 +223,57 @@ function setMode(m){
   document.getElementById("btnTurnier").classList.remove("active");
   document.getElementById("btnGruppen").classList.remove("active");
 
-  if(m==="turnier"){
-    document.getElementById("btnTurnier").classList.add("active");
-  } else {
-    document.getElementById("btnGruppen").classList.add("active");
-  }
-
-  drawTeams();
-}
-
-/* =========================
-   TEAM DRAW
-========================= */
-
-function drawTeams(){
-
-  let list = players.filter(p=>p.active).map(p=>p.name);
-  list = list.sort(()=>Math.random()-0.5);
-
-  if(list.length===4){
-    groups={
-      mode:"2TEAM",
-      teams:[
-        [list[0],list[1]],
-        [list[2],list[3]]
-      ]
-    };
-  }
-
-  if(list.length===6){
-    groups={
-      mode:"3TEAM",
-      teams:[
-        [list[0],list[1]],
-        [list[2],list[3]],
-        [list[4],list[5]]
-      ]
-    };
-  }
+  document.getElementById("btnTurnier").classList.add("active");
 
   generate();
 }
 
 /* =========================
-   MATCH BUILD
+   ACTIVE PLAYERS
 ========================= */
 
-function buildMatch(r){
+function getActivePlayers(){
+  return players.filter(p=>p.active).map(p=>p.name);
+}
 
-  let t=groups.teams;
+/* =========================
+   TURNIER FIX (5 PLAYER BUG FIX)
+========================= */
 
-  if(groups.mode==="2TEAM"){
-    return {a:t[0],b:t[1],bank:[]};
+function buildTurnierMatch(){
+
+  let list = getActivePlayers();
+
+  // 4 Spieler
+  if(list.length === 4){
+    return {
+      a:[list[0],list[1]],
+      b:[list[2],list[3]],
+      bank:[]
+    };
   }
 
-  if(groups.mode==="3TEAM"){
+  // 🔥 5 Spieler FIX (nur 1 Bank!)
+  if(list.length === 5){
 
-    let bankIndex = r % 3;
-
-    let bank = t[bankIndex];
-
-    let active = t.filter((_,i)=>i!==bankIndex);
+    let s = [...list].sort(()=>Math.random()-0.5);
 
     return {
-      a:active[0],
-      b:active[1],
-      bank:[bank]
+      a:[s[0],s[1]],
+      b:[s[2],s[3]],
+      bank:[s[4]]
+    };
+  }
+
+  // 6 Spieler
+  if(list.length === 6){
+
+    let s = [...list].sort(()=>Math.random()-0.5);
+
+    return {
+      a:[s[0],s[1]],
+      b:[s[2],s[3]],
+      bank:[s[4],s[5]]
     };
   }
 }
@@ -387,7 +296,10 @@ function generate(){
   let rounds=calcRounds();
 
   for(let r=0;r<rounds;r++){
-    schedule.push(buildMatch(r));
+
+    if(mode==="turnier"){
+      schedule.push(buildTurnierMatch());
+    }
   }
 
   render();
@@ -442,10 +354,6 @@ function startTimer(){
       updateTimerDisplay();
 
       roundFinished=true;
-
-      playGong(); // 🔊 SOUND
-
-      update();
     }
 
   },1000);
@@ -473,22 +381,11 @@ function startGame(){
 
 function nextGame(){
   if(!roundFinished) return;
-
   index++;
-
   if(index>=schedule.length) index=0;
-
   roundFinished=false;
-
   update();
 }
-
-/* =========================
-   KIOSK
-========================= */
-
-function enterKiosk(){document.body.classList.add("kioskMode");}
-function exitKiosk(){document.body.classList.remove("kioskMode");}
 
 /* =========================
    UPDATE
@@ -506,12 +403,13 @@ function update(){
     `Bank: ${s.bank.length?s.bank.join(", "):"keine"}`;
 
   document.getElementById("roundInfo").innerHTML=
-    roundFinished
-      ? `Runde ${index+1}/${schedule.length}<br>🟡 BEREIT`
-      : `Runde ${index+1}/${schedule.length}`;
+    `Runde ${index+1}/${schedule.length}`;
 }
 
-/* INIT */
+/* =========================
+   INIT
+========================= */
+
 renderPlayers();
 generate();
 
