@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0014.2 TIMER FIX</title>
+<title>Padel Club Manager V11 MASTER 0014.3 TIMER FIX</title>
 
 <style>
 body{
@@ -75,6 +75,13 @@ button{
   font-size:22px;
   margin:6px;
 }
+
+#timerBox{
+  font-size:32px;
+  font-weight:bold;
+  color:#00ff99;
+  margin:10px;
+}
 </style>
 </head>
 
@@ -83,7 +90,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0014.2 TIMER FIX</div>
+  <div>🎾 V11 MASTER 0014.3 TIMER FIX</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -135,6 +142,8 @@ button{
 
 <h1>🎾 KIOSK</h1>
 
+<div id="timerBox">⏱ 00:00</div>
+
 <div class="kioskBox" id="teams"></div>
 <div class="kioskBox" id="bank"></div>
 <div class="kioskBox" id="roundInfo"></div>
@@ -169,14 +178,14 @@ let index=0;
 let groups=null;
 
 /* =========================
-   TIMER (NEW)
+   TIMER
 ========================= */
 
 let timer=null;
 let timeLeft=0;
 
 /* =========================
-   UI
+   PLAYERS UI
 ========================= */
 
 function renderPlayers(){
@@ -232,7 +241,7 @@ function getSystemMode(){
 }
 
 /* =========================
-   TIME ENGINE
+   TIME
 ========================= */
 
 function calcRounds(){
@@ -260,7 +269,7 @@ function buildGroups(){
 }
 
 /* =========================
-   HYBRID FIX
+   HYBRID
 ========================= */
 
 function hybridMatch(){
@@ -283,48 +292,32 @@ function buildPureMatch(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:[]
-  };
+  return {a:[p[0],p[1]],b:[p[2],p[3]],bank:[]};
 }
 
 function buildRotation5(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:[p[4]]
-  };
+  return {a:[p[0],p[1]],b:[p[2],p[3]],bank:[p[4]]};
 }
 
 function buildRotation6(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:[p[4],p[5]]
-  };
+  return {a:[p[0],p[1]],b:[p[2],p[3]],bank:[p[4],p[5]]};
 }
 
 function buildTeams(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:p.slice(4)
-  };
+  return {a:[p[0],p[1]],b:[p[2],p[3]],bank:p.slice(4)};
 }
 
 /* =========================
-   TIMER FUNCTIONS
+   TIMER ENGINE (FIXED)
 ========================= */
 
 function startTimer(){
@@ -335,7 +328,10 @@ function startTimer(){
 
   clearInterval(timer);
 
+  updateTimerDisplay();
+
   timer = setInterval(()=>{
+
     timeLeft--;
 
     updateTimerDisplay();
@@ -354,10 +350,8 @@ function updateTimerDisplay(){
 
   if(sec < 10) sec = "0" + sec;
 
-  let s = schedule[index];
-
-  document.getElementById("roundInfo").innerHTML =
-    `Runde ${index+1}/${schedule.length}<br>⏱ ${min}:${sec}`;
+  document.getElementById("timerBox").innerHTML =
+    `⏱ ${min}:${sec}`;
 }
 
 /* =========================
@@ -445,6 +439,10 @@ function nextGame(){
   update();
 }
 
+/* =========================
+   KIOSK UPDATE
+========================= */
+
 function update(){
 
   let s=schedule[index];
@@ -456,12 +454,8 @@ function update(){
   document.getElementById("bank").innerHTML=
     `Bank: ${s.bank.length?s.bank.join(", "):"keine"}`;
 
-  let min = Math.floor(timeLeft/60);
-  let sec = timeLeft%60;
-  if(sec<10) sec="0"+sec;
-
   document.getElementById("roundInfo").innerHTML=
-    `Runde ${index+1}/${schedule.length}<br>⏱ ${min}:${sec}`;
+    `Runde ${index+1}/${schedule.length}`;
 }
 
 /* INIT */
