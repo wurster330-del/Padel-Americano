@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V12</title>
+<title>Padel Club Manager V12 FAIR</title>
 
 <style>
 body{
@@ -79,7 +79,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V12 MASTER STABLE</div>
+  <div>🎾 V12 FAIR ROTATION</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
@@ -168,19 +168,37 @@ let schedule=[];
 let index=0;
 
 /* =====================
-   LOCKS
+   SYSTEM
 ===================== */
 
 let freeze=false;
 let lock=false;
-
-/* =====================
-   TIMER
-===================== */
-
 let timer=null;
 let timeLeft=0;
 let finished=false;
+
+/* =====================
+   FAIRNESS ENGINE
+===================== */
+
+let pairHistory={};
+
+function pairKey(a,b){
+  return [a,b].sort().join("-");
+}
+
+function pairScore(a,b){
+  return pairHistory[pairKey(a,b)] || 0;
+}
+
+function updateHistory(team){
+  for(let i=0;i<team.length;i++){
+    for(let j=i+1;j<team.length;j++){
+      let key=pairKey(team[i],team[j]);
+      pairHistory[key]=(pairHistory[key]||0)+1;
+    }
+  }
+}
 
 /* =====================
    PLAYERS
@@ -203,10 +221,6 @@ function renderPlayers(){
       </div>`;
   });
 }
-
-/* =====================
-   ACTIVE PLAYERS
-===================== */
 
 function active(){
   return players.filter(p=>p.active).map(p=>p.name);
@@ -235,27 +249,49 @@ function setMode(m){
 }
 
 /* =====================
-   TURNIER
+   TURNIER FAIR ENGINE
 ===================== */
 
 function buildTurnier(){
 
   let l=active();
+  let pool=[...l];
 
-  if(l.length===4)
-    return {a:[l[0],l[1]],b:[l[2],l[3]],bank:[]};
+  let bestA=null;
+  let bestB=null;
+  let bestScore=999999;
 
-  if(l.length===5){
-    let s=[...l].sort(()=>Math.random()-0.5);
-    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4]]};
+  pool.sort(()=>Math.random()-0.5);
+
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      for(let k=0;k<pool.length;k++){
+        for(let m=k+1;m<pool.length;m++){
+
+          let A=[pool[i],pool[j]];
+          let B=[pool[k],pool[m]];
+
+          let used=new Set([...A,...B]);
+          if(used.size<4) continue;
+
+          let score=
+            pairScore(A[0],A[1])+
+            pairScore(B[0],B[1]);
+
+          if(score<bestScore){
+            bestScore=score;
+            bestA=A;
+            bestB=B;
+          }
+        }
+      }
+    }
   }
 
-  if(l.length===6){
-    let s=[...l].sort(()=>Math.random()-0.5);
-    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4],s[5]]};
-  }
+  let used=[...bestA,...bestB];
+  let bank=pool.filter(p=>!used.includes(p));
 
-  return {a:[],b:[],bank:[]};
+  return {a:bestA||[],b:bestB||[],bank};
 }
 
 /* =====================
@@ -382,17 +418,18 @@ function updateTimer(){
 }
 
 /* =====================
-   NEXT
+   NEXT MATCH
 ===================== */
 
 function nextMatch(){
 
   if(!finished) return;
 
-  index++;
+  updateHistory(schedule[index].a);
+  updateHistory(schedule[index].b);
 
-  if(index>=schedule.length)
-    index=0;
+  index++;
+  if(index>=schedule.length) index=0;
 
   finished=false;
 
