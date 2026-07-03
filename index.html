@@ -3,52 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Manager V11 FINAL MASTER</title>
+<title>Padel Club Manager V12</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#02140e;
+  background:#0b1f16;
   color:white;
 }
 
 #app{
-  max-width:900px;
+  max-width:1000px;
   margin:auto;
   padding-bottom:80px;
 }
 
+/* TOPBAR */
 .topbar{
-  background:#0f3b26;
+  position:sticky;
+  top:0;
+  background:#123b28;
   padding:10px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
 
+/* BUTTONS */
 button{
   padding:16px 20px;
   margin:6px;
-  font-weight:bold;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
+  font-weight:bold;
   background:#1f6f4a;
   color:white;
   cursor:pointer;
+  font-size:18px;
+}
+
+button:active{
+  transform:scale(0.98);
 }
 
 .mode-btn.active{
-  box-shadow:0 0 10px #00ff99;
+  box-shadow:0 0 12px #00ff99;
 }
 
+/* SECTIONS */
 .section{
-  background:#185c3b;
+  background:#184d35;
   margin:10px;
-  padding:10px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:12px;
 }
 
-.playerRow{display:flex;gap:8px;margin:5px 0;}
+.playerRow{
+  display:flex;
+  gap:10px;
+  margin:6px 0;
+}
 
 /* KIOSK */
 .kioskMode #app{display:none;}
@@ -62,10 +77,12 @@ button{
   padding-top:20px;
 }
 
+/* TIMER */
 #timerBox{
-  font-size:180px;
+  font-size:200px;
   font-weight:900;
   color:#00ff99;
+  text-shadow:0 0 20px #00ff99;
 }
 </style>
 </head>
@@ -75,11 +92,11 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 FINAL MASTER</div>
+  <div>🎾 V12 MASTER STABLE</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
-<!-- ⚙️ SETUP -->
+<!-- SETUP -->
 <div class="section">
 <h3>⚙️ Setup</h3>
 
@@ -97,24 +114,25 @@ button{
   <option value="18" selected>18 min</option>
   <option value="20">20 min</option>
 </select>
+
 </div>
 
-<!-- MODE -->
+<!-- MODUS -->
 <div class="section">
 <h3>Modus</h3>
 
 <button id="btnTurnier" class="mode-btn active" onclick="setMode('turnier')">🏆 Turnier</button>
-<button id="btnGruppen" class="mode-btn" onclick="setMode('gruppen')">👥 Gruppen</button>
+<button id="btnGruppen" class="mode-btn" onclick="setMode('gruppen')">👥 Gruppe</button>
 
 </div>
 
-<!-- PLAYERS -->
+<!-- SPIELER -->
 <div class="section">
 <h3>Spieler</h3>
 <div id="players"></div>
 </div>
 
-<!-- PLAN -->
+<!-- SPIELPLAN -->
 <div class="section">
 <h3>Spielplan</h3>
 <div id="preview"></div>
@@ -130,17 +148,15 @@ button{
 <div id="timerBox">⏱ 00:00</div>
 
 <div id="modeBox"></div>
-<div id="lockBox"></div>
-<div id="freezeBox"></div>
+<div id="roundBox"></div>
 
-<div id="teams"></div>
-<div id="bank"></div>
-<div id="roundInfo"></div>
+<div id="teamsBox"></div>
+<div id="bankBox"></div>
 
 <br>
 
 <button onclick="startTimer()">Start</button>
-<button onclick="next()">Next</button>
+<button onclick="nextMatch()">Next</button>
 <button onclick="exitKiosk()">Exit</button>
 
 </div>
@@ -166,11 +182,11 @@ let schedule=[];
 let index=0;
 
 /* =========================
-   SYSTEM FLAGS
+   FLAGS
 ========================= */
 
-let modeLock=false;
-let freezePlan=false;
+let freeze=false;
+let lock=false;
 
 /* =========================
    TIMER
@@ -178,14 +194,13 @@ let freezePlan=false;
 
 let timer=null;
 let timeLeft=0;
-let roundFinished=false;
+let finished=false;
 
 /* =========================
    PLAYERS
 ========================= */
 
 function renderPlayers(){
-
   let box=document.getElementById("players");
   box.innerHTML="";
 
@@ -193,56 +208,49 @@ function renderPlayers(){
     box.innerHTML+=`
       <div class="playerRow">
         <input type="checkbox"
-        ${p.active?"checked":""}
-        onchange="players[${i}].active=this.checked">
+          ${p.active?"checked":""}
+          onchange="players[${i}].active=this.checked">
 
         <input type="text"
-        value="${p.name}"
-        onchange="players[${i}].name=this.value">
+          value="${p.name}"
+          onchange="players[${i}].name=this.value">
       </div>`;
   });
 }
 
 /* =========================
-   MODE (LOCKED)
+   ACTIVE LIST
+========================= */
+
+function active(){
+  return players.filter(p=>p.active).map(p=>p.name);
+}
+
+/* =========================
+   MODE SWITCH
 ========================= */
 
 function setMode(m){
 
-  if(modeLock){
-    alert("⚠️ Modus gesperrt");
-    return;
-  }
+  if(lock) return;
 
   mode=m;
 
   document.getElementById("btnTurnier").classList.remove("active");
   document.getElementById("btnGruppen").classList.remove("active");
 
-  if(m==="turnier"){
-    document.getElementById("btnTurnier").classList.add("active");
-  } else {
-    document.getElementById("btnGruppen").classList.add("active");
-  }
+  document.getElementById("btnTurnier").classList.add("active");
 
   generate();
 }
 
 /* =========================
-   ACTIVE PLAYERS
-========================= */
-
-function list(){
-  return players.filter(p=>p.active).map(p=>p.name);
-}
-
-/* =========================
-   MATCH LOGIC (5 PLAYER FIX)
+   MATCH ENGINE
 ========================= */
 
 function match(){
 
-  let l=list();
+  let l=active();
 
   if(l.length===4){
     return {a:[l[0],l[1]],b:[l[2],l[3]],bank:[]};
@@ -262,15 +270,12 @@ function match(){
 }
 
 /* =========================
-   GENERATE (FREEZE SAFE)
+   GENERATE
 ========================= */
 
 function generate(){
 
-  if(freezePlan){
-    alert("🧊 Spielplan ist fixiert");
-    return;
-  }
+  if(freeze) return;
 
   schedule=[];
   index=0;
@@ -278,7 +283,7 @@ function generate(){
   let total=parseInt(document.getElementById("totalTime").value);
   let matchT=parseInt(document.getElementById("matchTime").value);
 
-  let rounds=Math.max(1, Math.floor(total/matchT));
+  let rounds=Math.max(1,Math.floor(total/matchT));
 
   for(let i=0;i<rounds;i++){
     schedule.push(match());
@@ -286,6 +291,24 @@ function generate(){
 
   render();
   update();
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+  let html="";
+
+  schedule.forEach((s,i)=>{
+    html+=`
+      R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
+      🪑 ${s.bank.join(", ") || "keine"}<br><br>
+    `;
+  });
+
+  document.getElementById("preview").innerHTML=html;
 }
 
 /* =========================
@@ -301,18 +324,18 @@ function exitKiosk(){
 }
 
 /* =========================
-   TIMER + FREEZE START
+   TIMER
 ========================= */
 
 function startTimer(){
 
-  freezePlan=true;   // 🧊 LOCK TURNIER
-  modeLock=true;
+  freeze=true;
+  lock=true;
 
-  let matchT=parseInt(document.getElementById("matchTime").value);
+  let t=parseInt(document.getElementById("matchTime").value);
 
-  timeLeft=matchT*60;
-  roundFinished=false;
+  timeLeft=t*60;
+  finished=false;
 
   clearInterval(timer);
 
@@ -325,20 +348,12 @@ function startTimer(){
     updateTimer();
 
     if(timeLeft<=0){
-
       clearInterval(timer);
-      timeLeft=0;
-      updateTimer();
-
-      roundFinished=true;
+      finished=true;
     }
 
   },1000);
 }
-
-/* =========================
-   TIMER UI
-========================= */
 
 function updateTimer(){
 
@@ -346,22 +361,22 @@ function updateTimer(){
   let s=timeLeft%60;
   if(s<10) s="0"+s;
 
-  document.getElementById("timerBox").innerHTML=
-    `⏱ ${m}:${s}`;
+  document.getElementById("timerBox").innerHTML=`⏱ ${m}:${s}`;
 }
 
 /* =========================
    NEXT MATCH
 ========================= */
 
-function next(){
+function nextMatch(){
 
-  if(!roundFinished) return;
+  if(!finished) return;
 
   index++;
+
   if(index>=schedule.length) index=0;
 
-  roundFinished=false;
+  finished=false;
 
   update();
 }
@@ -375,23 +390,17 @@ function update(){
   let s=schedule[index];
   if(!s) return;
 
-  document.getElementById("teams").innerHTML=
-    `A: ${s.a.join(" / ")}<br>B: ${s.b.join(" / ")}`;
+  document.getElementById("modeBox").innerHTML=
+    mode==="turnier"?"🏆 TURNIER":"👥 GRUPPE";
 
-  document.getElementById("bank").innerHTML=
-    `Bank: ${s.bank.join(", ") || "keine"}`;
-
-  document.getElementById("roundInfo").innerHTML=
+  document.getElementById("roundBox").innerHTML=
     `Runde ${index+1}/${schedule.length}`;
 
-  document.getElementById("modeBox").innerHTML=
-    (mode==="turnier") ? "🏆 TURNIER MODUS" : "👥 GRUPPEN MODUS";
+  document.getElementById("teamsBox").innerHTML=
+    `A: ${s.a.join(" / ")}<br>B: ${s.b.join(" / ")}`;
 
-  document.getElementById("lockBox").innerHTML=
-    modeLock ? "🔒 MODUS GESPERRT" : "🔓 MODUS FREI";
-
-  document.getElementById("freezeBox").innerHTML=
-    freezePlan ? "🧊 SPIELPLAN GEFROREN" : "🟢 SPIELPLAN AKTIV";
+  document.getElementById("bankBox").innerHTML=
+    `Bank: ${s.bank.join(", ") || "keine"}`;
 }
 
 /* =========================
