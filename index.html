@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0008.1 FIX</title>
+<title>Padel Club Manager V11 MASTER 0010 FRE</title>
 
 <style>
 body{
@@ -80,6 +80,16 @@ button{
   font-size:22px;
   margin:6px;
 }
+
+/* FRE BOX */
+#fairnessBox{
+  background:#0b2d1d;
+  padding:10px;
+  margin-top:10px;
+  border-radius:10px;
+  font-size:14px;
+  color:#b6ffda;
+}
 </style>
 </head>
 
@@ -88,10 +98,8 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0008.1 MODUS FIX</div>
-  <div>
-    <button onclick="enterKiosk()">▶ Kiosk</button>
-  </div>
+  <div>🎾 V11 MASTER 0010 FRE</div>
+  <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
 <!-- SETTINGS -->
@@ -114,17 +122,12 @@ button{
 </select>
 </div>
 
-<!-- MODE RESTORED -->
+<!-- MODE -->
 <div class="section">
 <h3>🎛 Modus</h3>
 
-<button id="btnTurnier"
-class="mode-btn turnier active"
-onclick="setMode('turnier')">🏆 Turniermodus</button>
-
-<button id="btnGruppen"
-class="mode-btn gruppen"
-onclick="setMode('gruppen')">👥 Gruppenmodus</button>
+<button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier</button>
+<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen</button>
 
 </div>
 
@@ -137,7 +140,9 @@ onclick="setMode('gruppen')">👥 Gruppenmodus</button>
 <!-- PREVIEW -->
 <div class="section">
 <h3>📊 Spielplan</h3>
-<div id="preview">Kein Spielplan</div>
+<div id="preview"></div>
+
+<div id="fairnessBox">FRE: noch keine Berechnung</div>
 </div>
 
 </div>
@@ -156,15 +161,19 @@ onclick="setMode('gruppen')">👥 Gruppenmodus</button>
 
 <button onclick="startGame()">▶ Start</button>
 <button onclick="nextGame()">➡ Next</button>
-<button onclick="openExit()">⛔ Exit</button>
+<button onclick="exitKiosk()">⛔ Exit</button>
 
 </div>
 
 <script>
 
-let mode="turnier";
+/* =========================
+   STATE
+========================= */
 
-let players=[
+let mode = "turnier";
+
+let players = [
   {name:"Marco",active:true},
   {name:"Stefan",active:true},
   {name:"David",active:true},
@@ -173,236 +182,319 @@ let players=[
   {name:"Werner",active:true}
 ];
 
-let schedule=[];
-let history=[];
-let index=0;
-let matchTime=0;
-let timer=null;
+let schedule = [];
+let history = [];
+let index = 0;
 
-/* MODE FIXED */
+/* =========================
+   UI PLAYERS
+========================= */
+
+function renderPlayers(){
+  let box = document.getElementById("players");
+  box.innerHTML = "";
+
+  players.forEach((p,i)=>{
+    box.innerHTML += `
+      <div class="playerRow">
+        <input type="checkbox"
+        ${p.active ? "checked":""}
+        onchange="players[${i}].active=this.checked">
+
+        <input type="text"
+        value="${p.name}"
+        onchange="players[${i}].name=this.value">
+      </div>
+    `;
+  });
+}
+
+/* =========================
+   MODE
+========================= */
+
 function setMode(m){
-
-  mode=m;
+  mode = m;
 
   document.getElementById("btnTurnier").classList.remove("active");
   document.getElementById("btnGruppen").classList.remove("active");
 
   if(m==="turnier"){
     document.getElementById("btnTurnier").classList.add("active");
-  }
-
-  if(m==="gruppen"){
+  } else {
     document.getElementById("btnGruppen").classList.add("active");
   }
 
   generate();
 }
 
-/* PLAYERS */
-function renderPlayers(){
+/* =========================
+   FRE ENGINE
+========================= */
 
-  let box=document.getElementById("players");
-  box.innerHTML="";
+let stats = {};
 
-  players.forEach((p,i)=>{
-    box.innerHTML+=`
-      <div class="playerRow">
-        <input type="checkbox"
-        ${p.active?"checked":""}
-        onchange="players[${i}].active=this.checked">
-
-        <input type="text"
-        value="${p.name}"
-        onchange="players[${i}].name=this.value">
-      </div>`;
+function initStats(){
+  stats = {};
+  players.filter(p=>p.active).forEach(p=>{
+    stats[p.name] = {
+      bench:0,
+      games:0,
+      partners:{},
+      opponents:{}
+    };
   });
 }
-renderPlayers();
 
-/* ROUNDS */
-function calcRounds(){
-  let total=parseInt(document.getElementById("total").value);
-  let match=parseInt(document.getElementById("match").value);
-  return Math.floor(total/match);
+function scoreLine(a,b){
+
+  let score = 1000;
+  let active = players.filter(p=>p.active).map(p=>p.name);
+  let bank = active.filter(p=>!a.includes(p) && !b.includes(p));
+
+  bank.forEach(p=>{
+    score -= (stats[p]?.bench || 0) * 50;
+  });
+
+  a.forEach(p=>{
+    b.forEach(o=>{
+      score -= (stats[p]?.opponents?.[o] || 0) * 40;
+    });
+  });
+
+  a.forEach(p=>{
+    a.forEach(o=>{
+      if(p!==o){
+        score -= (stats[p]?.partners?.[o] || 0) * 20;
+      }
+    });
+  });
+
+  return score;
 }
 
-/* NO DUPLICATE CHECK */
-function isValid(a,b){
-  return !history.some(h =>
-    (h.a[0]===a[0] && h.a[1]===a[1]) ||
-    (h.b[0]===b[0] && h.b[1]===b[1])
-  );
+function updateStats(a,b,bank){
+
+  a.concat(b).forEach(p=>{
+    stats[p].games++;
+  });
+
+  bank.forEach(p=>{
+    stats[p].bench++;
+  });
+
+  a.forEach(p=>{
+    b.forEach(o=>{
+      stats[p].opponents[o] = (stats[p].opponents[o]||0)+1;
+    });
+  });
+
+  b.forEach(p=>{
+    a.forEach(o=>{
+      stats[p].opponents[o] = (stats[p].opponents[o]||0)+1;
+    });
+  });
+
+  a.forEach(p=>{
+    a.forEach(o=>{
+      if(p!==o){
+        stats[p].partners[o] = (stats[p].partners[o]||0)+1;
+      }
+    });
+  });
+
+  b.forEach(p=>{
+    b.forEach(o=>{
+      if(p!==o){
+        stats[p].partners[o] = (stats[p].partners[o]||0)+1;
+      }
+    });
+  });
 }
 
-/* TURNIER */
+/* =========================
+   GENERATOR (FRE)
+========================= */
+
 function buildTurnier(){
 
-  let list=players.filter(p=>p.active).map(p=>p.name);
-  schedule=[];
-  history=[];
+  let list = players.filter(p=>p.active).map(p=>p.name);
 
-  let rounds=calcRounds();
+  schedule = [];
+  history = [];
+  initStats();
+
+  let rounds = calcRounds();
 
   for(let r=0;r<rounds;r++){
 
-    let rotated=[...list];
-    for(let i=0;i<r;i++) rotated.push(rotated.shift());
+    let best = null;
+    let bestScore = -99999;
 
-    let a=[rotated[0],rotated[1]];
-    let b=[rotated[2],rotated[3]];
+    for(let i=0;i<40;i++){
 
-    let bank=rotated.slice(4);
+      let pool = [...list].sort(()=>Math.random()-0.5);
 
-    if(isValid(a,b)){
-      schedule.push({a,b,bank,round:r+1});
-      history.push({a,b});
-    } else {
-      rotated.sort(()=>Math.random()-0.5);
+      let a = [pool[0],pool[1]];
+      let b = [pool[2],pool[3]];
+      let bank = pool.slice(4);
 
-      schedule.push({
-        a:[rotated[0],rotated[1]],
-        b:[rotated[2],rotated[3]],
-        bank:rotated.slice(4),
-        round:r+1
-      });
+      let s = scoreLine(a,b);
 
-      history.push({
-        a:[rotated[0],rotated[1]],
-        b:[rotated[2],rotated[3]]
-      });
+      if(s > bestScore){
+        bestScore = s;
+        best = {a,b,bank};
+      }
     }
+
+    updateStats(best.a,best.b,best.bank);
+
+    schedule.push({
+      a:best.a,
+      b:best.b,
+      bank:best.bank,
+      round:r+1
+    });
+
+    history.push({a:best.a,b:best.b});
   }
+
+  renderFairness(bestScore);
 }
 
-/* GRUPPEN */
 function buildGruppen(){
 
-  let list=players.filter(p=>p.active).map(p=>p.name);
-  schedule=[];
-  history=[];
+  let list = players.filter(p=>p.active).map(p=>p.name);
 
-  let rounds=calcRounds();
+  schedule = [];
+  history = [];
+  initStats();
+
+  let rounds = calcRounds();
 
   for(let r=0;r<rounds;r++){
 
-    let rotated=[...list];
-    for(let i=0;i<r;i++) rotated.push(rotated.shift());
+    let pool = [...list].sort(()=>Math.random()-0.5);
 
-    let g1=[rotated[0],rotated[1]];
-    let g2=[rotated[2],rotated[3]];
-    let g3=[rotated[4],rotated[5]];
+    let g1 = [pool[0],pool[1]];
+    let g2 = [pool[2],pool[3]];
+    let g3 = [pool[4],pool[5]];
 
-    let pattern=[
+    let pattern = [
       [g1,g2],
       [g1,g3],
       [g2,g3]
     ];
 
-    let p=pattern[r%3];
+    let p = pattern[r%3];
+
+    let bank = [g1,g2,g3].flat().filter(x=>!p[0].includes(x) && !p[1].includes(x));
 
     schedule.push({
       a:p[0],
       b:p[1],
-      bank:[g1,g2,g3].flat().filter(x=>!p[0].includes(x) && !p[1].includes(x)),
+      bank,
       round:r+1
     });
   }
 }
 
-/* GENERATE */
-function generate(){
+/* =========================
+   FAIRNESS DISPLAY
+========================= */
 
+function renderFairness(score){
+
+  let percent = Math.max(60, Math.min(100, Math.round(80 + score/50)));
+
+  let color = percent>90 ? "🟢" : percent>80 ? "🟡" : "🔴";
+
+  document.getElementById("fairnessBox").innerHTML =
+    `${color} FRE Fairness Index: ${percent}%`;
+}
+
+/* =========================
+   CORE
+========================= */
+
+function calcRounds(){
+  let total = parseInt(document.getElementById("total").value);
+  let match = parseInt(document.getElementById("match").value);
+  return Math.floor(total / match);
+}
+
+function generate(){
   if(mode==="turnier") buildTurnier();
   if(mode==="gruppen") buildGruppen();
-
   index=0;
   renderPreview();
   update();
 }
 
-/* PREVIEW */
+/* =========================
+   PREVIEW
+========================= */
+
 function renderPreview(){
 
-  if(!schedule.length){
-    document.getElementById("preview").innerHTML="Kein Spielplan";
-    return;
-  }
-
-  let html="<b>Spielplan</b><br><br>";
+  let html = "<b>Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
-    html+=`
-      Runde ${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
-      Bank: ${s.bank.join(", ")||"-"}<br><br>
-    `;
+    html += `R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>`;
   });
 
-  document.getElementById("preview").innerHTML=html;
+  document.getElementById("preview").innerHTML = html;
 }
 
-/* KIOSK */
+/* =========================
+   KIOSK
+========================= */
+
 function enterKiosk(){
   document.body.classList.add("kioskMode");
 }
 
-/* GAME */
+function exitKiosk(){
+  document.body.classList.remove("kioskMode");
+}
+
+/* =========================
+   GAME FLOW
+========================= */
+
 function startGame(){
   index=0;
-  matchTime=parseInt(document.getElementById("match").value)*60;
   update();
-  startTimer();
 }
 
 function nextGame(){
   index++;
   if(index>=schedule.length) index=0;
-  matchTime=parseInt(document.getElementById("match").value)*60;
   update();
 }
 
-/* TIMER */
-function startTimer(){
-  if(timer) return;
-
-  timer=setInterval(()=>{
-    if(matchTime>0) matchTime--;
-
-    let m=Math.floor(matchTime/60);
-    let s=matchTime%60;
-
-    document.getElementById("ktimer").innerText=
-      m+":"+String(s).padStart(2,"0");
-
-  },1000);
-}
-
-/* UPDATE */
 function update(){
 
-  let s=schedule[index];
+  let s = schedule[index];
   if(!s) return;
 
-  document.getElementById("teams").innerHTML=
-    "A: "+s.a.join(" / ")+"<br>B: "+s.b.join(" / ");
+  document.getElementById("teams").innerHTML =
+    `A: ${s.a.join(" / ")}<br>B: ${s.b.join(" / ")}`;
 
-  document.getElementById("bank").innerHTML=
-    "Bank: "+(s.bank.join(", ")||"-");
+  document.getElementById("bank").innerHTML =
+    `Bank: ${s.bank.join(", ")}`;
 
-  document.getElementById("roundInfo").innerHTML=
-    "Runde "+(index+1)+" / "+schedule.length;
+  document.getElementById("roundInfo").innerHTML =
+    `Runde ${index+1}/${schedule.length}`;
 
-  document.getElementById("nextGame").innerHTML=
+  document.getElementById("nextGame").innerHTML =
     schedule[index+1]
-    ? "Nächstes Spiel: "+schedule[index+1].a.join(" / ")+" vs "+schedule[index+1].b.join(" / ")
-    : "Nächstes Spiel: -";
-}
-
-/* EXIT */
-function openExit(){
-  document.body.classList.remove("kioskMode");
+    ? `Nächstes: ${schedule[index+1].a.join(" / ")} vs ${schedule[index+1].b.join(" / ")}`
+    : "Ende";
 }
 
 /* INIT */
+renderPlayers();
 generate();
 
 </script>
