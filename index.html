@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V12 GROUP FIX</title>
+<title>Padel Club Manager V12 FINAL</title>
 
 <style>
 body{
@@ -79,7 +79,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V12 GROUP FIX</div>
+  <div>🎾 V12 FINAL</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
@@ -168,12 +168,6 @@ let schedule=[];
 let index=0;
 
 /* =====================
-   GROUP STATE (FIXED TEAMS)
-===================== */
-
-let groupTeams=null;
-
-/* =====================
    SYSTEM
 ===================== */
 
@@ -182,6 +176,27 @@ let lock=false;
 let timer=null;
 let timeLeft=0;
 let finished=false;
+
+/* =====================
+   HISTORY (TURNIER)
+===================== */
+
+let matchHistory={};
+
+function matchKey(A,B){
+  let a=A.slice().sort().join("-");
+  let b=B.slice().sort().join("-");
+  return [a,b].sort().join(" VS ");
+}
+
+function matchPenalty(A,B){
+  return matchHistory[matchKey(A,B)] || 0;
+}
+
+function addHistory(A,B){
+  let key = matchKey(A,B);
+  matchHistory[key] = (matchHistory[key] || 0) + 1;
+}
 
 /* =====================
    PLAYERS
@@ -210,7 +225,7 @@ function active(){
 }
 
 /* =====================
-   MODE SWITCH
+   MODE
 ===================== */
 
 function setMode(m){
@@ -232,54 +247,72 @@ function setMode(m){
 }
 
 /* =====================
-   TURNIER (simple stable)
+   TURNIER NO REPEAT
 ===================== */
 
 function buildTurnier(){
 
   let l=active();
+  let pool=[...l];
 
-  let s=[...l].sort(()=>Math.random()-0.5);
+  pool.sort(()=>Math.random()-0.5);
 
-  if(l.length===4)
-    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[]};
+  let bestA=null;
+  let bestB=null;
+  let bestScore=999999;
 
-  if(l.length===5)
-    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4]]};
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      for(let k=0;k<pool.length;k++){
+        for(let m=k+1;m<pool.length;m++){
 
-  if(l.length===6)
-    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4],s[5]]};
+          let A=[pool[i],pool[j]];
+          let B=[pool[k],pool[m]];
 
-  return {a:[],b:[],bank:[]};
+          let used=new Set([...A,...B]);
+          if(used.size<4) continue;
+
+          let score=matchPenalty(A,B);
+
+          if(score<bestScore){
+            bestScore=score;
+            bestA=A;
+            bestB=B;
+          }
+        }
+      }
+    }
+  }
+
+  let used=[...bestA,...bestB];
+  let bank=pool.filter(p=>!used.includes(p));
+
+  return {a:bestA,b:bestB,bank};
 }
 
 /* =====================
-   GROUP TEAM GENERATION (ONCE)
+   GROUP FIX (FIXED TEAMS)
 ===================== */
+
+let groupTeams=null;
 
 function generateGroupTeams(){
 
   let l=active();
 
-  if(l.length===4){
+  if(l.length===4)
     return [[l[0],l[1]],[l[2],l[3]]];
-  }
 
-  if(l.length===6){
+  if(l.length===6)
     return [[l[0],l[1]],[l[2],l[3]],[l[4],l[5]]];
-  }
 
   return [];
 }
 
-/* =====================
-   GROUP FIXED LOGIC
-===================== */
-
 function buildGruppe(){
 
   if(!groupTeams){
-    groupTeams = generateGroupTeams();
+    groupTeams=generateGroupTeams();
   }
 
   let t=groupTeams;
@@ -405,12 +438,18 @@ function updateTimer(){
 }
 
 /* =====================
-   NEXT
+   NEXT MATCH + HISTORY
 ===================== */
 
 function nextMatch(){
 
   if(!finished) return;
+
+  let s=schedule[index];
+
+  if(mode==="turnier"){
+    addHistory(s.a,s.b);
+  }
 
   index++;
 
