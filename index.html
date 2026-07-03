@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0013.1 FIX</title>
+<title>Padel Club Manager V11 MASTER 0014 TIME INTELLIGENCE</title>
 
 <style>
 body{
@@ -71,6 +71,12 @@ button{
   padding-top:25px;
 }
 
+.kioskTimer{
+  font-size:120px;
+  color:#00ff99;
+  margin-bottom:10px;
+}
+
 .kioskBox{
   font-size:22px;
   margin:6px;
@@ -83,11 +89,11 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0013.1 FIX</div>
+  <div>🎾 V11 MASTER 0014 TIME INTELLIGENCE ENGINE</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
-<!-- SETUP (RESTORED) -->
+<!-- SETUP -->
 <div class="section">
 <h3>⚙️ Setup</h3>
 
@@ -133,7 +139,7 @@ button{
 <!-- KIOSK -->
 <div id="kiosk">
 
-<h1>🎾 KIOSK</h1>
+<div class="kioskTimer" id="kioskTimer">00:00</div>
 
 <div class="kioskBox" id="teams"></div>
 <div class="kioskBox" id="bank"></div>
@@ -166,7 +172,8 @@ let players=[
 
 let schedule=[];
 let index=0;
-let groups=null;
+let timer=null;
+let remaining=0;
 
 /* =========================
    UI
@@ -190,7 +197,7 @@ function renderPlayers(){
 }
 
 /* =========================
-   MODE SWITCH
+   MODE
 ========================= */
 
 function setMode(m){
@@ -209,7 +216,7 @@ function setMode(m){
 }
 
 /* =========================
-   SMART MODE ENGINE
+   SMART ENGINE
 ========================= */
 
 function getSystemMode(){
@@ -225,15 +232,20 @@ function getSystemMode(){
 }
 
 /* =========================
-   TIME FIX (RESTORED)
+   TIME ENGINE
 ========================= */
 
-function calcRounds(){
+function calcTimePlan(){
 
   let total = parseInt(document.getElementById("total").value);
   let match = parseInt(document.getElementById("match").value);
 
-  return Math.max(1, Math.floor(total / match));
+  return {
+    rounds: Math.max(1, Math.floor(total / match)),
+    rest: total % match,
+    total,
+    match
+  };
 }
 
 /* =========================
@@ -244,49 +256,35 @@ function buildPureMatch(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:[]
-  };
+  return { a:[p[0],p[1]], b:[p[2],p[3]], bank:[] };
 }
 
 function buildRotation5(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:[p[4]]
-  };
+  return { a:[p[0],p[1]], b:[p[2],p[3]], bank:[p[4]] };
 }
 
 function buildRotation6(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:[p[4],p[5]]
-  };
+  return { a:[p[0],p[1]], b:[p[2],p[3]], bank:[p[4],p[5]] };
 }
 
 function buildTeams(list){
 
   let p=[...list].sort(()=>Math.random()-0.5);
 
-  return {
-    a:[p[0],p[1]],
-    b:[p[2],p[3]],
-    bank:p.slice(4)
-  };
+  return { a:[p[0],p[1]], b:[p[2],p[3]], bank:p.slice(4) };
 }
 
 /* =========================
    GROUPS
 ========================= */
+
+let groups=null;
 
 function buildGroups(){
 
@@ -318,7 +316,7 @@ function groupMatch(r){
 }
 
 /* =========================
-   GENERATE CORE
+   GENERATE
 ========================= */
 
 function generate(){
@@ -327,29 +325,16 @@ function generate(){
   index=0;
 
   let list=players.filter(p=>p.active).map(p=>p.name);
-  let rounds=calcRounds();
-
   let system=getSystemMode();
+  let time=calcTimePlan();
 
-  if(system==="PURE_MATCH"){
-    for(let r=0;r<rounds;r++) schedule.push(buildPureMatch(list));
-  }
+  for(let r=0;r<time.rounds;r++){
 
-  else if(system==="ROTATION_5"){
-    for(let r=0;r<rounds;r++) schedule.push(buildRotation5(list));
-  }
-
-  else if(system==="ROTATION_6"){
-    for(let r=0;r<rounds;r++) schedule.push(buildRotation6(list));
-  }
-
-  else if(system==="GROUP_MODE"){
-    buildGroups();
-    for(let r=0;r<rounds;r++) schedule.push(groupMatch(r));
-  }
-
-  else{
-    for(let r=0;r<rounds;r++) schedule.push(buildTeams(list));
+    if(system==="PURE_MATCH") schedule.push(buildPureMatch(list));
+    else if(system==="ROTATION_5") schedule.push(buildRotation5(list));
+    else if(system==="ROTATION_6") schedule.push(buildRotation6(list));
+    else if(system==="GROUP_MODE"){ buildGroups(); schedule.push(groupMatch(r)); }
+    else schedule.push(buildTeams(list));
   }
 
   render();
@@ -362,6 +347,8 @@ function generate(){
 
 function render(){
 
+  let time=calcTimePlan();
+
   let html="<b>Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
@@ -371,18 +358,77 @@ function render(){
     `;
   });
 
+  html+=`
+  <hr>
+  ⏱ Gesamt: ${time.total} min<br>
+  🎾 Match: ${time.match} min<br>
+  🔁 Runden: ${time.rounds}<br>
+  ⏳ Rest: ${time.rest} min
+  `;
+
   document.getElementById("preview").innerHTML=html;
 }
 
 /* =========================
-   KIOSK
+   KIOSK + TIMER
 ========================= */
 
-function enterKiosk(){document.body.classList.add("kioskMode");}
-function exitKiosk(){document.body.classList.remove("kioskMode");}
+function enterKiosk(){
+  document.body.classList.add("kioskMode");
+}
 
-function startGame(){index=0;update();}
-function nextGame(){index++;if(index>=schedule.length)index=0;update();}
+function exitKiosk(){
+  document.body.classList.remove("kioskMode");
+  stopTimer();
+}
+
+function startGame(){
+  index=0;
+  startTimer();
+  update();
+}
+
+function nextGame(){
+  index++;
+  if(index>=schedule.length) index=0;
+  resetTimer();
+  update();
+}
+
+/* TIMER */
+
+function startTimer(){
+
+  stopTimer();
+
+  let time=parseInt(document.getElementById("match").value)*60;
+  remaining=time;
+
+  timer=setInterval(()=>{
+
+    remaining--;
+
+    let min=Math.floor(remaining/60);
+    let sec=remaining%60;
+
+    document.getElementById("kioskTimer").innerText=
+      `${String(min).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+
+    if(remaining<=0){
+      stopTimer();
+    }
+
+  },1000);
+}
+
+function resetTimer(){
+  startTimer();
+}
+
+function stopTimer(){
+  if(timer) clearInterval(timer);
+  timer=null;
+}
 
 function update(){
 
