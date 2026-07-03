@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0014.4 TIMER FIX</title>
+<title>Padel Club Manager V11 MASTER 0014.4.1 200PX TIMER</title>
 
 <style>
 body{
@@ -59,7 +59,10 @@ button{
   margin:5px 0;
 }
 
-/* KIOSK */
+/* =========================
+   KIOSK
+========================= */
+
 .kioskMode #app{ display:none; }
 .kioskMode #kiosk{ display:block; }
 
@@ -77,31 +80,31 @@ button{
 }
 
 /* =========================
-   🔥 FAR VISIBILITY TIMER FIX
+   🔥 200PX SCOREBOARD TIMER
 ========================= */
 
 #timerBox{
-  font-size:82px;              /* ≈ 60mm+ visuell */
+  font-size:200px;   /* 🔥 ULTRA SIZE */
   font-weight:900;
   color:#00ff99;
-  background:rgba(0,0,0,0.75);
-  padding:20px 35px;
-  border-radius:18px;
+
+  background:rgba(0,0,0,0.85);
 
   text-align:center;
   width:100%;
 
-  text-shadow:
-    0 0 12px #00ff99,
-    0 0 28px #00ff99;
+  padding:40px 0;
 
-  letter-spacing:4px;
+  letter-spacing:6px;
+
+  text-shadow:
+    0 0 20px #00ff99,
+    0 0 40px #00ff99,
+    0 0 70px #00ff99;
 
   font-variant-numeric: tabular-nums;
 
-  border-bottom:3px solid #00ff99;
-
-  margin-bottom:15px;
+  border-bottom:4px solid #00ff99;
 }
 </style>
 </head>
@@ -111,7 +114,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0014.4 TIMER FIX</div>
+  <div>🎾 V11 MASTER 0014.4.1 ULTRA TIMER</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -163,7 +166,7 @@ button{
 
 <h1>🎾 KIOSK</h1>
 
-<!-- 🔥 TIMER (3–5m sichtbar) -->
+<!-- TIMER -->
 <div id="timerBox">⏱ 00:00</div>
 
 <div class="kioskBox" id="teams"></div>
@@ -247,7 +250,7 @@ function setMode(m){
 }
 
 /* =========================
-   SMART ENGINE
+   ENGINE
 ========================= */
 
 function getSystemMode(){
