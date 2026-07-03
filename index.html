@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Manager FIX 5.1</title>
+<title>Padel Manager FIX 5.2</title>
 
 <style>
 body{
@@ -23,8 +23,8 @@ body{
 }
 
 button{
-  padding:18px 22px;
-  margin:8px;
+  padding:16px 20px;
+  margin:6px;
   font-weight:bold;
   border:none;
   border-radius:10px;
@@ -70,8 +70,29 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 FIX 5.1</div>
+  <div>🎾 FIX 5.2</div>
   <button onclick="enterKiosk()">Kiosk</button>
+</div>
+
+<!-- ⚙️ SETTINGS FIX -->
+<div class="section">
+<h3>⚙️ Spielzeit Setup</h3>
+
+<label>Gesamtzeit Spielabend:</label><br>
+<select id="totalTime">
+  <option value="120">120 min</option>
+  <option value="180" selected>180 min</option>
+</select>
+
+<br><br>
+
+<label>Matchzeit:</label><br>
+<select id="matchTime">
+  <option value="15">15 min</option>
+  <option value="18" selected>18 min</option>
+  <option value="20">20 min</option>
+</select>
+
 </div>
 
 <!-- MODE -->
@@ -110,13 +131,18 @@ button{
 
 <br>
 
+<button onclick="startTimer()">Start</button>
+<button onclick="next()">Next</button>
 <button onclick="exitKiosk()">Exit</button>
 
 </div>
 
 <script>
 
-/* STATE */
+/* =========================
+   STATE
+========================= */
+
 let mode="turnier";
 
 let players=[
@@ -132,7 +158,15 @@ let schedule=[];
 let index=0;
 
 /* =========================
-   UI FIX
+   TIMER STATE
+========================= */
+
+let timer=null;
+let timeLeft=0;
+let roundFinished=false;
+
+/* =========================
+   PLAYERS
 ========================= */
 
 function renderPlayers(){
@@ -155,7 +189,7 @@ function renderPlayers(){
 }
 
 /* =========================
-   MODE FIX (TURNIER + GRUPPEN)
+   MODE
 ========================= */
 
 function setMode(m){
@@ -165,29 +199,13 @@ function setMode(m){
   document.getElementById("btnTurnier").classList.remove("active");
   document.getElementById("btnGruppen").classList.remove("active");
 
-  if(m==="turnier"){
-    document.getElementById("btnTurnier").classList.add("active");
-  } else {
-    document.getElementById("btnGruppen").classList.add("active");
-  }
+  document.getElementById("btnTurnier").classList.add("active");
 
   generate();
 }
 
 /* =========================
-   KIOSK FIX
-========================= */
-
-function enterKiosk(){
-  document.body.classList.add("kioskMode");
-}
-
-function exitKiosk(){
-  document.body.classList.remove("kioskMode");
-}
-
-/* =========================
-   PLAYERS ACTIVE
+   ACTIVE PLAYERS
 ========================= */
 
 function list(){
@@ -195,7 +213,7 @@ function list(){
 }
 
 /* =========================
-   MATCH LOGIC (FIXED 5 PLAYER)
+   MATCH LOGIC (5 PLAYER FIX STABLE)
 ========================= */
 
 function match(){
@@ -220,7 +238,7 @@ function match(){
 }
 
 /* =========================
-   GENERATE FIX
+   GENERATE (FIXED)
 ========================= */
 
 function generate(){
@@ -228,7 +246,12 @@ function generate(){
   schedule=[];
   index=0;
 
-  for(let i=0;i<5;i++){
+  let total=parseInt(document.getElementById("totalTime").value);
+  let matchT=parseInt(document.getElementById("matchTime").value);
+
+  let rounds=Math.max(1, Math.floor(total/matchT));
+
+  for(let i=0;i<rounds;i++){
     schedule.push(match());
   }
 
@@ -237,7 +260,7 @@ function generate(){
 }
 
 /* =========================
-   RENDER FIX
+   RENDER
 ========================= */
 
 function render(){
@@ -247,7 +270,7 @@ function render(){
   schedule.forEach((s,i)=>{
     html+=`
       R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
-      Bank: ${s.bank.join(", ") || "keine"}<br><br>
+      🪑 Bank: ${s.bank.join(", ") || "keine"}<br><br>
     `;
   });
 
@@ -255,7 +278,65 @@ function render(){
 }
 
 /* =========================
-   UPDATE KIOSK
+   TIMER (MATCH TIME FIX)
+========================= */
+
+function startTimer(){
+
+  let matchT=parseInt(document.getElementById("matchTime").value);
+
+  timeLeft=matchT*60;
+  roundFinished=false;
+
+  clearInterval(timer);
+
+  updateTimer();
+
+  timer=setInterval(()=>{
+
+    timeLeft--;
+
+    updateTimer();
+
+    if(timeLeft<=0){
+
+      clearInterval(timer);
+      timeLeft=0;
+      updateTimer();
+
+      roundFinished=true;
+    }
+
+  },1000);
+}
+
+function updateTimer(){
+
+  let m=Math.floor(timeLeft/60);
+  let s=timeLeft%60;
+  if(s<10) s="0"+s;
+
+  document.getElementById("timerBox").innerHTML=
+    `⏱ ${m}:${s}`;
+}
+
+/* =========================
+   CONTROL
+========================= */
+
+function next(){
+  if(!roundFinished) return;
+
+  index++;
+  if(index>=schedule.length) index=0;
+
+  roundFinished=false;
+
+  update();
+}
+
+/* =========================
+   UPDATE
 ========================= */
 
 function update(){
@@ -271,6 +352,18 @@ function update(){
 
   document.getElementById("roundInfo").innerHTML=
     `Runde ${index+1}/${schedule.length}`;
+}
+
+/* =========================
+   KIOSK
+========================= */
+
+function enterKiosk(){
+  document.body.classList.add("kioskMode");
+}
+
+function exitKiosk(){
+  document.body.classList.remove("kioskMode");
 }
 
 /* INIT */
