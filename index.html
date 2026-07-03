@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0008</title>
+<title>Padel Club Manager V11.0 Build 0008.1 FIX</title>
 
 <style>
 body{
@@ -39,6 +39,13 @@ button{
   background:#1f6f4a;
 }
 
+.mode-btn.active{
+  box-shadow:0 0 10px #00ff99;
+}
+
+.mode-btn.turnier.active{ background:#2e8b57; }
+.mode-btn.gruppen.active{ background:#1e90ff; }
+
 .section{
   background:#185c3b;
   margin:10px;
@@ -73,20 +80,6 @@ button{
   font-size:22px;
   margin:6px;
 }
-
-/* PIN */
-#pinOverlay{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:black;
-  text-align:center;
-  padding-top:120px;
-  z-index:9999;
-}
 </style>
 </head>
 
@@ -95,7 +88,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0008 NO DUPLICATES ENGINE</div>
+  <div>🎾 Build 0008.1 MODUS FIX</div>
   <div>
     <button onclick="enterKiosk()">▶ Kiosk</button>
   </div>
@@ -119,10 +112,20 @@ button{
   <option value="18" selected>18</option>
   <option value="20">20</option>
 </select>
+</div>
 
-<br><br>
+<!-- MODE RESTORED -->
+<div class="section">
+<h3>🎛 Modus</h3>
 
-<div id="rounds">Runden: -</div>
+<button id="btnTurnier"
+class="mode-btn turnier active"
+onclick="setMode('turnier')">🏆 Turniermodus</button>
+
+<button id="btnGruppen"
+class="mode-btn gruppen"
+onclick="setMode('gruppen')">👥 Gruppenmodus</button>
+
 </div>
 
 <!-- PLAYERS -->
@@ -157,15 +160,9 @@ button{
 
 </div>
 
-<!-- PIN -->
-<div id="pinOverlay">
-<h2>PIN</h2>
-<input id="pin" type="password">
-<br><br>
-<button onclick="checkPin()">OK</button>
-</div>
-
 <script>
+
+let mode="turnier";
 
 let players=[
   {name:"Marco",active:true},
@@ -182,10 +179,31 @@ let index=0;
 let matchTime=0;
 let timer=null;
 
+/* MODE FIXED */
+function setMode(m){
+
+  mode=m;
+
+  document.getElementById("btnTurnier").classList.remove("active");
+  document.getElementById("btnGruppen").classList.remove("active");
+
+  if(m==="turnier"){
+    document.getElementById("btnTurnier").classList.add("active");
+  }
+
+  if(m==="gruppen"){
+    document.getElementById("btnGruppen").classList.add("active");
+  }
+
+  generate();
+}
+
 /* PLAYERS */
 function renderPlayers(){
+
   let box=document.getElementById("players");
   box.innerHTML="";
+
   players.forEach((p,i)=>{
     box.innerHTML+=`
       <div class="playerRow">
@@ -208,22 +226,16 @@ function calcRounds(){
   return Math.floor(total/match);
 }
 
-/* CHECK DUPLICATES */
+/* NO DUPLICATE CHECK */
 function isValid(a,b){
-
-  for(let h of history){
-    if(
-      (h.a[0]===a[0] && h.a[1]===a[1]) ||
-      (h.b[0]===b[0] && h.b[1]===b[1])
-    ){
-      return false;
-    }
-  }
-  return true;
+  return !history.some(h =>
+    (h.a[0]===a[0] && h.a[1]===a[1]) ||
+    (h.b[0]===b[0] && h.b[1]===b[1])
+  );
 }
 
-/* BUILD SCHEDULE (NO DUPLICATES ENGINE) */
-function buildSchedule(){
+/* TURNIER */
+function buildTurnier(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
   schedule=[];
@@ -234,23 +246,17 @@ function buildSchedule(){
   for(let r=0;r<rounds;r++){
 
     let rotated=[...list];
-
-    for(let i=0;i<r;i++){
-      rotated.push(rotated.shift());
-    }
+    for(let i=0;i<r;i++) rotated.push(rotated.shift());
 
     let a=[rotated[0],rotated[1]];
     let b=[rotated[2],rotated[3]];
+
     let bank=rotated.slice(4);
 
     if(isValid(a,b)){
-      schedule.push({
-        a,b,bank,round:r+1
-      });
-
+      schedule.push({a,b,bank,round:r+1});
       history.push({a,b});
     } else {
-      // fallback: simple shuffle
       rotated.sort(()=>Math.random()-0.5);
 
       schedule.push({
@@ -268,9 +274,47 @@ function buildSchedule(){
   }
 }
 
+/* GRUPPEN */
+function buildGruppen(){
+
+  let list=players.filter(p=>p.active).map(p=>p.name);
+  schedule=[];
+  history=[];
+
+  let rounds=calcRounds();
+
+  for(let r=0;r<rounds;r++){
+
+    let rotated=[...list];
+    for(let i=0;i<r;i++) rotated.push(rotated.shift());
+
+    let g1=[rotated[0],rotated[1]];
+    let g2=[rotated[2],rotated[3]];
+    let g3=[rotated[4],rotated[5]];
+
+    let pattern=[
+      [g1,g2],
+      [g1,g3],
+      [g2,g3]
+    ];
+
+    let p=pattern[r%3];
+
+    schedule.push({
+      a:p[0],
+      b:p[1],
+      bank:[g1,g2,g3].flat().filter(x=>!p[0].includes(x) && !p[1].includes(x)),
+      round:r+1
+    });
+  }
+}
+
 /* GENERATE */
 function generate(){
-  buildSchedule();
+
+  if(mode==="turnier") buildTurnier();
+  if(mode==="gruppen") buildGruppen();
+
   index=0;
   renderPreview();
   update();
@@ -284,7 +328,7 @@ function renderPreview(){
     return;
   }
 
-  let html="<b>Turnier (No Duplicate Engine)</b><br><br>";
+  let html="<b>Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
     html+=`
@@ -318,11 +362,9 @@ function nextGame(){
 
 /* TIMER */
 function startTimer(){
-
   if(timer) return;
 
   timer=setInterval(()=>{
-
     if(matchTime>0) matchTime--;
 
     let m=Math.floor(matchTime/60);
@@ -357,15 +399,7 @@ function update(){
 
 /* EXIT */
 function openExit(){
-  document.getElementById("pinOverlay").style.display="block";
-}
-
-function checkPin(){
-  if(document.getElementById("pin").value==="1234"){
-    document.body.classList.remove("kioskMode");
-  }
-  document.getElementById("pin").value="";
-  document.getElementById("pinOverlay").style.display="none";
+  document.body.classList.remove("kioskMode");
 }
 
 /* INIT */
