@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0015 FINAL</title>
+<title>Padel Club Manager V11 MASTER 0015.1</title>
 
 <style>
 body{
@@ -28,15 +28,29 @@ body{
   justify-content:space-between;
 }
 
+/* =========================
+   TOUCH BUTTONS (UPGRADED)
+========================= */
+
 button{
   border:none;
-  padding:12px 14px;
-  border-radius:10px;
+  padding:22px 28px;
+  border-radius:14px;
+  font-size:20px;
   color:#fff;
-  margin:4px;
+  margin:10px;
   cursor:pointer;
   font-weight:bold;
   background:#1f6f4a;
+  min-width:140px;
+}
+
+/* KIOSK BUTTONS BIGGER */
+#kiosk button{
+  font-size:32px;
+  padding:30px 40px;
+  min-width:220px;
+  border-radius:18px;
 }
 
 .mode-btn.active{
@@ -69,14 +83,10 @@ button{
 #kiosk{
   display:none;
   height:100vh;
-  background:black;
+  background:#000;
+  color:#fff;
   text-align:center;
   padding-top:25px;
-}
-
-.kioskBox{
-  font-size:22px;
-  margin:6px;
 }
 
 /* =========================
@@ -107,7 +117,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0015 FINAL</div>
+  <div>🎾 V11 MASTER 0015.1 FINAL</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -136,7 +146,7 @@ button{
 <h3>🎛 Modus</h3>
 
 <button id="btnTurnier" class="mode-btn turnier active" onclick="setMode('turnier')">🏆 Turnier</button>
-<button id="btnGruppen" class="mode-btn gruppen" onclick="setMode('gruppen')">👥 Gruppen</button>
+<button id="btnGruppen" class="mode-btn gruppen active" onclick="setMode('gruppen')">👥 Gruppen</button>
 
 </div>
 
@@ -169,6 +179,7 @@ button{
 
 <button onclick="startGame()">▶ Start</button>
 <button onclick="nextGame()">➡ Next</button>
+<button onclick="toggleTheme()">🌗 Theme</button>
 <button onclick="exitKiosk()">⛔ Exit</button>
 
 </div>
@@ -195,7 +206,7 @@ let index=0;
 let groups=null;
 
 /* =========================
-   TIMER STATE
+   TIMER
 ========================= */
 
 let timer=null;
@@ -203,7 +214,62 @@ let timeLeft=0;
 let roundFinished=false;
 
 /* =========================
-   PLAYERS UI
+   AUDIO ENGINE
+========================= */
+
+let audioCtx;
+
+function initAudio(){
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playGong(){
+
+  if(!audioCtx) initAudio();
+
+  let osc = audioCtx.createOscillator();
+  let gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.value = 220;
+
+  gain.gain.value = 0.8;
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+
+  setTimeout(()=>{
+    osc.frequency.value = 110;
+  },200);
+
+  setTimeout(()=>{
+    osc.stop();
+  },600);
+}
+
+/* =========================
+   THEME
+========================= */
+
+let theme="dark";
+
+function toggleTheme(){
+
+  theme = (theme==="dark") ? "light" : "dark";
+
+  if(theme==="light"){
+    document.getElementById("kiosk").style.background="#f2f2f2";
+    document.getElementById("kiosk").style.color="#000";
+  } else {
+    document.getElementById("kiosk").style.background="#000";
+    document.getElementById("kiosk").style.color="#fff";
+  }
+}
+
+/* =========================
+   UI
 ========================= */
 
 function renderPlayers(){
@@ -224,7 +290,7 @@ function renderPlayers(){
 }
 
 /* =========================
-   MODE SWITCH
+   MODE
 ========================= */
 
 function setMode(m){
@@ -243,7 +309,7 @@ function setMode(m){
 }
 
 /* =========================
-   TEAM DRAW (FIXED ONCE)
+   TEAM DRAW
 ========================= */
 
 function drawTeams(){
@@ -251,9 +317,8 @@ function drawTeams(){
   let list = players.filter(p=>p.active).map(p=>p.name);
   list = list.sort(()=>Math.random()-0.5);
 
-  if(list.length === 4){
-
-    groups = {
+  if(list.length===4){
+    groups={
       mode:"2TEAM",
       teams:[
         [list[0],list[1]],
@@ -262,9 +327,8 @@ function drawTeams(){
     };
   }
 
-  if(list.length === 6){
-
-    groups = {
+  if(list.length===6){
+    groups={
       mode:"3TEAM",
       teams:[
         [list[0],list[1]],
@@ -278,30 +342,24 @@ function drawTeams(){
 }
 
 /* =========================
-   MATCH LOGIC
+   MATCH BUILD
 ========================= */
 
 function buildMatch(r){
 
-  let t = groups.teams;
+  let t=groups.teams;
 
-  if(groups.mode === "2TEAM"){
-
-    return {
-      a:t[0],
-      b:t[1],
-      bank:[]
-    };
+  if(groups.mode==="2TEAM"){
+    return {a:t[0],b:t[1],bank:[]};
   }
 
-  if(groups.mode === "3TEAM"){
+  if(groups.mode==="3TEAM"){
 
-    // 🔁 only BANK rotates
     let bankIndex = r % 3;
 
     let bank = t[bankIndex];
 
-    let active = t.filter((_,i)=>i !== bankIndex);
+    let active = t.filter((_,i)=>i!==bankIndex);
 
     return {
       a:active[0],
@@ -326,7 +384,7 @@ function generate(){
   schedule=[];
   index=0;
 
-  let rounds = calcRounds();
+  let rounds=calcRounds();
 
   for(let r=0;r<rounds;r++){
     schedule.push(buildMatch(r));
@@ -355,7 +413,7 @@ function render(){
 }
 
 /* =========================
-   TIMER ENGINE
+   TIMER
 ========================= */
 
 function startTimer(){
@@ -385,7 +443,9 @@ function startTimer(){
 
       roundFinished=true;
 
-      updateRoundStatus();
+      playGong(); // 🔊 SOUND
+
+      update();
     }
 
   },1000);
@@ -402,19 +462,16 @@ function updateTimerDisplay(){
 }
 
 /* =========================
-   CONTROL FLOW
+   CONTROL
 ========================= */
 
 function startGame(){
-
   if(!roundFinished && timeLeft>0) return;
-
   startTimer();
   update();
 }
 
 function nextGame(){
-
   if(!roundFinished) return;
 
   index++;
@@ -427,7 +484,14 @@ function nextGame(){
 }
 
 /* =========================
-   UPDATE UI
+   KIOSK
+========================= */
+
+function enterKiosk(){document.body.classList.add("kioskMode");}
+function exitKiosk(){document.body.classList.remove("kioskMode");}
+
+/* =========================
+   UPDATE
 ========================= */
 
 function update(){
@@ -447,17 +511,7 @@ function update(){
       : `Runde ${index+1}/${schedule.length}`;
 }
 
-/* =========================
-   KIOSK
-========================= */
-
-function enterKiosk(){document.body.classList.add("kioskMode");}
-function exitKiosk(){document.body.classList.remove("kioskMode");}
-
-/* =========================
-   INIT
-========================= */
-
+/* INIT */
 renderPlayers();
 generate();
 
