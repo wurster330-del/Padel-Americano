@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0004.3</title>
+<title>Padel Club Manager V11.0 Build 0005</title>
 
 <style>
 body{
@@ -28,15 +28,12 @@ body{
   justify-content:space-between;
 }
 
-/* =========================
-   BUTTONS (FIXED CONTRAST)
-========================= */
-
+/* BUTTONS */
 button{
   border:none;
   padding:12px 14px;
   border-radius:10px;
-  color:#ffffff;
+  color:#fff;
   margin:4px;
   cursor:pointer;
   font-weight:bold;
@@ -49,12 +46,7 @@ button:hover{
   filter:brightness(1.2);
 }
 
-/* Topbar */
-.topbar button{
-  background:#2e8b57;
-}
-
-/* MODE BUTTONS */
+/* MODE */
 .mode-btn{
   background:#2e8b57;
   opacity:0.7;
@@ -73,20 +65,7 @@ button:hover{
   background:#1e90ff;
 }
 
-/* KIOSK BUTTONS */
-#kiosk button{
-  background:#00a86b;
-  color:#001a10;
-  font-size:20px;
-  padding:16px 18px;
-  border-radius:12px;
-}
-
-#kiosk button:hover{
-  background:#00ff99;
-  color:#000;
-}
-
+/* SECTIONS */
 .section{
   background:#185c3b;
   margin:10px;
@@ -148,7 +127,7 @@ button:hover{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0004.3 UI FIX</div>
+  <div>🎾 Build 0005 FAIR ENGINE</div>
   <div>
     <button onclick="enterKiosk()">▶ Kiosk</button>
   </div>
@@ -250,7 +229,7 @@ let index=0;
 let matchTime=0;
 let timer=null;
 
-/* MODE SWITCH */
+/* MODE */
 function setMode(m){
 
   mode=m;
@@ -292,9 +271,16 @@ function calcRounds(){
   return Math.floor(total/match);
 }
 
-/* SHUFFLE */
-function shuffle(arr){
-  return arr.sort(()=>Math.random()-0.5);
+/* FAIR ROTATION ENGINE */
+function fairList(list,round){
+
+  let rotated=[...list];
+
+  for(let i=0;i<round;i++){
+    rotated.push(rotated.shift());
+  }
+
+  return rotated;
 }
 
 /* TURNIER */
@@ -307,12 +293,12 @@ function buildSchedule(){
 
   for(let r=0;r<rounds;r++){
 
-    list=shuffle(list);
+    let rotated=fairList(list,r);
 
     schedule.push({
-      a:[list[0],list[1]],
-      b:[list[2],list[3]],
-      bank:list.slice(4),
+      a:[rotated[0],rotated[1]],
+      b:[rotated[2],rotated[3]],
+      bank:rotated.slice(4),
       round:r+1
     });
   }
@@ -322,32 +308,30 @@ function buildSchedule(){
 function buildGroupSchedule(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
-  list=shuffle(list);
-
-  let g1=[list[0],list[1]];
-  let g2=[list[2],list[3]];
-  let g3=[list[4],list[5]];
-
   let rounds=calcRounds();
 
   schedule=[];
 
-  let pattern=[
-    [g1,g2],
-    [g1,g3],
-    [g2,g3]
-  ];
-
   for(let r=0;r<rounds;r++){
+
+    let rotated=fairList(list,r);
+
+    let g1=[rotated[0],rotated[1]];
+    let g2=[rotated[2],rotated[3]];
+    let g3=[rotated[4],rotated[5]];
+
+    let pattern=[
+      [g1,g2],
+      [g1,g3],
+      [g2,g3]
+    ];
 
     let p=pattern[r%3];
 
     schedule.push({
       a:p[0],
       b:p[1],
-      bank:[g1,g2,g3]
-        .filter(x=>x!==p[0] && x!==p[1])
-        .flat(),
+      bank:[g1,g2,g3].flat().filter(x=>!p[0].includes(x) && !p[1].includes(x)),
       round:r+1
     });
   }
@@ -370,7 +354,7 @@ function renderPreview(){
     return;
   }
 
-  let html="<b>Spielplan</b><br><br>";
+  let html="<b>Fairer Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
     html+=`
