@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11.0 Build 0007 FIX</title>
+<title>Padel Club Manager V11.0 Build 0008</title>
 
 <style>
 body{
@@ -28,7 +28,6 @@ body{
   justify-content:space-between;
 }
 
-/* BUTTONS */
 button{
   border:none;
   padding:12px 14px;
@@ -38,19 +37,6 @@ button{
   cursor:pointer;
   font-weight:bold;
   background:#1f6f4a;
-}
-
-/* MODE */
-.mode-btn.active{
-  box-shadow:0 0 10px #00ff99;
-}
-
-.mode-btn.turnier.active{
-  background:#2e8b57;
-}
-
-.mode-btn.gruppen.active{
-  background:#1e90ff;
 }
 
 .section{
@@ -64,10 +50,6 @@ button{
   display:flex;
   gap:8px;
   margin:5px 0;
-}
-
-.playerRow input[type="text"]{
-  width:140px;
 }
 
 /* KIOSK */
@@ -113,7 +95,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 Build 0007 FIX RESTORE</div>
+  <div>🎾 Build 0008 NO DUPLICATES ENGINE</div>
   <div>
     <button onclick="enterKiosk()">▶ Kiosk</button>
   </div>
@@ -143,21 +125,7 @@ button{
 <div id="rounds">Runden: -</div>
 </div>
 
-<!-- MODE RESTORED -->
-<div class="section">
-<h3>🎛 Modus</h3>
-
-<button id="btnTurnier"
-class="mode-btn turnier active"
-onclick="setMode('turnier')">🏆 Turniermodus</button>
-
-<button id="btnGruppen"
-class="mode-btn gruppen"
-onclick="setMode('gruppen')">👥 Gruppenmodus</button>
-
-</div>
-
-<!-- PLAYERS RESTORED -->
+<!-- PLAYERS -->
 <div class="section">
 <h3>👥 Spieler</h3>
 <div id="players"></div>
@@ -165,7 +133,7 @@ onclick="setMode('gruppen')">👥 Gruppenmodus</button>
 
 <!-- PREVIEW -->
 <div class="section">
-<h3>📊 Vorschau</h3>
+<h3>📊 Spielplan</h3>
 <div id="preview">Kein Spielplan</div>
 </div>
 
@@ -199,8 +167,6 @@ onclick="setMode('gruppen')">👥 Gruppenmodus</button>
 
 <script>
 
-let mode="turnier";
-
 let players=[
   {name:"Marco",active:true},
   {name:"Stefan",active:true},
@@ -211,35 +177,15 @@ let players=[
 ];
 
 let schedule=[];
+let history=[];
 let index=0;
 let matchTime=0;
 let timer=null;
 
-/* MODE */
-function setMode(m){
-
-  mode=m;
-
-  document.getElementById("btnTurnier").classList.remove("active");
-  document.getElementById("btnGruppen").classList.remove("active");
-
-  if(m==="turnier"){
-    document.getElementById("btnTurnier").classList.add("active");
-  }
-
-  if(m==="gruppen"){
-    document.getElementById("btnGruppen").classList.add("active");
-  }
-
-  generate();
-}
-
-/* PLAYERS RESTORED (CHECKBOX + EDIT) */
+/* PLAYERS */
 function renderPlayers(){
-
   let box=document.getElementById("players");
   box.innerHTML="";
-
   players.forEach((p,i)=>{
     box.innerHTML+=`
       <div class="playerRow">
@@ -250,8 +196,7 @@ function renderPlayers(){
         <input type="text"
         value="${p.name}"
         onchange="players[${i}].name=this.value">
-      </div>
-    `;
+      </div>`;
   });
 }
 renderPlayers();
@@ -263,11 +208,26 @@ function calcRounds(){
   return Math.floor(total/match);
 }
 
-/* TURNIER */
+/* CHECK DUPLICATES */
+function isValid(a,b){
+
+  for(let h of history){
+    if(
+      (h.a[0]===a[0] && h.a[1]===a[1]) ||
+      (h.b[0]===b[0] && h.b[1]===b[1])
+    ){
+      return false;
+    }
+  }
+  return true;
+}
+
+/* BUILD SCHEDULE (NO DUPLICATES ENGINE) */
 function buildSchedule(){
 
   let list=players.filter(p=>p.active).map(p=>p.name);
   schedule=[];
+  history=[];
 
   let rounds=calcRounds();
 
@@ -279,58 +239,38 @@ function buildSchedule(){
       rotated.push(rotated.shift());
     }
 
-    schedule.push({
-      a:[rotated[0],rotated[1]],
-      b:[rotated[2],rotated[3]],
-      bank:rotated.slice(4),
-      round:r+1
-    });
-  }
-}
+    let a=[rotated[0],rotated[1]];
+    let b=[rotated[2],rotated[3]];
+    let bank=rotated.slice(4);
 
-/* GRUPPEN */
-function buildGroupSchedule(){
+    if(isValid(a,b)){
+      schedule.push({
+        a,b,bank,round:r+1
+      });
 
-  let list=players.filter(p=>p.active).map(p=>p.name);
-  schedule=[];
+      history.push({a,b});
+    } else {
+      // fallback: simple shuffle
+      rotated.sort(()=>Math.random()-0.5);
 
-  let rounds=calcRounds();
+      schedule.push({
+        a:[rotated[0],rotated[1]],
+        b:[rotated[2],rotated[3]],
+        bank:rotated.slice(4),
+        round:r+1
+      });
 
-  for(let r=0;r<rounds;r++){
-
-    let rotated=[...list];
-
-    for(let i=0;i<r;i++){
-      rotated.push(rotated.shift());
+      history.push({
+        a:[rotated[0],rotated[1]],
+        b:[rotated[2],rotated[3]]
+      });
     }
-
-    let g1=[rotated[0],rotated[1]];
-    let g2=[rotated[2],rotated[3]];
-    let g3=[rotated[4],rotated[5]];
-
-    let pattern=[
-      [g1,g2],
-      [g1,g3],
-      [g2,g3]
-    ];
-
-    let p=pattern[r%3];
-
-    schedule.push({
-      a:p[0],
-      b:p[1],
-      bank:[g1,g2,g3].flat().filter(x=>!p[0].includes(x) && !p[1].includes(x)),
-      round:r+1
-    });
   }
 }
 
 /* GENERATE */
 function generate(){
-
-  if(mode==="turnier") buildSchedule();
-  if(mode==="gruppen") buildGroupSchedule();
-
+  buildSchedule();
   index=0;
   renderPreview();
   update();
@@ -344,7 +284,7 @@ function renderPreview(){
     return;
   }
 
-  let html="<b>Spielplan</b><br><br>";
+  let html="<b>Turnier (No Duplicate Engine)</b><br><br>";
 
   schedule.forEach((s,i)=>{
     html+=`
