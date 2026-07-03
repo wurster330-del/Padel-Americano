@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V11 MASTER 0010 FRE</title>
+<title>Padel Club Manager V11 MASTER 0011 FRE v2</title>
 
 <style>
 body{
@@ -59,6 +59,15 @@ button{
   margin:5px 0;
 }
 
+#fairnessBox{
+  background:#0b2d1d;
+  padding:10px;
+  margin-top:10px;
+  border-radius:10px;
+  font-size:14px;
+  color:#b6ffda;
+}
+
 /* KIOSK */
 .kioskMode #app{ display:none; }
 .kioskMode #kiosk{ display:block; }
@@ -80,16 +89,6 @@ button{
   font-size:22px;
   margin:6px;
 }
-
-/* FRE BOX */
-#fairnessBox{
-  background:#0b2d1d;
-  padding:10px;
-  margin-top:10px;
-  border-radius:10px;
-  font-size:14px;
-  color:#b6ffda;
-}
 </style>
 </head>
 
@@ -98,7 +97,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V11 MASTER 0010 FRE</div>
+  <div>🎾 V11 MASTER 0011 FRE v2</div>
   <button onclick="enterKiosk()">▶ Kiosk</button>
 </div>
 
@@ -142,7 +141,7 @@ button{
 <h3>📊 Spielplan</h3>
 <div id="preview"></div>
 
-<div id="fairnessBox">FRE: noch keine Berechnung</div>
+<div id="fairnessBox">FRE v2: noch keine Bewertung</div>
 </div>
 
 </div>
@@ -171,9 +170,9 @@ button{
    STATE
 ========================= */
 
-let mode = "turnier";
+let mode="turnier";
 
-let players = [
+let players=[
   {name:"Marco",active:true},
   {name:"Stefan",active:true},
   {name:"David",active:true},
@@ -182,23 +181,23 @@ let players = [
   {name:"Werner",active:true}
 ];
 
-let schedule = [];
-let history = [];
-let index = 0;
+let schedule=[];
+let index=0;
+let stats={};
 
 /* =========================
    UI PLAYERS
 ========================= */
 
 function renderPlayers(){
-  let box = document.getElementById("players");
-  box.innerHTML = "";
+  let box=document.getElementById("players");
+  box.innerHTML="";
 
   players.forEach((p,i)=>{
-    box.innerHTML += `
+    box.innerHTML+=`
       <div class="playerRow">
         <input type="checkbox"
-        ${p.active ? "checked":""}
+        ${p.active?"checked":""}
         onchange="players[${i}].active=this.checked">
 
         <input type="text"
@@ -214,7 +213,7 @@ function renderPlayers(){
 ========================= */
 
 function setMode(m){
-  mode = m;
+  mode=m;
 
   document.getElementById("btnTurnier").classList.remove("active");
   document.getElementById("btnGruppen").classList.remove("active");
@@ -229,15 +228,14 @@ function setMode(m){
 }
 
 /* =========================
-   FRE ENGINE
+   FRE v2 INIT
 ========================= */
 
-let stats = {};
-
 function initStats(){
-  stats = {};
+  stats={};
+
   players.filter(p=>p.active).forEach(p=>{
-    stats[p.name] = {
+    stats[p.name]={
       bench:0,
       games:0,
       partners:{},
@@ -246,26 +244,31 @@ function initStats(){
   });
 }
 
-function scoreLine(a,b){
+/* =========================
+   SCORE ENGINE
+========================= */
 
-  let score = 1000;
-  let active = players.filter(p=>p.active).map(p=>p.name);
-  let bank = active.filter(p=>!a.includes(p) && !b.includes(p));
+function evaluateCandidate(c){
+
+  let score=1000;
+
+  let active=players.filter(p=>p.active).map(p=>p.name);
+  let bank=active.filter(p=>!c.a.includes(p)&&!c.b.includes(p));
 
   bank.forEach(p=>{
-    score -= (stats[p]?.bench || 0) * 50;
+    score -= (stats[p]?.bench||0)*80;
   });
 
-  a.forEach(p=>{
-    b.forEach(o=>{
-      score -= (stats[p]?.opponents?.[o] || 0) * 40;
+  c.a.forEach(p=>{
+    c.b.forEach(o=>{
+      score -= (stats[p]?.opponents?.[o]||0)*70;
     });
   });
 
-  a.forEach(p=>{
-    a.forEach(o=>{
+  c.a.forEach(p=>{
+    c.a.forEach(o=>{
       if(p!==o){
-        score -= (stats[p]?.partners?.[o] || 0) * 20;
+        score -= (stats[p]?.partners?.[o]||0)*40;
       }
     });
   });
@@ -273,7 +276,15 @@ function scoreLine(a,b){
   return score;
 }
 
-function updateStats(a,b,bank){
+/* =========================
+   UPDATE STATS
+========================= */
+
+function applyStats(c){
+
+  let a=c.a;
+  let b=c.b;
+  let bank=c.bank;
 
   a.concat(b).forEach(p=>{
     stats[p].games++;
@@ -285,20 +296,15 @@ function updateStats(a,b,bank){
 
   a.forEach(p=>{
     b.forEach(o=>{
-      stats[p].opponents[o] = (stats[p].opponents[o]||0)+1;
-    });
-  });
-
-  b.forEach(p=>{
-    a.forEach(o=>{
-      stats[p].opponents[o] = (stats[p].opponents[o]||0)+1;
+      stats[p].opponents[o]=(stats[p].opponents[o]||0)+1;
+      stats[o].opponents[p]=(stats[o].opponents[p]||0)+1;
     });
   });
 
   a.forEach(p=>{
     a.forEach(o=>{
       if(p!==o){
-        stats[p].partners[o] = (stats[p].partners[o]||0)+1;
+        stats[p].partners[o]=(stats[p].partners[o]||0)+1;
       }
     });
   });
@@ -306,48 +312,49 @@ function updateStats(a,b,bank){
   b.forEach(p=>{
     b.forEach(o=>{
       if(p!==o){
-        stats[p].partners[o] = (stats[p].partners[o]||0)+1;
+        stats[p].partners[o]=(stats[p].partners[o]||0)+1;
       }
     });
   });
 }
 
 /* =========================
-   GENERATOR (FRE)
+   GENERATE (FRE v2)
 ========================= */
 
 function buildTurnier(){
 
-  let list = players.filter(p=>p.active).map(p=>p.name);
+  let list=players.filter(p=>p.active).map(p=>p.name);
 
-  schedule = [];
-  history = [];
+  schedule=[];
   initStats();
 
-  let rounds = calcRounds();
+  let rounds=calcRounds();
 
   for(let r=0;r<rounds;r++){
 
-    let best = null;
-    let bestScore = -99999;
+    let best=null;
+    let bestScore=-99999;
 
-    for(let i=0;i<40;i++){
+    for(let i=0;i<50;i++){
 
-      let pool = [...list].sort(()=>Math.random()-0.5);
+      let pool=[...list].sort(()=>Math.random()-0.5);
 
-      let a = [pool[0],pool[1]];
-      let b = [pool[2],pool[3]];
-      let bank = pool.slice(4);
+      let c={
+        a:[pool[0],pool[1]],
+        b:[pool[2],pool[3]],
+        bank:pool.slice(4)
+      };
 
-      let s = scoreLine(a,b);
+      let s=evaluateCandidate(c);
 
-      if(s > bestScore){
-        bestScore = s;
-        best = {a,b,bank};
+      if(s>bestScore){
+        bestScore=s;
+        best=c;
       }
     }
 
-    updateStats(best.a,best.b,best.bank);
+    applyStats(best);
 
     schedule.push({
       a:best.a,
@@ -355,8 +362,6 @@ function buildTurnier(){
       bank:best.bank,
       round:r+1
     });
-
-    history.push({a:best.a,b:best.b});
   }
 
   renderFairness(bestScore);
@@ -364,31 +369,30 @@ function buildTurnier(){
 
 function buildGruppen(){
 
-  let list = players.filter(p=>p.active).map(p=>p.name);
+  let list=players.filter(p=>p.active).map(p=>p.name);
 
-  schedule = [];
-  history = [];
+  schedule=[];
   initStats();
 
-  let rounds = calcRounds();
+  let rounds=calcRounds();
 
   for(let r=0;r<rounds;r++){
 
-    let pool = [...list].sort(()=>Math.random()-0.5);
+    let pool=[...list].sort(()=>Math.random()-0.5);
 
-    let g1 = [pool[0],pool[1]];
-    let g2 = [pool[2],pool[3]];
-    let g3 = [pool[4],pool[5]];
+    let g1=[pool[0],pool[1]];
+    let g2=[pool[2],pool[3]];
+    let g3=[pool[4],pool[5]];
 
-    let pattern = [
+    let pattern=[
       [g1,g2],
       [g1,g3],
       [g2,g3]
     ];
 
-    let p = pattern[r%3];
+    let p=pattern[r%3];
 
-    let bank = [g1,g2,g3].flat().filter(x=>!p[0].includes(x) && !p[1].includes(x));
+    let bank=[g1,g2,g3].flat().filter(x=>!p[0].includes(x)&&!p[1].includes(x));
 
     schedule.push({
       a:p[0],
@@ -405,12 +409,12 @@ function buildGruppen(){
 
 function renderFairness(score){
 
-  let percent = Math.max(60, Math.min(100, Math.round(80 + score/50)));
+  let percent=Math.max(65,Math.min(100,Math.round(80+score/60)));
 
-  let color = percent>90 ? "🟢" : percent>80 ? "🟡" : "🔴";
+  let color=percent>90?"🟢":percent>80?"🟡":"🔴";
 
-  document.getElementById("fairnessBox").innerHTML =
-    `${color} FRE Fairness Index: ${percent}%`;
+  document.getElementById("fairnessBox").innerHTML=
+    `${color} FRE v2 Fairness Index: ${percent}%`;
 }
 
 /* =========================
@@ -418,9 +422,9 @@ function renderFairness(score){
 ========================= */
 
 function calcRounds(){
-  let total = parseInt(document.getElementById("total").value);
-  let match = parseInt(document.getElementById("match").value);
-  return Math.floor(total / match);
+  let total=parseInt(document.getElementById("total").value);
+  let match=parseInt(document.getElementById("match").value);
+  return Math.floor(total/match);
 }
 
 function generate(){
@@ -437,13 +441,13 @@ function generate(){
 
 function renderPreview(){
 
-  let html = "<b>Spielplan</b><br><br>";
+  let html="<b>Spielplan</b><br><br>";
 
   schedule.forEach((s,i)=>{
-    html += `R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>`;
+    html+=`R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>`;
   });
 
-  document.getElementById("preview").innerHTML = html;
+  document.getElementById("preview").innerHTML=html;
 }
 
 /* =========================
@@ -475,19 +479,19 @@ function nextGame(){
 
 function update(){
 
-  let s = schedule[index];
+  let s=schedule[index];
   if(!s) return;
 
-  document.getElementById("teams").innerHTML =
+  document.getElementById("teams").innerHTML=
     `A: ${s.a.join(" / ")}<br>B: ${s.b.join(" / ")}`;
 
-  document.getElementById("bank").innerHTML =
+  document.getElementById("bank").innerHTML=
     `Bank: ${s.bank.join(", ")}`;
 
-  document.getElementById("roundInfo").innerHTML =
+  document.getElementById("roundInfo").innerHTML=
     `Runde ${index+1}/${schedule.length}`;
 
-  document.getElementById("nextGame").innerHTML =
+  document.getElementById("nextGame").innerHTML=
     schedule[index+1]
     ? `Nächstes: ${schedule[index+1].a.join(" / ")} vs ${schedule[index+1].b.join(" / ")}`
     : "Ende";
