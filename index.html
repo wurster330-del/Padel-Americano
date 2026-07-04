@@ -143,38 +143,38 @@ button{
    STATE
 ===================== */
 
-let mode="turnier";
+let mode = "turnier";
 
-let players=["Marco","Stefan","David","Tobias","Chris","Werner"];
-let selected={};
+let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
+let selected = {};
 
-let schedule=[];
-let index=0;
+let schedule = [];
+let index = 0;
 
-let timer=null;
-let timeLeft=0;
-let finished=false;
+let timer = null;
+let timeLeft = 0;
+let finished = false;
 
 /* =====================
-   INIT
+   INIT PLAYERS
 ===================== */
 
 function initPlayers(){
 
-  const box=document.getElementById("players");
-  box.innerHTML="";
+  const box = document.getElementById("players");
+  box.innerHTML = "";
 
   players.forEach(p=>{
-    selected[p]=true;
+    selected[p] = true;
 
-    const row=document.createElement("div");
-    row.className="playerRow";
+    const row = document.createElement("div");
+    row.className = "playerRow";
 
-    const cb=document.createElement("input");
-    cb.type="checkbox";
-    cb.checked=true;
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = true;
 
-    cb.onchange=()=>selected[p]=cb.checked;
+    cb.onchange = ()=> selected[p] = cb.checked;
 
     row.appendChild(cb);
     row.appendChild(document.createTextNode(p));
@@ -184,7 +184,15 @@ function initPlayers(){
 }
 
 /* =====================
-   HELPERS
+   ACTIVE PLAYERS
+===================== */
+
+function activePlayers(){
+  return players.filter(p=>selected[p]);
+}
+
+/* =====================
+   SHUFFLE
 ===================== */
 
 function shuffle(a){
@@ -192,135 +200,94 @@ function shuffle(a){
 }
 
 /* =====================
-   SCORE SYSTEM
-===================== */
-
-function score(plan, history){
-
-  let s=0;
-
-  plan.bank.forEach(p=>{
-    if(history[p]?.bank>0) s+=10;
-  });
-
-  if(plan.a[0]===plan.a[1]) s+=5;
-  if(plan.b[0]===plan.b[1]) s+=5;
-
-  return s;
-}
-
-/* =====================
-   CREATE SINGLE PLAN
-===================== */
-
-function createPlan(p,r){
-
-  let pool=shuffle(p);
-
-  let a=[],b=[],bank=[];
-
-  if(mode==="turnier"){
-
-    if(p.length===6){
-      bank=[pool[0],pool[1]];
-      let rest=pool.slice(2);
-      a=[rest[0],rest[1]];
-      b=[rest[2],rest[3]];
-    }
-
-    else if(p.length===5){
-      bank=[pool[0]];
-      let rest=pool.slice(1);
-      a=[rest[0],rest[1]];
-      b=[rest[2],rest[3]];
-    }
-
-    else{
-      a=[pool[0],pool[1]];
-      b=[pool[2],pool[3]];
-    }
-  }
-
-  if(mode==="gruppe"){
-
-    if(p.length===4){
-      a=[p[0],p[1]];
-      b=[p[2],p[3]];
-    }
-
-    else if(p.length===5){
-      const rot=r%2;
-      a=rot?[p[2],p[3]]:[p[0],p[1]];
-      b=rot?[p[0],p[1]]:[p[2],p[3]];
-      bank=[p[4]];
-    }
-
-    else if(p.length===6){
-
-      const A=[p[0],p[1]];
-      const B=[p[2],p[3]];
-      const C=[p[4],p[5]];
-
-      const rot=r%3;
-
-      if(rot===0){a=A;b=B;bank=C;}
-      if(rot===1){a=B;b=C;bank=A;}
-      if(rot===2){a=C;b=A;bank=B;}
-    }
-  }
-
-  return {a,b,bank};
-}
-
-/* =====================
-   SMART GENERATOR (V1.3 CORE)
+   GENERATE (FIXED RESET)
 ===================== */
 
 function generate(){
 
-  const p=players.filter(x=>selected[x]);
+  const p = activePlayers();
 
-  if(p.length<4){
+  if(p.length < 4){
     alert("Mindestens 4 Spieler");
     return;
   }
 
-  schedule=[];
-  index=0;
+  // 🔥 WICHTIG: sauberer Reset
+  schedule = [];
+  index = 0;
+  finished = false;
 
-  const total=+totalTime.value;
-  const match=+matchTime.value;
+  const total = +totalTime.value;
+  const match = +matchTime.value;
 
-  const rounds=Math.floor(total/match);
+  const rounds = Math.floor(total / match);
 
-  let history={};
-  p.forEach(x=>{
-    history[x]={bank:0};
-  });
+  for(let r = 0; r < rounds; r++){
 
-  for(let r=0;r<rounds;r++){
+    let pool = shuffle(p);
 
-    let best=null;
-    let bestScore=999999;
+    let a = [], b = [], bank = [];
 
-    // 100 Varianten testen
-    for(let i=0;i<100;i++){
+    /* =====================
+       TURNIER
+    ===================== */
+    if(mode === "turnier"){
 
-      let plan=createPlan(p,r);
+      if(p.length === 6){
+        bank = [pool[0], pool[1]];
+        let rest = pool.slice(2);
+        a = [rest[0], rest[1]];
+        b = [rest[2], rest[3]];
+      }
 
-      let s=score(plan,history);
+      else if(p.length === 5){
+        bank = [pool[0]];
+        let rest = pool.slice(1);
+        a = [rest[0], rest[1]];
+        b = [rest[2], rest[3]];
+      }
 
-      if(s<bestScore){
-        best=plan;
-        bestScore=s;
+      else{
+        a = [pool[0], pool[1]];
+        b = [pool[2], pool[3]];
       }
     }
 
-    best.bank.forEach(x=>{
-      history[x].bank++;
-    });
+    /* =====================
+       GRUPPE
+    ===================== */
+    if(mode === "gruppe"){
 
-    schedule.push(best);
+      if(p.length === 4){
+        a = [p[0], p[1]];
+        b = [p[2], p[3]];
+        bank = [];
+      }
+
+      else if(p.length === 5){
+
+        const rot = r % 2;
+
+        a = rot ? [p[2], p[3]] : [p[0], p[1]];
+        b = rot ? [p[0], p[1]] : [p[2], p[3]];
+        bank = [p[4]];
+      }
+
+      else if(p.length === 6){
+
+        const A = [p[0], p[1]];
+        const B = [p[2], p[3]];
+        const C = [p[4], p[5]];
+
+        const rot = r % 3;
+
+        if(rot === 0){ a=A; b=B; bank=C; }
+        if(rot === 1){ a=B; b=C; bank=A; }
+        if(rot === 2){ a=C; b=A; bank=B; }
+      }
+    }
+
+    schedule.push({a,b,bank});
   }
 
   render();
@@ -328,10 +295,16 @@ function generate(){
 }
 
 /* =====================
-   REMIX BUTTON
+   REMIX FIX (IMPORTANT)
 ===================== */
 
 function remix(){
+
+  // kompletter sauberer Neustart
+  schedule = [];
+  index = 0;
+  finished = false;
+
   generate();
 }
 
@@ -341,30 +314,36 @@ function remix(){
 
 function render(){
 
-  const box=document.getElementById("preview");
-  box.innerHTML="";
+  const box = document.getElementById("preview");
+  box.innerHTML = "";
 
   schedule.forEach((s,i)=>{
-    const div=document.createElement("div");
-    div.innerText=
+
+    const div = document.createElement("div");
+
+    div.innerText =
       `R${i+1}: ${s.a.join("/")} vs ${s.b.join("/")} | Bank: ${s.bank.join(", ")||"keine"}`;
+
     box.appendChild(div);
   });
 }
 
 function update(){
 
-  const s=schedule[index];
+  const s = schedule[index];
   if(!s) return;
 
-  document.getElementById("mode").innerText=
-    mode==="turnier"?"🏆 Turnier":"👥 Gruppe";
+  document.getElementById("mode").innerText =
+    mode === "turnier" ? "🏆 Turnier" : "👥 Gruppe";
 
-  document.getElementById("round").innerText="Runde "+(index+1);
-  document.getElementById("teams").innerText=
-    s.a.join(" / ")+" vs "+s.b.join(" / ");
-  document.getElementById("bank").innerText=
-    "Bank: "+(s.bank.join(", ")||"keine");
+  document.getElementById("round").innerText =
+    "Runde " + (index + 1);
+
+  document.getElementById("teams").innerText =
+    s.a.join(" / ") + " vs " + s.b.join(" / ");
+
+  document.getElementById("bank").innerText =
+    "Bank: " + (s.bank.join(", ") || "keine");
 }
 
 /* =====================
@@ -373,22 +352,22 @@ function update(){
 
 function startTimer(){
 
-  timeLeft=+matchTime.value*60;
+  timeLeft = +matchTime.value * 60;
   clearInterval(timer);
 
-  timer=setInterval(()=>{
+  timer = setInterval(()=>{
 
     timeLeft--;
 
-    let m=Math.floor(timeLeft/60);
-    let s=timeLeft%60;
-    if(s<10)s="0"+s;
+    let m = Math.floor(timeLeft / 60);
+    let s = timeLeft % 60;
+    if(s < 10) s = "0" + s;
 
-    document.getElementById("timer").innerText=`${m}:${s}`;
+    document.getElementById("timer").innerText = `${m}:${s}`;
 
-    if(timeLeft<=0){
+    if(timeLeft <= 0){
       clearInterval(timer);
-      finished=true;
+      finished = true;
     }
 
   },1000);
@@ -399,9 +378,12 @@ function startTimer(){
 ===================== */
 
 function next(){
-  if(!finished)return;
-  index=(index+1)%schedule.length;
-  finished=false;
+
+  if(!finished) return;
+
+  index = (index + 1) % schedule.length;
+  finished = false;
+
   update();
 }
 
@@ -410,35 +392,37 @@ function next(){
 ===================== */
 
 function endMatch(){
+
   clearInterval(timer);
-  finished=true;
-  timeLeft=0;
-  document.getElementById("timer").innerText="00:00";
+  finished = true;
+  timeLeft = 0;
+
+  document.getElementById("timer").innerText = "00:00";
 }
 
 /* =====================
    MODE
 ===================== */
 
-btnTurnier.onclick=()=>mode="turnier";
-btnGruppe.onclick=()=>mode="gruppe";
+btnTurnier.onclick = ()=> mode = "turnier";
+btnGruppe.onclick = ()=> mode = "gruppe";
 
 /* =====================
    KIOSK
 ===================== */
 
-kioskBtn.onclick=()=>document.body.classList.add("kioskMode");
-btnExit.onclick=()=>document.body.classList.remove("kioskMode");
+kioskBtn.onclick = ()=> document.body.classList.add("kioskMode");
+btnExit.onclick = ()=> document.body.classList.remove("kioskMode");
 
 /* =====================
    EVENTS
 ===================== */
 
-btnGenerate.onclick=generate;
-btnRemix.onclick=remix;
-btnStart.onclick=startTimer;
-btnNext.onclick=next;
-btnEnd.onclick=endMatch;
+btnGenerate.onclick = generate;
+btnRemix.onclick = remix;
+btnStart.onclick = startTimer;
+btnNext.onclick = next;
+btnEnd.onclick = endMatch;
 
 /* INIT */
 initPlayers();
