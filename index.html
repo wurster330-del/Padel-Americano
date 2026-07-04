@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -105,7 +105,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V12.2 MASTER</div>
+  <div>🎾 V12.2 MASTER SOUND</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
@@ -168,11 +168,32 @@ button{
 
 <button onclick="startTimer()">Start</button>
 <button onclick="nextMatch()">Next</button>
+<button onclick="toggleSound()">🔊 Sound</button>
+<button onclick="toggleVoice()">🗣️ Sprache</button>
 <button onclick="exitKiosk()">Exit</button>
 
 </div>
 
 <script>
+
+/* =====================
+   SOUND + VOICE
+===================== */
+
+let soundEnabled = true;
+let voiceEnabled = true;
+
+const gong = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
+
+function speak(text){
+  if(!voiceEnabled) return;
+
+  let msg = new SpeechSynthesisUtterance(text);
+  msg.lang = "de-DE";
+  msg.rate = 1;
+
+  window.speechSynthesis.speak(msg);
+}
 
 /* =====================
    STATE
@@ -251,17 +272,15 @@ function setMode(m){
 }
 
 /* =====================
-   TURNIER (RULE BASED CLEAN)
+   TURNIER
 ===================== */
 
 function buildTurnier(){
 
   let l=active();
-  let pool=[...l];
+  let pool=[...l].sort(()=>Math.random()-0.5);
 
   let a=[],b=[],bank=[];
-
-  pool.sort(()=>Math.random()-0.5);
 
   if(l.length===5){
     bank=[pool[0]];
@@ -286,7 +305,7 @@ function buildTurnier(){
 }
 
 /* =====================
-   GROUP (FIXED ROTATION)
+   GROUP
 ===================== */
 
 let groupTeams=null;
@@ -332,7 +351,7 @@ function buildGruppe(){
 }
 
 /* =====================
-   GENERATE FULL PLAN
+   GENERATE
 ===================== */
 
 function generate(){
@@ -364,24 +383,6 @@ function generate(){
 }
 
 /* =====================
-   RENDER
-===================== */
-
-function render(){
-
-  let html="";
-
-  schedule.forEach((s,i)=>{
-    html+=`
-      R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}<br>
-      Bank: ${s.bank.join(", ") || "keine"}<br><br>
-    `;
-  });
-
-  document.getElementById("preview").innerHTML=html;
-}
-
-/* =====================
    KIOSK
 ===================== */
 
@@ -391,6 +392,18 @@ function enterKiosk(){
 
 function exitKiosk(){
   document.body.classList.remove("kioskMode");
+}
+
+/* =====================
+   SOUND TOGGLES
+===================== */
+
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+}
+
+function toggleVoice(){
+  voiceEnabled=!voiceEnabled;
 }
 
 /* =====================
@@ -419,6 +432,9 @@ function startTimer(){
     if(timeLeft<=0){
       clearInterval(timer);
       finished=true;
+
+      if(soundEnabled) gong.play();
+      speak("Match beendet. Bitte nächstes Match starten.");
     }
 
   },1000);
@@ -435,12 +451,28 @@ function updateTimer(){
 }
 
 /* =====================
-   NEXT
+   NEXT MATCH
 ===================== */
 
 function nextMatch(){
 
   if(!finished) return;
+
+  let s=schedule[index];
+
+  if(soundEnabled){
+    gong.currentTime=0;
+    gong.play();
+  }
+
+  speak(
+    "Nächstes Match. " +
+    s.a.join(" und ") +
+    " gegen " +
+    s.b.join(" und ") +
+    ". Bank: " +
+    (s.bank.length ? s.bank.join(" und ") : "keine")
+  );
 
   index++;
 
@@ -453,7 +485,7 @@ function nextMatch(){
 }
 
 /* =====================
-   UPDATE KIOSK
+   UPDATE
 ===================== */
 
 function update(){
