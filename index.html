@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Padel ULTRA PRO V13 FIX</title>
-
-<meta name="theme-color" content="#071a12">
+<title>Padel ULTRA PRO V13 FIXED</title>
 
 <style>
 body{
@@ -144,44 +142,44 @@ button{
    STATE
 ===================== */
 
-let mode = "turnier";
+let mode="turnier";
 
-let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
-let selected = {};
+let players=["Marco","Stefan","David","Tobias","Chris","Werner"];
+let selected={};
 
-let schedule = [];
-let index = 0;
+let schedule=[];
+let index=0;
 
-let timer = null;
-let timeLeft = 0;
-let finished = false;
+let timer=null;
+let timeLeft=0;
+let finished=false;
 
 /* =====================
-   INIT PLAYERS
+   PLAYERS
 ===================== */
 
 function initPlayers(){
 
-  const box = document.getElementById("playerList");
-  box.innerHTML = "";
+  const box=document.getElementById("playerList");
+  box.innerHTML="";
 
   players.forEach(p=>{
 
-    selected[p] = true;
+    selected[p]=true;
 
-    const row = document.createElement("div");
-    row.className = "playerRow";
+    const row=document.createElement("div");
+    row.className="playerRow";
 
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = true;
+    const cb=document.createElement("input");
+    cb.type="checkbox";
+    cb.checked=true;
 
     cb.addEventListener("change",()=>{
-      selected[p] = cb.checked;
+      selected[p]=cb.checked;
     });
 
-    const label = document.createElement("span");
-    label.innerText = p;
+    const label=document.createElement("span");
+    label.innerText=p;
 
     row.appendChild(cb);
     row.appendChild(label);
@@ -199,22 +197,79 @@ function activePlayers(){
 }
 
 /* =====================
-   FAIR ENGINE
+   TURNIER ENGINE (STABIL)
 ===================== */
 
-function pickBalanced(pool, lastBank){
+function buildTurnier(p, rounds){
 
-  let filtered = pool.filter(p => !lastBank.includes(p));
+  let list=[];
 
-  if(filtered.length < 2){
-    filtered = pool;
+  for(let r=0;r<rounds;r++){
+
+    let pool=[...p].sort(()=>Math.random()-0.5);
+
+    let a=[],b=[],bank=[];
+
+    if(p.length===6){
+      bank=[pool[0],pool[1]];
+      let rest=pool.slice(2);
+      a=[rest[0],rest[1]];
+      b=[rest[2],rest[3]];
+    }
+
+    else if(p.length===5){
+      bank=[pool[0]];
+      let rest=pool.slice(1);
+      a=[rest[0],rest[1]];
+      b=[rest[2],rest[3]];
+    }
+
+    else{
+      a=[pool[0],pool[1]];
+      b=[pool[2],pool[3]];
+    }
+
+    list.push({a,b,bank});
   }
 
-  return filtered.sort(()=>Math.random()-0.5);
+  return list;
 }
 
 /* =====================
-   GENERATE (FIXED BANK LOGIC)
+   GRUPPE ENGINE
+===================== */
+
+function buildGruppe(p, rounds){
+
+  let list=[];
+
+  for(let r=0;r<rounds;r++){
+
+    let A=[p[0],p[1]];
+    let B=[p[2],p[3]];
+    let C=p.length===6?[p[4],p[5]]:[];
+
+    let rot=r%3;
+
+    let a=[],b=[],bank=[];
+
+    if(p.length===6){
+      if(rot===0){a=A;b=B;bank=C;}
+      if(rot===1){a=B;b=C;bank=A;}
+      if(rot===2){a=C;b=A;bank=B;}
+    }else{
+      a=[p[0],p[1]];
+      b=[p[2],p[3]];
+    }
+
+    list.push({a,b,bank});
+  }
+
+  return list;
+}
+
+/* =====================
+   GENERATE (FIXED PREVIEW BUG)
 ===================== */
 
 function generate(){
@@ -226,95 +281,63 @@ function generate(){
     return;
   }
 
-  schedule = [];
-  index = 0;
-
   const total = +document.getElementById("totalTime").value;
   const match = +document.getElementById("matchTime").value;
 
   const rounds = Math.floor(total / match);
 
-  let lastBank = [];
-
-  for(let r=0;r<rounds;r++){
-
-    let pool = pickBalanced([...p], lastBank);
-
-    let a=[],b=[],bank=[];
-
-    if(mode==="turnier"){
-
-      if(p.length===6){
-        bank = [pool[0], pool[1]];
-        let rest = pool.slice(2);
-        a = [rest[0], rest[1]];
-        b = [rest[2], rest[3]];
-      }
-
-      else if(p.length===5){
-        bank = [pool[0]];
-        let rest = pool.slice(1);
-        a = [rest[0], rest[1]];
-        b = [rest[2], rest[3]];
-      }
-
-      else{
-        a = [pool[0], pool[1]];
-        b = [pool[2], pool[3]];
-      }
-    }
-
-    if(mode==="gruppe"){
-
-      if(p.length===6){
-
-        let A=[p[0],p[1]];
-        let B=[p[2],p[3]];
-        let C=[p[4],p[5]];
-
-        let rot = r % 3;
-
-        if(rot===0){a=A;b=B;bank=C;}
-        if(rot===1){a=B;b=C;bank=A;}
-        if(rot===2){a=C;b=A;bank=B;}
-      }
-      else{
-        a=[p[0],p[1]];
-        b=[p[2],p[3]];
-      }
-    }
-
-    /* =====================
-       🔥 CRITICAL FIX HERE
-    ===================== */
-
-    lastBank = [...bank];   // ✅ DEEP COPY FIX
-
-    schedule.push({a,b,bank});
+  if(mode==="turnier"){
+    schedule = buildTurnier(p, rounds);
+  }else{
+    schedule = buildGruppe(p, rounds);
   }
 
-  render();
+  index=0;
+
+  renderPreview();   // ✅ FIX: zeigt ALLE RUNDEN
   update();
 }
 
 /* =====================
-   RENDER
+   PREVIEW FIXED
 ===================== */
 
-function render(){
+function renderPreview(){
 
-  const box = document.getElementById("preview");
-  box.innerHTML = "";
+  const box=document.getElementById("preview");
+  box.innerHTML="";
 
   schedule.forEach((s,i)=>{
 
-    const div = document.createElement("div");
+    const div=document.createElement("div");
 
-    div.innerText =
-      `R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")} | Bank: ${s.bank.join(", ") || "keine"}`;
+    div.innerHTML =
+      `<b>R${i+1}</b>: ${s.a.join(" / ")} vs ${s.b.join(" / ")} | Bank: ${s.bank.join(", ")||"keine"}`;
 
     box.appendChild(div);
   });
+}
+
+/* =====================
+   UPDATE
+===================== */
+
+function update(){
+
+  const s=schedule[index];
+  if(!s) return;
+
+  document.getElementById("mode").innerText =
+    mode==="turnier"?"🏆 Turnier":"👥 Gruppe";
+
+  document.getElementById("round").innerText =
+    "Runde "+(index+1);
+
+  document.getElementById("teams").innerText =
+    s.a.join(" / ")+" vs "+s.b.join(" / ");
+
+  document.getElementById("bank").innerText =
+    "Bank: "+(s.bank.join(", ")||"keine");
 }
 
 /* =====================
@@ -330,28 +353,6 @@ function exitKiosk(){
 }
 
 /* =====================
-   UPDATE
-===================== */
-
-function update(){
-
-  const s = schedule[index];
-  if(!s) return;
-
-  document.getElementById("mode").innerText =
-    mode==="turnier"?"🏆 Turnier":"👥 Gruppe";
-
-  document.getElementById("round").innerText =
-    "Runde " + (index+1);
-
-  document.getElementById("teams").innerText =
-    s.a.join(" / ") + " vs " + s.b.join(" / ");
-
-  document.getElementById("bank").innerText =
-    "Bank: " + (s.bank.join(", ") || "keine");
-}
-
-/* =====================
    TIMER
 ===================== */
 
@@ -361,19 +362,19 @@ function startTimer(){
 
   clearInterval(timer);
 
-  timer = setInterval(()=>{
+  timer=setInterval(()=>{
 
     timeLeft--;
 
-    let m = Math.floor(timeLeft/60);
-    let s = timeLeft%60;
-    if(s<10) s="0"+s;
+    let m=Math.floor(timeLeft/60);
+    let s=timeLeft%60;
+    if(s<10)s="0"+s;
 
-    document.getElementById("timer").innerText = `${m}:${s}`;
+    document.getElementById("timer").innerText=`${m}:${s}`;
 
     if(timeLeft<=0){
       clearInterval(timer);
-      finished = true;
+      finished=true;
     }
 
   },1000);
@@ -387,8 +388,8 @@ function nextMatch(){
 
   if(!finished) return;
 
-  index = (index + 1) % schedule.length;
-  finished = false;
+  index = (index+1)%schedule.length;
+  finished=false;
 
   update();
 }
@@ -397,13 +398,13 @@ function nextMatch(){
    EVENTS
 ===================== */
 
-document.getElementById("btnGenerate").addEventListener("click", generate);
-document.getElementById("btnTurnier").addEventListener("click", ()=>mode="turnier");
-document.getElementById("btnGruppe").addEventListener("click", ()=>mode="gruppe");
-document.getElementById("btnStart").addEventListener("click", startTimer);
-document.getElementById("btnNext").addEventListener("click", nextMatch);
-document.getElementById("btnExit").addEventListener("click", exitKiosk);
-document.getElementById("kioskBtn").addEventListener("click", enterKiosk);
+document.getElementById("btnGenerate").addEventListener("click",generate);
+document.getElementById("btnTurnier").addEventListener("click",()=>mode="turnier");
+document.getElementById("btnGruppe").addEventListener("click",()=>mode="gruppe");
+document.getElementById("btnStart").addEventListener("click",startTimer);
+document.getElementById("btnNext").addEventListener("click",nextMatch);
+document.getElementById("btnExit").addEventListener("click",exitKiosk);
+document.getElementById("kioskBtn").addEventListener("click",enterKiosk);
 
 /* INIT */
 initPlayers();
