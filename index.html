@@ -1,10 +1,12 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Padel PRO MODE</title>
+<title>Padel PRO CLEAN V12.2</title>
+
+<meta name="theme-color" content="#0b1f16">
 
 <style>
 body{
@@ -17,10 +19,13 @@ body{
 #app{padding:10px;}
 
 .topbar{
+  position:sticky;
+  top:0;
   background:#123b28;
   padding:10px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
 
 button{
@@ -43,9 +48,9 @@ button{
 
 .playerRow{
   display:flex;
-  gap:10px;
   align-items:center;
-  margin:5px 0;
+  gap:10px;
+  margin:6px 0;
 }
 
 /* KIOSK */
@@ -76,45 +81,45 @@ button{
 <div id="app">
 
 <div class="topbar">
-<div>🎾 PRO MODE</div>
-<button onclick="enterKiosk()">Kiosk</button>
+<div>🎾 PRO CLEAN</div>
+<button id="kioskBtn">Kiosk</button>
 </div>
 
+<!-- PLAYERS -->
 <div class="section">
-<h3>Spieler</h3>
-
-<div id="players"></div>
-
-<div id="error" style="color:#ff6666;"></div>
+<h3>Spieler auswählen</h3>
+<div id="playerList"></div>
 </div>
 
+<!-- SETUP -->
 <div class="section">
 <h3>Setup</h3>
 
-<label>Gesamtzeit</label>
+<label>Gesamtzeit:</label>
 <select id="totalTime">
-<option value="120">120</option>
-<option value="180" selected>180</option>
+<option value="120">120 min</option>
+<option value="180" selected>180 min</option>
 </select>
 
 <br><br>
 
-<label>Matchzeit</label>
+<label>Matchzeit:</label>
 <select id="matchTime">
-<option value="15">15</option>
-<option value="18" selected>18</option>
-<option value="20">20</option>
+<option value="15">15 min</option>
+<option value="18" selected>18 min</option>
+<option value="20">20 min</option>
 </select>
 </div>
 
+<!-- MODE -->
 <div class="section">
 <h3>Modus</h3>
-<button onclick="setMode('turnier')">Turnier</button>
-<button onclick="setMode('gruppe')">Gruppe</button>
+<button id="btnTurnier">🏆 Turnier</button>
+<button id="btnGruppe">👥 Gruppe</button>
 </div>
 
 <div class="section">
-<button onclick="generate()">Spielplan erstellen</button>
+<button id="btnGenerate">Spielplan erstellen</button>
 <div id="preview"></div>
 </div>
 
@@ -130,76 +135,79 @@ button{
 <div id="teams" class="big"></div>
 <div id="bank" class="big"></div>
 
-<button onclick="startTimer()">Start</button>
-<button onclick="nextMatch()">Next</button>
-<button onclick="exitKiosk()">Exit</button>
+<button id="btnStart">Start</button>
+<button id="btnNext">Next</button>
+<button id="btnExit">Exit</button>
 
 </div>
 
 <script>
 
 /* =====================
-   STATE SAFE
+   SOUND
 ===================== */
 
-let mode="turnier";
-let schedule=[];
-let index=0;
-let timer=null;
-let timeLeft=0;
-let finished=false;
+const gong = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
 
-/* =====================
-   SAFE PLAYERS
-===================== */
-
-let players=["Marco","Stefan","David","Tobias","Chris","Werner"];
-let selected={};
-
-/* =====================
-   ERROR SYSTEM (PRO)
-===================== */
-
-function error(msg){
-  document.getElementById("error").innerText="⚠️ "+msg;
+function speak(text){
+  let u = new SpeechSynthesisUtterance(text);
+  u.lang = "de-DE";
+  speechSynthesis.speak(u);
 }
 
 /* =====================
-   INIT PLAYERS SAFE
+   STATE
+===================== */
+
+let mode = "turnier";
+let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
+let selected = {};
+let schedule = [];
+let index = 0;
+let timer = null;
+let timeLeft = 0;
+let finished = false;
+
+/* =====================
+   PLAYERS (SAFE DOM)
 ===================== */
 
 function renderPlayers(){
 
-  let box=document.getElementById("players");
-  box.innerHTML="";
+  const box = document.getElementById("playerList");
+  box.innerHTML = "";
 
-  players.forEach(p=>{
-    selected[p]=true;
+  players.forEach((p,i)=>{
 
-    box.innerHTML+=`
-      <div class="playerRow">
-        <input type="checkbox" checked onchange="selected['${p}']=this.checked">
-        <span>${p}</span>
-      </div>
-    `;
+    selected[p] = true;
+
+    const row = document.createElement("div");
+    row.className = "playerRow";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = true;
+
+    cb.addEventListener("change", ()=>{
+      selected[p] = cb.checked;
+    });
+
+    const label = document.createElement("label");
+    label.innerText = p;
+
+    row.appendChild(cb);
+    row.appendChild(label);
+
+    box.appendChild(row);
   });
 }
 
 /* =====================
-   SAFE ACTIVE PLAYERS
+   ACTIVE PLAYERS
 ===================== */
 
 function activePlayers(){
-
-  let list = players.filter(p=>selected[p]);
-
-  if(list.length < 4){
-    error("Mindestens 4 Spieler nötig!");
-    return [];
-  }
-
-  error("");
-  return list;
+  return players.filter(p=>selected[p]);
 }
 
 /* =====================
@@ -207,146 +215,119 @@ function activePlayers(){
 ===================== */
 
 function setMode(m){
-  mode=m;
+  mode = m;
 }
 
 /* =====================
-   SAFE GENERATE ENGINE
+   GENERATE SAFE
 ===================== */
 
 function generate(){
 
-  try{
+  const p = activePlayers();
 
-    let p = activePlayers();
-    if(p.length < 4) return;
-
-    schedule=[];
-    index=0;
-
-    let total = parseInt(document.getElementById("totalTime").value);
-    let match = parseInt(document.getElementById("matchTime").value);
-
-    if(match <= 0 || total <= 0){
-      error("Ungültige Zeiten!");
-      return;
-    }
-
-    let rounds = Math.floor(total / match);
-
-    if(rounds < 1){
-      error("Zu wenige Runden!");
-      return;
-    }
-
-    for(let r=0;r<rounds;r++){
-
-      let pool=[...p].sort(()=>Math.random()-0.5);
-
-      let a=[],b=[],bank=[];
-
-      if(mode==="turnier"){
-
-        if(p.length===5){
-          bank=[pool[0]];
-          let rest=pool.slice(1);
-          a=[rest[0],rest[1]];
-          b=[rest[2],rest[3]];
-        }
-
-        else if(p.length===6){
-          bank=[pool[0],pool[1]];
-          let rest=pool.slice(2);
-          a=[rest[0],rest[1]];
-          b=[rest[2],rest[3]];
-        }
-
-        else{
-          a=[pool[0],pool[1]];
-          b=[pool[2],pool[3]];
-        }
-      }
-
-      if(mode==="gruppe"){
-
-        if(p.length===6){
-          let A=[p[0],p[1]];
-          let B=[p[2],p[3]];
-          let C=[p[4],p[5]];
-
-          let rot=r%3;
-
-          if(rot===0){a=A;b=B;bank=C;}
-          if(rot===1){a=B;b=C;bank=A;}
-          if(rot===2){a=C;b=A;bank=B;}
-        }
-
-        else{
-          a=[p[0],p[1]];
-          b=[p[2],p[3]];
-        }
-      }
-
-      schedule.push({a,b,bank});
-    }
-
-    render();
-    update();
-
-  }catch(e){
-    error("Systemfehler: "+e.message);
+  if(p.length < 4){
+    alert("Mindestens 4 Spieler nötig!");
+    return;
   }
+
+  schedule = [];
+  index = 0;
+
+  const total = parseInt(document.getElementById("totalTime").value);
+  const match = parseInt(document.getElementById("matchTime").value);
+
+  const rounds = Math.floor(total / match);
+
+  for(let r=0;r<rounds;r++){
+
+    const pool = [...p].sort(()=>Math.random()-0.5);
+
+    let a=[],b=[],bank=[];
+
+    if(mode==="turnier"){
+
+      if(p.length===5){
+        bank=[pool[0]];
+        let rest=pool.slice(1);
+        a=[rest[0],rest[1]];
+        b=[rest[2],rest[3]];
+      }
+      else if(p.length===6){
+        bank=[pool[0],pool[1]];
+        let rest=pool.slice(2);
+        a=[rest[0],rest[1]];
+        b=[rest[2],rest[3]];
+      }
+      else{
+        a=[pool[0],pool[1]];
+        b=[pool[2],pool[3]];
+      }
+    }
+
+    if(mode==="gruppe"){
+
+      if(p.length===6){
+        const A=[p[0],p[1]];
+        const B=[p[2],p[3]];
+        const C=[p[4],p[5]];
+
+        const rot=r%3;
+
+        if(rot===0){a=A;b=B;bank=C;}
+        if(rot===1){a=B;b=C;bank=A;}
+        if(rot===2){a=C;b=A;bank=B;}
+      }
+      else{
+        a=[p[0],p[1]];
+        b=[p[2],p[3]];
+      }
+    }
+
+    schedule.push({a,b,bank});
+  }
+
+  renderPreview();
+  update();
 }
 
 /* =====================
-   SAFE RENDER
+   PREVIEW
 ===================== */
 
-function render(){
+function renderPreview(){
 
-  try{
+  const box = document.getElementById("preview");
+  box.innerHTML = "";
 
-    let box=document.getElementById("preview");
-    if(!box) return;
-
-    let html="";
-
-    schedule.forEach((s,i)=>{
-      if(!s.a || !s.b) return;
-
-      html+=`
-      R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")}
-      | Bank: ${s.bank?.join(", ") || "keine"}<br>
-      `;
-    });
-
-    box.innerHTML=html;
-
-  }catch(e){
-    error("Render Fehler");
-  }
+  schedule.forEach((s,i)=>{
+    const div = document.createElement("div");
+    div.innerHTML =
+      `R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")} | Bank: ${s.bank.join(", ")||"keine"}`;
+    box.appendChild(div);
+  });
 }
 
 /* =====================
-   SAFE UPDATE
+   UPDATE KIOSK
 ===================== */
 
 function update(){
 
-  let s=schedule[index];
+  const s = schedule[index];
   if(!s) return;
 
-  document.getElementById("mode").innerText=
-    mode==="turnier"?"🏆 Turnier":"👥 Gruppe";
+  document.getElementById("mode").innerText =
+    mode==="turnier" ? "🏆 Turnier" : "👥 Gruppe";
 
-  document.getElementById("round").innerText=
-    "Runde "+(index+1);
+  document.getElementById("round").innerText =
+    "Runde " + (index+1);
 
-  document.getElementById("teams").innerText=
-    s.a.join(" / ")+" vs "+s.b.join(" / ");
+  document.getElementById("teams").innerText =
+    s.a.join(" / ") + " vs " + s.b.join(" / ");
 
-  document.getElementById("bank").innerText=
-    "Bank: "+(s.bank.join(", ")||"keine");
+  document.getElementById("bank").innerText =
+    "Bank: " + (s.bank.join(", ")||"keine");
 }
 
 /* =====================
@@ -362,7 +343,7 @@ function exitKiosk(){
 }
 
 /* =====================
-   TIMER SAFE
+   TIMER
 ===================== */
 
 function startTimer(){
@@ -371,26 +352,28 @@ function startTimer(){
 
   clearInterval(timer);
 
-  timer=setInterval(()=>{
+  timer = setInterval(()=>{
 
     timeLeft--;
 
-    let m=Math.floor(timeLeft/60);
-    let s=timeLeft%60;
-    if(s<10)s="0"+s;
+    let m = Math.floor(timeLeft/60);
+    let s = timeLeft%60;
+    if(s<10) s="0"+s;
 
-    document.getElementById("timer").innerText=`${m}:${s}`;
+    document.getElementById("timer").innerText = `${m}:${s}`;
 
     if(timeLeft<=0){
       clearInterval(timer);
-      finished=true;
+      finished = true;
+      gong.play();
+      speak("Match beendet");
     }
 
   },1000);
 }
 
 /* =====================
-   NEXT SAFE
+   NEXT
 ===================== */
 
 function nextMatch(){
@@ -399,13 +382,24 @@ function nextMatch(){
 
   index++;
 
-  if(index>=schedule.length)
-    index=0;
+  if(index >= schedule.length) index = 0;
 
-  finished=false;
+  finished = false;
 
   update();
 }
+
+/* =====================
+   EVENTS (NO INLINE JS)
+===================== */
+
+document.getElementById("btnGenerate").addEventListener("click", generate);
+document.getElementById("btnTurnier").addEventListener("click", ()=>setMode("turnier"));
+document.getElementById("btnGruppe").addEventListener("click", ()=>setMode("gruppe"));
+document.getElementById("btnStart").addEventListener("click", startTimer);
+document.getElementById("btnNext").addEventListener("click", nextMatch);
+document.getElementById("btnExit").addEventListener("click", exitKiosk);
+document.getElementById("kioskBtn").addEventListener("click", enterKiosk);
 
 /* INIT */
 renderPlayers();
