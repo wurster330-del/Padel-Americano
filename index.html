@@ -131,6 +131,7 @@ button{
 
 <button id="btnStart">Start</button>
 <button id="btnNext">Next</button>
+<button id="btnEnd">Matchende</button>
 <button id="btnExit">Exit</button>
 
 </div>
@@ -154,7 +155,7 @@ let timeLeft=0;
 let finished=false;
 
 /* =====================
-   INIT
+   INIT PLAYERS
 ===================== */
 
 function initPlayers(){
@@ -182,127 +183,28 @@ function initPlayers(){
 }
 
 /* =====================
-   HELPERS
+   ACTIVE
+===================== */
+
+function activePlayers(){
+  return players.filter(p=>selected[p]);
+}
+
+/* =====================
+   GENERATOR HELPERS
 ===================== */
 
 function shuffle(a){
   return [...a].sort(()=>Math.random()-0.5);
 }
 
-function countPair(a,b,history){
-  return (history[a]?.[b]||0);
-}
-
 /* =====================
-   SCORE (FAIR + ANTI-REPEAT)
-===================== */
-
-function scorePlan(plan, history){
-
-  let score=0;
-
-  // Bank fairness
-  plan.bank.forEach(p=>{
-    if(history[p].bank>0) score += 5;
-  });
-
-  // Partner repetition penalty
-  if(history[plan.a[0]].partner === plan.a[1]) score += 10;
-  if(history[plan.b[0]].partner === plan.b[1]) score += 10;
-
-  return score;
-}
-
-/* =====================
-   HISTORY
-===================== */
-
-function createHistory(p){
-
-  let h={};
-
-  p.forEach(x=>{
-    h[x]={
-      bank:0,
-      partner:null,
-      opponents:{}
-    };
-  });
-
-  return h;
-}
-
-/* =====================
-   GENERATE CANDIDATE PLAN
-===================== */
-
-function createPlan(p,r,mode){
-
-  let pool=shuffle(p);
-
-  let a=[],b=[],bank=[];
-
-  if(mode==="turnier"){
-
-    if(p.length===6){
-      bank=[pool[0],pool[1]];
-      let rest=pool.slice(2);
-      a=[rest[0],rest[1]];
-      b=[rest[2],rest[3]];
-    }
-
-    else if(p.length===5){
-      bank=[pool[0]];
-      let rest=pool.slice(1);
-      a=[rest[0],rest[1]];
-      b=[rest[2],rest[3]];
-    }
-
-    else{
-      a=[pool[0],pool[1]];
-      b=[pool[2],pool[3]];
-    }
-  }
-
-  if(mode==="gruppe"){
-
-    if(p.length===4){
-      a=[p[0],p[1]];
-      b=[p[2],p[3]];
-      bank=[];
-    }
-
-    else if(p.length===5){
-      const teams=[[p[0],p[1]],[p[2],p[3]]];
-      const rot=r%2;
-      a=rot?teams[1]:teams[0];
-      b=rot?teams[0]:teams[1];
-      bank=[p[4]];
-    }
-
-    else if(p.length===6){
-      const A=[p[0],p[1]];
-      const B=[p[2],p[3]];
-      const C=[p[4],p[5]];
-
-      const rot=r%3;
-
-      if(rot===0){a=A;b=B;bank=C;}
-      if(rot===1){a=B;b=C;bank=A;}
-      if(rot===2){a=C;b=A;bank=B;}
-    }
-  }
-
-  return {a,b,bank};
-}
-
-/* =====================
-   QUALITY SEARCH (BEST PLAN)
+   ENGINE
 ===================== */
 
 function generate(){
 
-  const p=players.filter(x=>selected[x]);
+  const p=activePlayers();
 
   if(p.length<4){
     alert("Mindestens 4 Spieler");
@@ -317,34 +219,68 @@ function generate(){
 
   const rounds=Math.floor(total/match);
 
-  let history=createHistory(p);
-
   for(let r=0;r<rounds;r++){
 
-    let best=null;
-    let bestScore=999999;
+    let pool=shuffle(p);
 
-    // 10 candidate tries
-    for(let i=0;i<10;i++){
+    let a=[],b=[],bank=[];
 
-      let plan=createPlan(p,r,mode);
+    /* TURNIER */
+    if(mode==="turnier"){
 
-      let s=0;
+      if(p.length===6){
+        bank=[pool[0],pool[1]];
+        let rest=pool.slice(2);
+        a=[rest[0],rest[1]];
+        b=[rest[2],rest[3]];
+      }
 
-      plan.bank.forEach(x=>{
-        if(history[x].bank>0) s+=5;
-      });
+      else if(p.length===5){
+        bank=[pool[0]];
+        let rest=pool.slice(1);
+        a=[rest[0],rest[1]];
+        b=[rest[2],rest[3]];
+      }
 
-      if(s<bestScore){
-        best=plan;
-        bestScore=s;
+      else{
+        a=[pool[0],pool[1]];
+        b=[pool[2],pool[3]];
       }
     }
 
-    // update history
-    best.bank.forEach(x=>history[x].bank++);
+    /* GRUPPE */
+    if(mode==="gruppe"){
 
-    schedule.push(best);
+      if(p.length===4){
+        a=[p[0],p[1]];
+        b=[p[2],p[3]];
+        bank=[];
+      }
+
+      else if(p.length===5){
+
+        const teams=[[p[0],p[1]],[p[2],p[3]]];
+        const rot=r%2;
+
+        if(rot===0){a=teams[0];b=teams[1];bank=[p[4]];}
+        else{a=teams[1];b=teams[0];bank=[p[4]];}
+      }
+
+      else if(p.length===6){
+
+        const A=[p[0],p[1]];
+        const B=[p[2],p[3]];
+        const C=[p[4],p[5]];
+
+        const rot=r%3;
+
+        if(rot===0){a=A;b=B;bank=C;}
+        if(rot===1){a=B;b=C;bank=A;}
+        if(rot===2){a=C;b=A;bank=B;}
+      }
+    }
+
+    schedule.push({a,b,bank});
   }
 
   render();
@@ -352,7 +288,7 @@ function generate(){
 }
 
 /* =====================
-   UI
+   PREVIEW
 ===================== */
 
 function render(){
@@ -362,10 +298,15 @@ function render(){
 
   schedule.forEach((s,i)=>{
     const div=document.createElement("div");
-    div.innerText=`R${i+1}: ${s.a.join("/")} vs ${s.b.join("/")} | Bank: ${s.bank.join(", ")||"keine"}`;
+    div.innerText=
+      `R${i+1}: ${s.a.join("/")} vs ${s.b.join("/")} | Bank: ${s.bank.join(", ")||"keine"}`;
     box.appendChild(div);
   });
 }
+
+/* =====================
+   UPDATE
+===================== */
 
 function update(){
 
@@ -376,8 +317,10 @@ function update(){
     mode==="turnier"?"🏆 Turnier":"👥 Gruppe";
 
   document.getElementById("round").innerText="Runde "+(index+1);
-  document.getElementById("teams").innerText=s.a.join(" / ")+" vs "+s.b.join(" / ");
-  document.getElementById("bank").innerText="Bank: "+(s.bank.join(", ")||"keine");
+  document.getElementById("teams").innerText=
+    s.a.join(" / ")+" vs "+s.b.join(" / ");
+  document.getElementById("bank").innerText=
+    "Bank: "+(s.bank.join(", ")||"keine");
 }
 
 /* =====================
@@ -412,11 +355,24 @@ function startTimer(){
    NEXT
 ===================== */
 
-function next(){
+function nextMatch(){
   if(!finished)return;
   index=(index+1)%schedule.length;
   finished=false;
   update();
+}
+
+/* =====================
+   MATCHENDE (NEU)
+===================== */
+
+function endMatch(){
+
+  clearInterval(timer);
+  finished=true;
+  timeLeft=0;
+
+  document.getElementById("timer").innerText="00:00";
 }
 
 /* =====================
@@ -439,7 +395,8 @@ btnExit.onclick=()=>document.body.classList.remove("kioskMode");
 
 btnGenerate.onclick=generate;
 btnStart.onclick=startTimer;
-btnNext.onclick=next;
+btnNext.onclick=nextMatch;
+btnEnd.onclick=endMatch;
 
 /* INIT */
 initPlayers();
