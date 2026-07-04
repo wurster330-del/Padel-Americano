@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Padel ULTRA PRO V13 FIXED</title>
+<title>Padel ULTRA PRO FAIR V14</title>
 
 <style>
 body{
@@ -21,6 +21,7 @@ body{
   padding:10px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
 
 button{
@@ -44,8 +45,8 @@ button{
 .playerRow{
   display:flex;
   gap:10px;
-  margin:6px 0;
   align-items:center;
+  margin:6px 0;
 }
 
 /* KIOSK */
@@ -66,8 +67,8 @@ button{
   font-weight:900;
 }
 
-.big{font-size:48px;margin:20px;}
-.bank{font-size:42px;color:#ffd54a;}
+.big{font-size:46px;margin:18px;}
+.bank{font-size:40px;color:#ffd54a;}
 </style>
 </head>
 
@@ -76,17 +77,15 @@ button{
 <div id="app">
 
 <div class="topbar">
-<div>🎾 ULTRA PRO V13 FIX</div>
+<div>🎾 ULTRA PRO FAIR V14</div>
 <button id="kioskBtn">Kiosk</button>
 </div>
 
-<!-- PLAYERS -->
 <div class="section">
-<h3>Spieler auswählen</h3>
+<h3>Spieler</h3>
 <div id="playerList"></div>
 </div>
 
-<!-- SETUP -->
 <div class="section">
 <h3>Setup</h3>
 
@@ -106,7 +105,6 @@ button{
 </select>
 </div>
 
-<!-- MODE -->
 <div class="section">
 <h3>Modus</h3>
 <button id="btnTurnier">🏆 Turnier</button>
@@ -150,12 +148,13 @@ let selected={};
 let schedule=[];
 let index=0;
 
+let stats={};
 let timer=null;
 let timeLeft=0;
 let finished=false;
 
 /* =====================
-   PLAYERS
+   INIT PLAYERS
 ===================== */
 
 function initPlayers(){
@@ -189,6 +188,49 @@ function initPlayers(){
 }
 
 /* =====================
+   STATS SYSTEM (FAIRNESS)
+===================== */
+
+function createStats(p){
+
+  stats={};
+
+  p.forEach(x=>{
+    stats[x]={
+      bank:0,
+      played:0,
+      lastBank:false
+    };
+  });
+}
+
+/* =====================
+   SCORE (FAIR CORE)
+===================== */
+
+function score(p){
+
+  let s=stats[p];
+
+  return (
+    s.bank*3 +
+    s.played +
+    (s.lastBank ? 8 : 0)
+  );
+}
+
+/* =====================
+   PICK BANK FAIR
+===================== */
+
+function pickBank(pool,count){
+
+  return [...pool]
+    .sort((a,b)=>score(a)-score(b))
+    .slice(0,count);
+}
+
+/* =====================
    ACTIVE PLAYERS
 ===================== */
 
@@ -197,112 +239,64 @@ function activePlayers(){
 }
 
 /* =====================
-   TURNIER ENGINE (STABIL)
-===================== */
-
-function buildTurnier(p, rounds){
-
-  let list=[];
-
-  for(let r=0;r<rounds;r++){
-
-    let pool=[...p].sort(()=>Math.random()-0.5);
-
-    let a=[],b=[],bank=[];
-
-    if(p.length===6){
-      bank=[pool[0],pool[1]];
-      let rest=pool.slice(2);
-      a=[rest[0],rest[1]];
-      b=[rest[2],rest[3]];
-    }
-
-    else if(p.length===5){
-      bank=[pool[0]];
-      let rest=pool.slice(1);
-      a=[rest[0],rest[1]];
-      b=[rest[2],rest[3]];
-    }
-
-    else{
-      a=[pool[0],pool[1]];
-      b=[pool[2],pool[3]];
-    }
-
-    list.push({a,b,bank});
-  }
-
-  return list;
-}
-
-/* =====================
-   GRUPPE ENGINE
-===================== */
-
-function buildGruppe(p, rounds){
-
-  let list=[];
-
-  for(let r=0;r<rounds;r++){
-
-    let A=[p[0],p[1]];
-    let B=[p[2],p[3]];
-    let C=p.length===6?[p[4],p[5]]:[];
-
-    let rot=r%3;
-
-    let a=[],b=[],bank=[];
-
-    if(p.length===6){
-      if(rot===0){a=A;b=B;bank=C;}
-      if(rot===1){a=B;b=C;bank=A;}
-      if(rot===2){a=C;b=A;bank=B;}
-    }else{
-      a=[p[0],p[1]];
-      b=[p[2],p[3]];
-    }
-
-    list.push({a,b,bank});
-  }
-
-  return list;
-}
-
-/* =====================
-   GENERATE (FIXED PREVIEW BUG)
+   GENERATE FAIR ENGINE
 ===================== */
 
 function generate(){
 
-  const p = activePlayers();
+  const p=activePlayers();
 
-  if(p.length < 4){
+  if(p.length<4){
     alert("Mindestens 4 Spieler!");
     return;
   }
 
-  const total = +document.getElementById("totalTime").value;
-  const match = +document.getElementById("matchTime").value;
+  createStats(p);
 
-  const rounds = Math.floor(total / match);
-
-  if(mode==="turnier"){
-    schedule = buildTurnier(p, rounds);
-  }else{
-    schedule = buildGruppe(p, rounds);
-  }
-
+  schedule=[];
   index=0;
 
-  renderPreview();   // ✅ FIX: zeigt ALLE RUNDEN
+  const total=+totalTime.value;
+  const match=+matchTime.value;
+
+  const rounds=Math.floor(total/match);
+
+  for(let r=0;r<rounds;r++){
+
+    let pool=[...p];
+
+    let bankCount = p.length===6?2:(p.length===5?1:0);
+
+    let bank=pickBank(pool,bankCount);
+
+    let rest=pool.filter(x=>!bank.includes(x));
+
+    let a=[rest[0],rest[1]];
+    let b=[rest[2],rest[3]];
+
+    // UPDATE STATS
+    bank.forEach(x=>{
+      stats[x].bank++;
+      stats[x].lastBank=true;
+    });
+
+    rest.forEach(x=>{
+      stats[x].played++;
+      stats[x].lastBank=false;
+    });
+
+    schedule.push({a,b,bank});
+  }
+
+  render();
   update();
 }
 
 /* =====================
-   PREVIEW FIXED
+   PREVIEW
 ===================== */
 
-function renderPreview(){
+function render(){
 
   const box=document.getElementById("preview");
   box.innerHTML="";
@@ -311,15 +305,15 @@ function renderPreview(){
 
     const div=document.createElement("div");
 
-    div.innerHTML =
-      `<b>R${i+1}</b>: ${s.a.join(" / ")} vs ${s.b.join(" / ")} | Bank: ${s.bank.join(", ")||"keine"}`;
+    div.innerText =
+      `R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")} | Bank: ${s.bank.join(", ")}`;
 
     box.appendChild(div);
   });
 }
 
 /* =====================
-   UPDATE
+   UPDATE KIOSK
 ===================== */
 
 function update(){
@@ -327,30 +321,20 @@ function update(){
   const s=schedule[index];
   if(!s) return;
 
-  document.getElementById("mode").innerText =
-    mode==="turnier"?"🏆 Turnier":"👥 Gruppe";
+  modeText = mode==="turnier"?"🏆 Turnier":"👥 Gruppe";
 
-  document.getElementById("round").innerText =
-    "Runde "+(index+1);
-
-  document.getElementById("teams").innerText =
-    s.a.join(" / ")+" vs "+s.b.join(" / ");
-
-  document.getElementById("bank").innerText =
-    "Bank: "+(s.bank.join(", ")||"keine");
+  document.getElementById("mode").innerText=modeText;
+  document.getElementById("round").innerText="Runde "+(index+1);
+  document.getElementById("teams").innerText=s.a.join(" / ")+" vs "+s.b.join(" / ");
+  document.getElementById("bank").innerText="Bank: "+(s.bank.join(", ")||"keine");
 }
 
 /* =====================
-   KIOSK
+   MODE
 ===================== */
 
-function enterKiosk(){
-  document.body.classList.add("kioskMode");
-}
-
-function exitKiosk(){
-  document.body.classList.remove("kioskMode");
-}
+document.getElementById("btnTurnier").onclick=()=>mode="turnier";
+document.getElementById("btnGruppe").onclick=()=>mode="gruppe";
 
 /* =====================
    TIMER
@@ -358,7 +342,7 @@ function exitKiosk(){
 
 function startTimer(){
 
-  timeLeft = +document.getElementById("matchTime").value * 60;
+  timeLeft=+matchTime.value*60;
 
   clearInterval(timer);
 
@@ -370,7 +354,8 @@ function startTimer(){
     let s=timeLeft%60;
     if(s<10)s="0"+s;
 
-    document.getElementById("timer").innerText=`${m}:${s}`;
+    timerDisplay=`${m}:${s}`;
+    document.getElementById("timer").innerText=timerDisplay;
 
     if(timeLeft<=0){
       clearInterval(timer);
@@ -388,23 +373,31 @@ function nextMatch(){
 
   if(!finished) return;
 
-  index = (index+1)%schedule.length;
+  index=(index+1)%schedule.length;
   finished=false;
 
   update();
 }
 
 /* =====================
+   KIOSK
+===================== */
+
+document.getElementById("kioskBtn").onclick=()=>{
+  document.body.classList.add("kioskMode");
+};
+
+document.getElementById("btnExit").onclick=()=>{
+  document.body.classList.remove("kioskMode");
+};
+
+/* =====================
    EVENTS
 ===================== */
 
-document.getElementById("btnGenerate").addEventListener("click",generate);
-document.getElementById("btnTurnier").addEventListener("click",()=>mode="turnier");
-document.getElementById("btnGruppe").addEventListener("click",()=>mode="gruppe");
-document.getElementById("btnStart").addEventListener("click",startTimer);
-document.getElementById("btnNext").addEventListener("click",nextMatch);
-document.getElementById("btnExit").addEventListener("click",exitKiosk);
-document.getElementById("kioskBtn").addEventListener("click",enterKiosk);
+document.getElementById("btnGenerate").onclick=generate;
+document.getElementById("btnStart").onclick=startTimer;
+document.getElementById("btnNext").onclick=nextMatch;
 
 /* INIT */
 initPlayers();
