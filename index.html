@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Padel-Götter PRO 1.3</title>
+<title>Padel-Götter PRO V1.3</title>
 
 <style>
 body{
@@ -156,7 +156,7 @@ let timeLeft = 0;
 let finished = false;
 
 /* =====================
-   INIT
+   INIT PLAYERS
 ===================== */
 
 function initPlayers(){
@@ -191,7 +191,7 @@ function activePlayers(){
 }
 
 /* =====================
-   SHUFFLE
+   SHUFFLE (nur Turnier!)
 ===================== */
 
 function shuffle(a){
@@ -199,7 +199,59 @@ function shuffle(a){
 }
 
 /* =====================
-   GENERATE (CLEAN RESET FIX)
+   GROUP LOGIC (FIXED CYCLIC)
+===================== */
+
+function groupRound(p, r){
+
+  // 👥 4 Spieler
+  if(p.length === 4){
+    return {
+      a:[p[0],p[1]],
+      b:[p[2],p[3]],
+      bank:[]
+    };
+  }
+
+  // 👥 5 Spieler
+  if(p.length === 5){
+
+    const rot = r % 2;
+
+    if(rot === 0){
+      return {
+        a:[p[0],p[1]],
+        b:[p[2],p[3]],
+        bank:[p[4]]
+      };
+    } else {
+      return {
+        a:[p[2],p[3]],
+        b:[p[0],p[1]],
+        bank:[p[4]]
+      };
+    }
+  }
+
+  // 👥 6 Spieler (3 Teams Rotation)
+  if(p.length === 6){
+
+    const A = [p[0],p[1]];
+    const B = [p[2],p[3]];
+    const C = [p[4],p[5]];
+
+    const rot = r % 3;
+
+    if(rot === 0) return {a:A,b:B,bank:C};
+    if(rot === 1) return {a:B,b:C,bank:A};
+    return {a:C,b:A,bank:B};
+  }
+
+  return {a:[],b:[],bank:[]};
+}
+
+/* =====================
+   GENERATE (FIXED)
 ===================== */
 
 function generate(){
@@ -211,7 +263,7 @@ function generate(){
     return;
   }
 
-  // 🔥 HARD RESET (entscheidend)
+  // 🔥 HARD RESET
   schedule = [];
   index = 0;
   finished = false;
@@ -224,14 +276,14 @@ function generate(){
 
   for(let r = 0; r < rounds; r++){
 
-    let pool = shuffle(p);
-
     let a = [], b = [], bank = [];
 
     /* =====================
        TURNIER
     ===================== */
     if(mode === "turnier"){
+
+      let pool = shuffle(p);
 
       if(p.length === 6){
         bank = [pool[0], pool[1]];
@@ -254,43 +306,14 @@ function generate(){
     }
 
     /* =====================
-       GRUPPE (FIXED STABLE ROTATION)
+       GRUPPE (FIXED CYCLIC)
     ===================== */
     if(mode === "gruppe"){
 
-      if(p.length === 4){
-        a = [p[0], p[1]];
-        b = [p[2], p[3]];
-        bank = [];
-      }
-
-      else if(p.length === 5){
-
-        const rot = r % 2;
-
-        if(rot === 0){
-          a = [p[0], p[1]];
-          b = [p[2], p[3]];
-        } else {
-          a = [p[2], p[3]];
-          b = [p[0], p[1]];
-        }
-
-        bank = [p[4]];
-      }
-
-      else if(p.length === 6){
-
-        const A = [p[0], p[1]];
-        const B = [p[2], p[3]];
-        const C = [p[4], p[5]];
-
-        const rot = r % 3;
-
-        if(rot === 0){ a=A; b=B; bank=C; }
-        if(rot === 1){ a=B; b=C; bank=A; }
-        if(rot === 2){ a=C; b=A; bank=B; }
-      }
+      let g = groupRound(p, r);
+      a = g.a;
+      b = g.b;
+      bank = g.bank;
     }
 
     schedule.push({a,b,bank});
@@ -301,16 +324,14 @@ function generate(){
 }
 
 /* =====================
-   REMIX (FIXED)
+   REMIX (NOW WORKS)
 ===================== */
 
 function remix(){
 
-  // kompletter sauberer Neustart
   schedule = [];
   index = 0;
   finished = false;
-
   clearInterval(timer);
 
   generate();
