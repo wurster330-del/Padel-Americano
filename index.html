@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V12 FINAL STABLE</title>
+<title>Padel Club Manager V12 FAIR GROUP</title>
 
 <style>
 body{
@@ -79,7 +79,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V12 FINAL STABLE</div>
+  <div>🎾 V12 GROUP FAIR</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
@@ -178,53 +178,11 @@ let timeLeft=0;
 let finished=false;
 
 /* =====================
-   BANK SYSTEM FIX
+   GROUP ROTATION STATE (FIX)
 ===================== */
 
-let lastBank=[];
-
-function isBlocked(p){
-  return lastBank.includes(p);
-}
-
-function pickBank(pool,count){
-
-  let available = pool.filter(p => !isBlocked(p));
-
-  if(available.length < count){
-    available = [...pool];
-    lastBank = [];
-  }
-
-  let bank = available
-    .sort(()=>Math.random()-0.5)
-    .slice(0,count);
-
-  lastBank = bank;
-
-  return bank;
-}
-
-/* =====================
-   MATCH HISTORY (TURNIER)
-===================== */
-
-let matchHistory={};
-
-function matchKey(A,B){
-  let a=A.slice().sort().join("-");
-  let b=B.slice().sort().join("-");
-  return [a,b].sort().join(" VS ");
-}
-
-function matchPenalty(A,B){
-  return matchHistory[matchKey(A,B)] || 0;
-}
-
-function addHistory(A,B){
-  let key=matchKey(A,B);
-  matchHistory[key]=(matchHistory[key]||0)+1;
-}
+let groupTeams=null;
+let groupRotationIndex=0;
 
 /* =====================
    PLAYERS
@@ -253,7 +211,7 @@ function active(){
 }
 
 /* =====================
-   MODE
+   MODE SWITCH
 ===================== */
 
 function setMode(m){
@@ -275,58 +233,29 @@ function setMode(m){
 }
 
 /* =====================
-   TURNIER NO REPEAT
+   TURNIER (simple stable)
 ===================== */
 
 function buildTurnier(){
 
   let l=active();
-  let pool=[...l];
+  let s=[...l].sort(()=>Math.random()-0.5);
 
-  pool.sort(()=>Math.random()-0.5);
+  if(l.length===4)
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[]};
 
-  let bestA=null;
-  let bestB=null;
-  let bestScore=999999;
+  if(l.length===5)
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4]]};
 
-  for(let i=0;i<pool.length;i++){
-    for(let j=i+1;j<pool.length;j++){
-      for(let k=0;k<pool.length;k++){
-        for(let m=k+1;m<pool.length;m++){
+  if(l.length===6)
+    return {a:[s[0],s[1]],b:[s[2],s[3]],bank:[s[4],s[5]]};
 
-          let A=[pool[i],pool[j]];
-          let B=[pool[k],pool[m]];
-
-          let used=new Set([...A,...B]);
-          if(used.size<4) continue;
-
-          let score=matchPenalty(A,B);
-
-          if(score<bestScore){
-            bestScore=score;
-            bestA=A;
-            bestB=B;
-          }
-        }
-      }
-    }
-  }
-
-  let used=[...bestA,...bestB];
-  let bankPool=pool.filter(p=>!used.includes(p));
-
-  let bankCount = pool.length===6 ? 2 : (pool.length===5 ? 1 : 0);
-
-  let bank = pickBank(bankPool,bankCount);
-
-  return {a:bestA,b:bestB,bank};
+  return {a:[],b:[],bank:[]};
 }
 
 /* =====================
-   GROUP FIX (stable teams)
+   GROUP FIXED TEAMS
 ===================== */
-
-let groupTeams=null;
 
 function generateGroupTeams(){
 
@@ -341,13 +270,18 @@ function generateGroupTeams(){
   return [];
 }
 
+/* =====================
+   GROUP FAIR ROTATION (FIX)
+===================== */
+
 function buildGruppe(){
 
   if(!groupTeams){
-    groupTeams=generateGroupTeams();
+    groupTeams = generateGroupTeams();
+    groupRotationIndex = 0;
   }
 
-  let t=groupTeams;
+  let t = groupTeams;
 
   if(t.length===2){
     return {a:t[0],b:t[1],bank:[]};
@@ -355,12 +289,17 @@ function buildGruppe(){
 
   if(t.length===3){
 
-    let order=[0,1,2].sort(()=>Math.random()-0.5);
+    // FIXED rotation (NO RANDOM)
+    let a = t[groupRotationIndex % 3];
+    let b = t[(groupRotationIndex + 1) % 3];
+    let bank = t[(groupRotationIndex + 2) % 3];
+
+    groupRotationIndex++;
 
     return {
-      a:t[order[0]],
-      b:t[order[1]],
-      bank:[...t[order[2]]]
+      a:a,
+      b:b,
+      bank:[...bank]
     };
   }
 
@@ -379,7 +318,7 @@ function generate(){
   index=0;
 
   groupTeams=null;
-  lastBank=[];
+  groupRotationIndex=0;
 
   let total=parseInt(document.getElementById("totalTime").value);
   let match=parseInt(document.getElementById("matchTime").value);
@@ -471,20 +410,12 @@ function updateTimer(){
 }
 
 /* =====================
-   NEXT MATCH
+   NEXT
 ===================== */
 
 function nextMatch(){
 
   if(!finished) return;
-
-  let s=schedule[index];
-
-  if(mode==="turnier"){
-    addHistory(s.a,s.b);
-  }
-
-  lastBank = s.bank || [];
 
   index++;
 
