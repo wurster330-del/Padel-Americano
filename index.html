@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Padel Club Manager V12.2 FIXED</title>
+<title>Padel Club Manager V12.2 FINAL</title>
 
 <meta name="theme-color" content="#0b1f16">
 
@@ -35,6 +35,7 @@ button{
   background:#1f6f4a;
   color:white;
   font-weight:bold;
+  cursor:pointer;
 }
 
 .section{
@@ -46,9 +47,9 @@ button{
 
 .playerRow{
   display:flex;
-  align-items:center;
   gap:10px;
-  margin:6px 0;
+  align-items:center;
+  margin:5px 0;
 }
 
 /* KIOSK */
@@ -69,8 +70,15 @@ button{
   font-weight:900;
 }
 
-.big{font-size:44px;margin:18px;}
-.bank{font-size:40px;color:#ffd54a;}
+.big{
+  font-size:44px;
+  margin:18px;
+}
+
+.bank{
+  font-size:40px;
+  color:#ffd54a;
+}
 </style>
 </head>
 
@@ -79,11 +87,11 @@ button{
 <div id="app">
 
 <div class="topbar">
-<div>🎾 V12.2 PLAYER FIX</div>
+<div>🎾 V12.2 FINAL FIX</div>
 <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
-<!-- PLAYERS (REAL SELECTION) -->
+<!-- PLAYERS -->
 <div class="section">
 <h3>Spieler auswählen</h3>
 <div id="playerList"></div>
@@ -95,17 +103,17 @@ button{
 
 <label>Gesamtzeit:</label>
 <select id="totalTime">
-<option value="120">120</option>
-<option value="180" selected>180</option>
+<option value="120">120 min</option>
+<option value="180" selected>180 min</option>
 </select>
 
 <br><br>
 
 <label>Matchzeit:</label>
 <select id="matchTime">
-<option value="15">15</option>
-<option value="18" selected>18</option>
-<option value="20">20</option>
+<option value="15">15 min</option>
+<option value="18" selected>18 min</option>
+<option value="20">20 min</option>
 </select>
 </div>
 
@@ -142,10 +150,10 @@ button{
 <script>
 
 /* =====================
-   SOUND
+   SOUND + VOICE
 ===================== */
 
-const gong=new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
+const gong = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
 
 function speak(t){
   let u=new SpeechSynthesisUtterance(t);
@@ -165,7 +173,7 @@ let timeLeft=0;
 let finished=false;
 
 /* =====================
-   PLAYERS (REAL SELECTION)
+   PLAYERS
 ===================== */
 
 let players=[
@@ -205,17 +213,21 @@ function setMode(m){
 }
 
 /* =====================
-   GENERATE
+   🔥 FIX: RUNDEN BERECHNUNG
 ===================== */
 
 function generate(){
 
-  let p=activePlayers();
+  let p = activePlayers();
+
+  let total = parseInt(document.getElementById("totalTime").value);
+  let match = parseInt(document.getElementById("matchTime").value);
+
+  // ✅ FIX: echte Rundenberechnung
+  let rounds = Math.floor(total / match);
 
   schedule=[];
   i=0;
-
-  let rounds=6;
 
   for(let r=0;r<rounds;r++){
 
@@ -232,14 +244,14 @@ function generate(){
         b=[rest[2],rest[3]];
       }
 
-      if(p.length===6){
+      else if(p.length===6){
         bank=[pool[0],pool[1]];
         let rest=pool.slice(2);
         a=[rest[0],rest[1]];
         b=[rest[2],rest[3]];
       }
 
-      if(p.length===4){
+      else if(p.length===4){
         a=[pool[0],pool[1]];
         b=[pool[2],pool[3]];
       }
@@ -248,6 +260,7 @@ function generate(){
     if(mode==="gruppe"){
 
       if(p.length===6){
+
         let A=[p[0],p[1]];
         let B=[p[2],p[3]];
         let C=[p[4],p[5]];
@@ -317,7 +330,7 @@ function startTimer(){
 }
 
 /* =====================
-   NEXT
+   NEXT MATCH
 ===================== */
 
 function nextMatch(){
@@ -334,7 +347,7 @@ function nextMatch(){
     " gegen " +
     s.b.join(" und ") +
     ". Bank: " +
-    (s.bank.length?s.bank.join(" und "):"keine")
+    (s.bank.length ? s.bank.join(" und ") : "keine")
   );
 
   i++;
@@ -357,7 +370,8 @@ function update(){
   document.getElementById("mode").innerText=
     mode==="turnier"?"🏆 Turnier":"👥 Gruppe";
 
-  document.getElementById("round").innerText="Runde "+(i+1);
+  document.getElementById("round").innerText=
+    "Runde " + (i+1) + " / " + schedule.length;
 
   document.getElementById("teams").innerText=
     s.a.join(" / ") + " vs " + s.b.join(" / ");
@@ -367,19 +381,23 @@ function update(){
 }
 
 /* =====================
-   RENDER
+   RENDER PLAYERS
 ===================== */
 
-function render(){
+function renderPlayers(){
+  let box=document.getElementById("playerList");
+  box.innerHTML="";
 
-  let html="";
-  schedule.forEach((s,i)=>{
-    html+=`
-    R${i+1}: ${s.a.join(" / ")} vs ${s.b.join(" / ")} | Bank: ${s.bank.join(", ")}<br>
+  players.forEach(p=>{
+    selected[p]=true;
+
+    box.innerHTML+=`
+      <div class="playerRow">
+        <input type="checkbox" checked onchange="selected['${p}']=this.checked">
+        <span>${p}</span>
+      </div>
     `;
   });
-
-  document.getElementById("preview").innerHTML=html;
 }
 
 /* INIT */
