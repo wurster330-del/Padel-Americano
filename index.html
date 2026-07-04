@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel Club Manager V12.1 MASTER</title>
+<title>Padel Club Manager V12.2 MASTER</title>
 
 <style>
 body{
@@ -75,27 +75,27 @@ button{
   font-weight:900;
   color:#00ff99;
   text-shadow:0 0 20px #00ff99;
-  margin-bottom:40px;
+  margin-bottom:35px;
 }
 
 .kioskBlock{
   font-size:52px;
   font-weight:bold;
-  margin:25px 0;
+  margin:20px 0;
 }
 
 .kioskTeams{
-  font-size:60px;
+  font-size:58px;
   font-weight:bold;
-  margin:40px 0;
+  margin:35px 0;
   line-height:1.6;
 }
 
 .kioskBank{
-  font-size:50px;
+  font-size:48px;
   font-weight:bold;
   color:#ffd54a;
-  margin-top:30px;
+  margin-top:25px;
 }
 </style>
 </head>
@@ -105,7 +105,7 @@ button{
 <div id="app">
 
 <div class="topbar">
-  <div>🎾 V12.1 MASTER</div>
+  <div>🎾 V12.2 MASTER</div>
   <button onclick="enterKiosk()">Kiosk</button>
 </div>
 
@@ -203,38 +203,6 @@ let timeLeft=0;
 let finished=false;
 
 /* =====================
-   BANK SYSTEM (FAIR ROTATION)
-===================== */
-
-let lastBank=[];
-let bankCounter={};
-
-function updateBankCounter(bank){
-  bank.forEach(p=>{
-    bankCounter[p]=(bankCounter[p]||0)+1;
-  });
-}
-
-function pickBank(pool,count){
-
-  let available = pool.filter(p => !lastBank.includes(p));
-
-  if(available.length < count){
-    available = [...pool];
-    lastBank=[];
-  }
-
-  let bank = available
-    .sort(()=>Math.random()-0.5)
-    .slice(0,count);
-
-  lastBank = bank;
-  updateBankCounter(bank);
-
-  return bank;
-}
-
-/* =====================
    PLAYERS
 ===================== */
 
@@ -283,38 +251,33 @@ function setMode(m){
 }
 
 /* =====================
-   TURNIER (RULE BASED)
+   TURNIER (RULE BASED CLEAN)
 ===================== */
 
 function buildTurnier(){
 
   let l=active();
-  let pool=[...l].sort(()=>Math.random()-0.5);
+  let pool=[...l];
 
-  let a,b,bank=[];
+  let a=[],b=[],bank=[];
+
+  pool.sort(()=>Math.random()-0.5);
 
   if(l.length===5){
-
-    bank = pickBank(pool,1);
-
-    let rest = pool.filter(p=>!bank.includes(p));
-
-    a=[rest[0],rest[1]];
-    b=[rest[2],rest[3]];
+    bank=[pool[0]];
+    let r=pool.slice(1);
+    a=[r[0],r[1]];
+    b=[r[2],r[3]];
   }
 
   if(l.length===6){
-
-    bank = pickBank(pool,2);
-
-    let rest = pool.filter(p=>!bank.includes(p));
-
-    a=[rest[0],rest[1]];
-    b=[rest[2],rest[3]];
+    bank=[pool[0],pool[1]];
+    let r=pool.slice(2);
+    a=[r[0],r[1]];
+    b=[r[2],r[3]];
   }
 
   if(l.length===4){
-
     a=[pool[0],pool[1]];
     b=[pool[2],pool[3]];
   }
@@ -323,7 +286,7 @@ function buildTurnier(){
 }
 
 /* =====================
-   GROUP (FIXED TEAMS + ROTATION)
+   GROUP (FIXED ROTATION)
 ===================== */
 
 let groupTeams=null;
@@ -369,7 +332,7 @@ function buildGruppe(){
 }
 
 /* =====================
-   GENERATE FULL SCHEDULE
+   GENERATE FULL PLAN
 ===================== */
 
 function generate(){
@@ -381,7 +344,6 @@ function generate(){
 
   groupTeams=null;
   groupIndex=0;
-  lastBank=[];
 
   let total=parseInt(document.getElementById("totalTime").value);
   let match=parseInt(document.getElementById("matchTime").value);
@@ -473,7 +435,7 @@ function updateTimer(){
 }
 
 /* =====================
-   NEXT MATCH
+   NEXT
 ===================== */
 
 function nextMatch(){
