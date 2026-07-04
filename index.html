@@ -40,15 +40,9 @@ button{
   background:#1f6f4a;
   color:white;
   font-weight:bold;
+  cursor:pointer;
 }
 
-.playerRow{
-  display:flex;
-  gap:10px;
-  margin:5px 0;
-}
-
-/* KIOSK */
 .kiosk{
   display:none;
   height:100vh;
@@ -61,18 +55,18 @@ button{
 .kioskMode .kiosk{display:block;}
 
 #timer{
-  font-size:160px;
+  font-size:150px;
   color:#00ff99;
   font-weight:bold;
 }
 
 .match{
-  font-size:40px;
+  font-size:38px;
   margin-top:20px;
 }
 
 .bank{
-  font-size:30px;
+  font-size:28px;
   color:#ffd54a;
   margin-top:10px;
 }
@@ -94,19 +88,37 @@ button{
 </div>
 
 <div class="section">
+<h3>Setup</h3>
+
+<label>Gesamtzeit</label>
+<select id="totalTime">
+<option value="120">120</option>
+<option value="180" selected>180</option>
+</select>
+
+<br><br>
+
+<label>Matchzeit</label>
+<select id="matchTime">
+<option value="15">15</option>
+<option value="18" selected>18</option>
+<option value="20">20</option>
+</select>
+</div>
+
+<div class="section">
 <h3>Modus</h3>
 <button onclick="mode='turnier'">Turnier</button>
 <button onclick="mode='gruppe'">Gruppe</button>
 </div>
 
 <div class="section">
-<h3>Aktion</h3>
 <button onclick="generate()">Spielplan erstellen</button>
 <button onclick="remix()">Neu mischen</button>
 </div>
 
 <div class="section">
-<h3>Vorschau</h3>
+<h3>Spielplan</h3>
 <div id="preview"></div>
 </div>
 
@@ -121,6 +133,7 @@ button{
 
 <br>
 
+<button onclick="startMatch()">Start</button>
 <button onclick="next()">Next</button>
 <button onclick="endMatch()">Matchende</button>
 <button onclick="closeKiosk()">Exit</button>
@@ -129,40 +142,40 @@ button{
 
 <script>
 
-/* ======================
-   STATE ENGINE
-====================== */
+/* =====================
+   STATE
+===================== */
 
-const State = {
-  mode: "turnier",
-  players: ["Marco","Stefan","David","Tobias","Chris","Werner"],
-  selected: {},
-  schedule: [],
-  index: 0,
-  timer: null,
-  timeLeft: 0,
-  finished: false
-};
+let mode = "turnier";
 
-/* ======================
-   INIT
-====================== */
+let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
+let selected = {};
+
+let schedule = [];
+let index = 0;
+
+let timer = null;
+let running = false;
+let timeLeft = 0;
+
+/* =====================
+   INIT PLAYERS
+===================== */
 
 function init(){
   const box = document.getElementById("players");
   box.innerHTML = "";
 
-  State.players.forEach(p=>{
-    State.selected[p] = true;
+  players.forEach(p=>{
+    selected[p] = true;
 
     const row = document.createElement("div");
-    row.className = "playerRow";
 
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = true;
 
-    cb.onchange = ()=> State.selected[p] = cb.checked;
+    cb.onchange = ()=> selected[p] = cb.checked;
 
     row.appendChild(cb);
     row.appendChild(document.createTextNode(p));
@@ -171,21 +184,17 @@ function init(){
   });
 }
 
-/* ======================
-   HELPERS
-====================== */
+/* =====================
+   ACTIVE PLAYERS
+===================== */
 
 function activePlayers(){
-  return State.players.filter(p=>State.selected[p]);
+  return players.filter(p=>selected[p]);
 }
 
-function shuffle(arr){
-  return [...arr].sort(()=>Math.random()-0.5);
-}
-
-/* ======================
-   GROUP ENGINE (NEU + STABIL)
-====================== */
+/* =====================
+   GROUP ENGINE
+===================== */
 
 function groupRound(p,r){
 
@@ -211,94 +220,82 @@ function groupRound(p,r){
   return {a:[],b:[],bank:[]};
 }
 
-/* ======================
-   GENERATE (CORE)
-====================== */
+/* =====================
+   GENERATE (TIME FIXED)
+===================== */
 
 function generate(){
 
-  const p = activePlayers();
+  let p = activePlayers();
 
-  if(p.length<4){
+  if(p.length < 4){
     alert("Mindestens 4 Spieler");
     return;
   }
 
-  State.schedule = [];
-  State.index = 0;
-  State.finished = false;
+  schedule = [];
+  index = 0;
 
-  const rounds = 6;
+  let total = parseInt(document.getElementById("totalTime").value);
+  let match = parseInt(document.getElementById("matchTime").value);
+
+  let rounds = Math.floor(total / match);
 
   for(let r=0;r<rounds;r++){
 
-    let a=[],b=[],bank=[];
+    let a=[], b=[], bank=[];
 
-    if(State.mode==="turnier"){
+    if(mode === "turnier"){
 
-      let pool = shuffle(p);
+      let pool = [...p].sort(()=>Math.random()-0.5);
 
-      a=[pool[0],pool[1]];
-      b=[pool[2],pool[3]];
+      a = [pool[0], pool[1]];
+      b = [pool[2], pool[3]];
       bank = pool[4] ? [pool[4]] : [];
     }
 
-    if(State.mode==="gruppe"){
-      const g = groupRound(p,r);
-      a=g.a; b=g.b; bank=g.bank;
+    if(mode === "gruppe"){
+      let g = groupRound(p,r);
+      a = g.a;
+      b = g.b;
+      bank = g.bank;
     }
 
-    State.schedule.push({a,b,bank});
+    schedule.push({a,b,bank});
   }
 
   render();
   update();
 }
 
-/* ======================
+/* =====================
    REMIX
-====================== */
+===================== */
 
 function remix(){
-  State.schedule=[];
-  State.index=0;
+  schedule = [];
+  index = 0;
   generate();
 }
 
-/* ======================
-   UI
-====================== */
+/* =====================
+   RENDER
+===================== */
 
 function render(){
-  const box=document.getElementById("preview");
-  box.innerHTML="";
+  let box = document.getElementById("preview");
+  box.innerHTML = "";
 
-  State.schedule.forEach((s,i)=>{
-    const div=document.createElement("div");
-    div.innerText=`R${i+1}: ${s.a.join("/")} vs ${s.b.join("/")} | Bank: ${s.bank.join(",")||"keine"}`;
-    box.appendChild(div);
+  schedule.forEach((s,i)=>{
+    let d = document.createElement("div");
+    d.innerText = `R${i+1}: ${s.a.join("/")} vs ${s.b.join("/")} | Bank: ${s.bank.join(",")||"keine"}`;
+    box.appendChild(d);
   });
 }
 
-/* ======================
-   KIOSK UPDATE
-====================== */
-
-function update(){
-
-  const s=State.schedule[State.index];
-  if(!s)return;
-
-  document.getElementById("match").innerText =
-    s.a.join(" & ") + " 🆚 " + s.b.join(" & ");
-
-  document.getElementById("bank").innerText =
-    "Bank: " + (s.bank.join(", ") || "keine");
-}
-
-/* ======================
+/* =====================
    KIOSK
-====================== */
+===================== */
 
 function openKiosk(){
   document.body.classList.add("kioskMode");
@@ -308,17 +305,81 @@ function closeKiosk(){
   document.body.classList.remove("kioskMode");
 }
 
-/* ======================
-   NAV
-====================== */
+/* =====================
+   MATCH VIEW
+===================== */
 
-function next(){
-  State.index = (State.index+1)%State.schedule.length;
-  update();
+function update(){
+
+  let s = schedule[index];
+  if(!s) return;
+
+  document.getElementById("match").innerText =
+    s.a.join(" & ") + " 🆚 " + s.b.join(" & ");
+
+  document.getElementById("bank").innerText =
+    "Bank: " + (s.bank.join(", ") || "keine");
 }
 
+/* =====================
+   TIMER (START FIX)
+===================== */
+
+function startMatch(){
+
+  if(!schedule.length) return;
+
+  let match = parseInt(document.getElementById("matchTime").value) * 60;
+
+  timeLeft = match;
+  running = true;
+
+  clearInterval(timer);
+
+  timer = setInterval(()=>{
+
+    if(timeLeft <= 0){
+      clearInterval(timer);
+      running = false;
+      document.getElementById("timer").innerText = "00:00";
+      return;
+    }
+
+    timeLeft--;
+
+    let m = Math.floor(timeLeft / 60);
+    let s = timeLeft % 60;
+
+    if(s < 10) s = "0"+s;
+
+    document.getElementById("timer").innerText = `${m}:${s}`;
+
+  },1000);
+}
+
+/* =====================
+   NEXT
+===================== */
+
+function next(){
+
+  if(!schedule.length) return;
+
+  index = (index + 1) % schedule.length;
+  update();
+
+  startMatch();
+}
+
+/* =====================
+   MATCH ENDE
+===================== */
+
 function endMatch(){
-  clearInterval(State.timer);
+  clearInterval(timer);
+  running = false;
+  timeLeft = 0;
+  document.getElementById("timer").innerText = "00:00";
 }
 
 /* INIT */
