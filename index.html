@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -13,37 +13,46 @@ body{
   color:white;
 }
 
+/* KIOSK CONTAINER */
 #kiosk{
   text-align:center;
   padding:20px;
 }
 
+/* TITLE */
 .big{
   font-size:40px;
   font-weight:bold;
   margin-bottom:10px;
 }
 
+/* 🔥 MATCH (GRÖSSER GEMACHT) */
+.match{
+  font-size:70px;
+  margin:20px 0;
+  font-weight:bold;
+  line-height:1.2;
+}
+
+/* 🔥 TIMER 200px */
 .timer{
-  font-size:200px;   /* 🔥 FIX: 200px */
+  font-size:200px;
   margin:20px 0;
   color:#00ff99;
   font-weight:bold;
   line-height:1;
 }
 
-.match{
-  font-size:30px;
-  margin:10px 0;
-}
-
+/* 🔥 BANK + TEAMS GRÖSSER */
 .bank{
-  font-size:20px;
-  opacity:0.7;
+  font-size:55px;
+  opacity:0.95;
+  margin-top:15px;
 }
 
+/* BUTTONS */
 button{
-  padding:12px 18px;
+  padding:14px 20px;
   margin:5px;
   border:none;
   border-radius:8px;
@@ -55,6 +64,7 @@ button{
 .next{background:#444;color:white;}
 .end{background:#b30000;color:white;}
 .exit{background:#666;color:white;}
+
 </style>
 </head>
 
@@ -82,7 +92,7 @@ button{
 <script>
 
 /* =====================
-   DEMO SPIELPLAN (später aus Engine)
+   DEMO DATA (Engine später gekoppelt)
 ===================== */
 
 let schedule = [
@@ -98,7 +108,7 @@ let timer = null;
 let running = false;
 
 /* =====================
-   RENDER MATCH
+   RENDER
 ===================== */
 
 function render(){
@@ -113,7 +123,7 @@ function render(){
 }
 
 /* =====================
-   TIMER UPDATE
+   TIMER
 ===================== */
 
 function updateTimer(){
@@ -163,7 +173,7 @@ function endMatch(){
 }
 
 /* =====================
-   NEXT MATCH
+   NEXT
 ===================== */
 
 function next(){
@@ -184,7 +194,7 @@ function next(){
 }
 
 /* =====================
-   EXIT (NEU)
+   EXIT FIX
 ===================== */
 
 function exitKiosk(){
@@ -195,10 +205,12 @@ function exitKiosk(){
   timeLeft = 18 * 60;
   updateTimer();
 
-  document.getElementById("match").innerText = "Kiosk verlassen";
-  document.getElementById("bank").innerText = "Bank: -";
+  document.getElementById("match").innerText =
+    "⛔ KIOSK PAUSIERT";
 
-  console.log("🚪 EXIT Kiosk");
+  document.getElementById("bank").innerText = "";
+
+  console.log("🚪 Exit Kiosk aktiv");
 }
 
 /* INIT */
