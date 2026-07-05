@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -35,6 +35,12 @@ font-size:16px;
 
 .player{display:flex;gap:10px;margin:5px 0;}
 
+/* MODE BUTTONS */
+.activeMode{
+background:#b30000 !important;
+color:white;
+}
+
 /* KIOSK */
 #kiosk{
 text-align:center;
@@ -43,6 +49,24 @@ height:100vh;
 }
 
 .title{font-size:42px;font-weight:bold;}
+
+/* MODE INDICATOR */
+.modeIndicator{
+font-size:22px;
+margin-top:10px;
+font-weight:bold;
+padding:6px 12px;
+display:inline-block;
+border-radius:8px;
+}
+
+.modeTurnier{
+background:#1f6f4a;
+}
+
+.modeGruppe{
+background:#b30000;
+}
 
 .match{font-size:72px;margin:20px 0;font-weight:bold;}
 
@@ -83,8 +107,8 @@ margin-top:15px;
 
 <div class="section">
 <h3>Modus</h3>
-<button onclick="setMode('turnier')">Turnier</button>
-<button onclick="setMode('gruppe')">Gruppe</button>
+<button id="btnTurnier" onclick="setMode('turnier')">Turnier</button>
+<button id="btnGruppe" onclick="setMode('gruppe')">Gruppe</button>
 </div>
 
 <div class="section">
@@ -119,6 +143,8 @@ margin-top:15px;
 
 <div class="title">🏆 PADEL-GÖTTER</div>
 
+<div id="modeDisplay" class="modeIndicator modeTurnier">TURNIERMODUS</div>
+
 <div class="match" id="match">---</div>
 
 <div class="timer" id="timer">00:00</div>
@@ -138,27 +164,27 @@ margin-top:15px;
    STATE
 ===================== */
 
-let mode="turnier";
+let mode = "turnier";
 
-let players=["Marco","Stefan","David","Tobias","Chris","Werner"];
-let active={};
+let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
+let active = {};
 
-let schedule=[];
-let index=0;
+let schedule = [];
+let index = 0;
 
-let fixedTeams=[];
+let fixedTeams = [];
 
-let interval=null;
-let running=false;
-let timeLeft=18*60;
+let interval = null;
+let running = false;
+let timeLeft = 18 * 60;
 
 /* =====================
-   INIT
+   INIT PLAYERS
 ===================== */
 
 function init(){
 
-let box=document.getElementById("players");
+let box = document.getElementById("players");
 
 players.forEach(p=>{
 active[p]=true;
@@ -180,6 +206,28 @@ box.appendChild(d);
 }
 
 /* =====================
+   MODE + UI FIX
+===================== */
+
+function setMode(m){
+
+mode = m;
+
+// BUTTON STATE
+document.getElementById("btnTurnier").classList.remove("activeMode");
+document.getElementById("btnGruppe").classList.remove("activeMode");
+
+if(mode === "turnier"){
+document.getElementById("btnTurnier").classList.add("activeMode");
+}
+
+if(mode === "gruppe"){
+document.getElementById("btnGruppe").classList.add("activeMode");
+}
+
+}
+
+/* =====================
    HELPERS
 ===================== */
 
@@ -192,22 +240,14 @@ return [...a].sort(()=>Math.random()-0.5);
 }
 
 /* =====================
-   MODE
-===================== */
-
-function setMode(m){
-mode=m;
-}
-
-/* =====================
    GROUP TEAMS
 ===================== */
 
 function createTeams(p){
 
-let pool=shuffle(p);
+let pool = shuffle(p);
 
-fixedTeams=[
+fixedTeams = [
 [pool[0],pool[1]],
 [pool[2],pool[3]],
 [pool[4],pool[5]]
@@ -216,69 +256,44 @@ fixedTeams=[
 }
 
 /* =====================
-   NO DUPLICATES
-===================== */
-
-let history=[];
-
-function isDuplicate(a,b){
-return history.includes(a.join()+b.join()) ||
-history.includes(b.join()+a.join());
-}
-
-function savePair(a,b){
-history.push(a.join()+b.join());
-}
-
-/* =====================
    GENERATE
 ===================== */
 
 function generate(){
 
-let p=getPlayers();
+let p = getPlayers();
 
-let total=+totalTime.value;
-let match=+matchTime.value;
+let total = +totalTime.value;
+let match = +matchTime.value;
 
-let rounds=Math.floor(total/match);
+let rounds = Math.floor(total / match);
 
-schedule=[];
-index=0;
-history=[];
+schedule = [];
+index = 0;
 
-if(mode==="gruppe") createTeams(p);
+if(mode === "gruppe") createTeams(p);
 
 for(let r=0;r<rounds;r++){
 
 let round;
 
-if(mode==="turnier"){
+if(mode === "turnier"){
 
-let pool;
-let a,b;
+let pool = shuffle(p);
 
-do{
-pool=shuffle(p);
-a=[pool[0],pool[1]];
-b=[pool[2],pool[3]];
-}while(isDuplicate(a,b));
-
-savePair(a,b);
-
-round={
-a,
-b,
+round = {
+a:[pool[0],pool[1]],
+b:[pool[2],pool[3]],
 bank:[pool[4],pool[5]]
 };
 
 }
 
-if(mode==="gruppe"){
+if(mode === "gruppe"){
 
-let t=fixedTeams;
+let t = fixedTeams;
 
-round={
+round = {
 a:t[r%3],
 b:t[(r+1)%3],
 bank:t[(r+2)%3]
@@ -327,7 +342,7 @@ planOutput.innerHTML+=
 }
 
 /* =====================
-   KIOSK
+   KIOSK OPEN
 ===================== */
 
 function openKiosk(){
@@ -335,13 +350,35 @@ function openKiosk(){
 planning.classList.remove("active");
 kiosk.classList.add("active");
 
-index=0;
+index = 0;
+
 loadMatch();
 
-let match=+matchTime.value;
-timeLeft=match*60;
+let match = +matchTime.value;
+timeLeft = match * 60;
 
 updateTimer();
+updateModeDisplay();
+
+}
+
+/* =====================
+   MODE DISPLAY (KIOSK)
+===================== */
+
+function updateModeDisplay(){
+
+let el = document.getElementById("modeDisplay");
+
+if(mode === "turnier"){
+el.innerText = "TURNIERMODUS";
+el.className = "modeIndicator modeTurnier";
+}
+
+if(mode === "gruppe"){
+el.innerText = "GRUPPENMODUS";
+el.className = "modeIndicator modeGruppe";
+}
 
 }
 
@@ -351,12 +388,14 @@ updateTimer();
 
 function loadMatch(){
 
-let s=schedule[index];
+let s = schedule[index];
 
-match.innerText=
-s.a.join(" & ")+" vs "+s.b.join(" & ");
+if(!s) return;
 
-bank.innerText="Bank: "+s.bank.join(", ");
+match.innerText =
+s.a.join(" & ") + " vs " + s.b.join(" & ");
+
+bank.innerText = "Bank: " + s.bank.join(", ");
 
 }
 
@@ -366,49 +405,37 @@ bank.innerText="Bank: "+s.bank.join(", ");
 
 function updateTimer(){
 
-let m=Math.floor(timeLeft/60);
-let s=timeLeft%60;
+let m = Math.floor(timeLeft / 60);
+let s = timeLeft % 60;
 
-timer.innerText=
+timer.innerText =
 String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
 
 }
 
 /* =====================
-   START + SOUND
+   START
 ===================== */
 
 function start(){
 
 if(running) return;
 
-running=true;
-
-beep();
+running = true;
 
 clearInterval(interval);
 
-interval=setInterval(()=>{
+interval = setInterval(()=>{
 
-if(timeLeft>0){
+if(timeLeft > 0){
 timeLeft--;
 updateTimer();
-}else endMatch();
+}else{
+endMatch();
+}
 
 },1000);
 
-}
-
-/* =====================
-   SOUND
-===================== */
-
-function beep(){
-let ctx=new (window.AudioContext||window.webkitAudioContext)();
-let osc=ctx.createOscillator();
-osc.connect(ctx.destination);
-osc.start();
-osc.stop(ctx.currentTime+0.2);
 }
 
 /* =====================
@@ -418,10 +445,9 @@ osc.stop(ctx.currentTime+0.2);
 function endMatch(){
 
 clearInterval(interval);
-running=false;
-timeLeft=0;
+running = false;
+timeLeft = 0;
 updateTimer();
-beep();
 
 }
 
@@ -432,14 +458,14 @@ beep();
 function next(){
 
 clearInterval(interval);
-running=false;
+running = false;
 
 index++;
 
-if(index>=schedule.length) index=0;
+if(index >= schedule.length) index = 0;
 
-let match=+matchTime.value;
-timeLeft=match*60;
+let match = +matchTime.value;
+timeLeft = match * 60;
 
 loadMatch();
 updateTimer();
@@ -453,7 +479,7 @@ updateTimer();
 function exitKiosk(){
 
 clearInterval(interval);
-running=false;
+running = false;
 
 kiosk.classList.remove("active");
 planning.classList.add("active");
@@ -461,12 +487,12 @@ planning.classList.add("active");
 }
 
 /* =====================
-   FULLSCREEN FIXED
+   FULLSCREEN FIX
 ===================== */
 
 function toggleFullscreen(){
 
-let el=document.documentElement;
+let el = document.documentElement;
 
 if(document.fullscreenElement ||
 document.webkitFullscreenElement ||
@@ -488,6 +514,7 @@ else if(el.msRequestFullscreen) el.msRequestFullscreen();
 
 /* INIT */
 init();
+setMode("turnier");
 updateTimer();
 
 </script>
