@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel-Götter V2.1 Group FIX</title>
+<title>Padel-Götter V2.1</title>
 
 <style>
 body{
@@ -45,7 +45,7 @@ button{
 
 <div id="app">
 
-<h2>🏆 Padel-Götter V2.1 GROUP FIX</h2>
+<h2>🏆 Padel-Götter V2.1</h2>
 
 <div class="section">
 <h3>Spieler</h3>
@@ -99,7 +99,6 @@ let mode = "turnier";
 
 let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
 let active = {};
-
 let schedule = [];
 
 /* =====================
@@ -129,7 +128,7 @@ function init(){
 }
 
 /* =====================
-   HELPERS (IMPORTANT FIX)
+   HELPERS
 ===================== */
 
 function getPlayers(){
@@ -149,55 +148,78 @@ function setMode(m){
 }
 
 /* =====================
-   TURNIER
+   TURNIER (Partner wechseln jede Runde)
 ===================== */
 
 function turnierRound(p){
 
   let pool = shuffle(p);
 
-  let a = [pool[0], pool[1]];
-  let b = [pool[2], pool[3]];
-
-  let bank = [];
-
-  if(pool.length === 6){
-    bank = [pool[4], pool[5]];
-  } else if(pool.length === 5){
-    bank = [pool[4]];
-  }
-
-  return {a,b,bank};
+  return {
+    a:[pool[0], pool[1]],
+    b:[pool[2], pool[3]],
+    bank: pool.length === 6 ? [pool[4], pool[5]] : [pool[4] || ""]
+  };
 }
 
 /* =====================
-   GRUPPE (FIXED ROTATION)
+   GRUPPE (FESTE TEAMS)
 ===================== */
 
-function groupRound(p,r){
+let fixedTeams = [];
 
-  let pool = shuffle(p); // 🔥 FIX: JEDER CALL NEU RANDOM
+function createFixedTeams(p){
 
-  if(pool.length === 4){
-    return {a:[pool[0],pool[1]], b:[pool[2],pool[3]], bank:[]};
+  let pool = shuffle(p);
+
+  fixedTeams = [];
+
+  if(pool.length === 6){
+    fixedTeams = [
+      [pool[0], pool[1]],
+      [pool[2], pool[3]],
+      [pool[4], pool[5]]
+    ];
   }
 
   if(pool.length === 5){
-    return (r % 2 === 0)
-      ? {a:[pool[0],pool[1]], b:[pool[2],pool[3]], bank:[pool[4]]}
-      : {a:[pool[1],pool[2]], b:[pool[3],pool[4]], bank:[pool[0]]};
+    fixedTeams = [
+      [pool[0], pool[1]],
+      [pool[2], pool[3]],
+      [pool[4]]
+    ];
   }
 
-  if(pool.length === 6){
+  if(pool.length === 4){
+    fixedTeams = [
+      [pool[0], pool[1]],
+      [pool[2], pool[3]]
+    ];
+  }
+}
 
-    const A = [pool[0],pool[1]];
-    const B = [pool[2],pool[3]];
-    const C = [pool[4],pool[5]];
+/* =====================
+   GROUP ROUND (TEAMS BLEIBEN FIX)
+===================== */
+
+function groupRound(r){
+
+  let t = fixedTeams;
+
+  if(t.length === 2){
+    return {
+      a:t[0],
+      b:t[1],
+      bank:[]
+    };
+  }
+
+  if(t.length === 3){
 
     switch(r % 3){
-      case 0: return {a:A, b:B, bank:C};
-      case 1: return {a:B, b:C, bank:A};
-      case 2: return {a:C, b:A, bank:B};
+      case 0: return {a:t[0], b:t[1], bank:t[2]};
+      case 1: return {a:t[1], b:t[2], bank:t[0]};
+      case 2: return {a:t[2], b:t[0], bank:t[1]};
     }
   }
 
@@ -205,7 +227,7 @@ function groupRound(p,r){
 }
 
 /* =====================
-   GENERATE (FULL RESET FIX)
+   GENERATE
 ===================== */
 
 function generate(){
@@ -217,14 +239,17 @@ function generate(){
     return;
   }
 
-  // 🔥 FIX: echte saubere Werte
   const total = Number(document.getElementById("totalTime").value);
   const match = Number(document.getElementById("matchTime").value);
 
   const rounds = Math.floor(total / match);
 
-  // 🔥 FULL RESET (WICHTIG FÜR TEST 2)
   schedule = [];
+
+  // 🔥 GROUP FIXED TEAMS ONLY ONCE
+  if(mode === "gruppe"){
+    createFixedTeams(p);
+  }
 
   for(let r=0;r<rounds;r++){
 
@@ -233,29 +258,26 @@ function generate(){
     if(mode === "turnier"){
       round = turnierRound(p);
     } else {
-      round = groupRound(p, r); // 🔥 FIX: kein alter Zustand mehr
+      round = groupRound(r);
     }
 
     schedule.push(round);
   }
 
   render();
-
-  console.log("MODE:", mode);
-  console.log("ROUNDS:", rounds);
 }
 
 /* =====================
-   REMIX (FORCED NEW STATE)
+   REMIX
 ===================== */
 
 function remix(){
 
-  // 🔥 WICHTIG: kompletter HARD RESET
   schedule = [];
 
-  // kleine Random-Änderung im Seed
-  players = [...players].sort(()=>Math.random()-0.5);
+  if(mode === "gruppe"){
+    createFixedTeams(getPlayers());
+  }
 
   generate();
 }
@@ -275,7 +297,7 @@ function render(){
 
     div.innerHTML =
       `<b>R${i+1}</b>: ${s.a.join(" & ")} vs ${s.b.join(" & ")}
-       <br>Bank: ${s.bank.join(", ") || "keine"}`;
+      <br>Bank: ${s.bank.join(", ") || "keine"}`;
 
     box.appendChild(div);
   });
