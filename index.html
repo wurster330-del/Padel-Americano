@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel-Götter V2.2</title>
+<title>Padel-Götter V2.3</title>
 
 <style>
 body{
@@ -13,11 +13,9 @@ background:#061b12;
 color:white;
 }
 
-/* VIEWS */
 .view{display:none;padding:15px;}
 .view.active{display:block;}
 
-/* PLANUNG */
 .section{
 background:#124d35;
 margin:10px 0;
@@ -26,19 +24,16 @@ border-radius:10px;
 }
 
 button{
-padding:10px 14px;
+padding:12px 16px;
 margin:5px;
 border:none;
 border-radius:8px;
 font-weight:bold;
 cursor:pointer;
+font-size:16px;
 }
 
-.player{
-display:flex;
-gap:10px;
-margin:5px 0;
-}
+.player{display:flex;gap:10px;margin:5px 0;}
 
 /* KIOSK */
 #kiosk{
@@ -47,9 +42,9 @@ background:black;
 height:100vh;
 }
 
-.title{font-size:40px;font-weight:bold;}
+.title{font-size:42px;font-weight:bold;}
 
-.match{font-size:70px;margin:20px 0;font-weight:bold;}
+.match{font-size:72px;margin:20px 0;font-weight:bold;}
 
 .timer{
 font-size:200px;
@@ -63,11 +58,16 @@ opacity:0.95;
 margin-top:15px;
 }
 
-/* BUTTONS */
+/* Buttons */
 .start{background:#1f6f4a;color:white;}
 .next{background:#444;color:white;}
 .end{background:#b30000;color:white;}
 .exit{background:#666;color:white;}
+
+.fullscreen{
+background:#222;
+color:white;
+}
 </style>
 </head>
 
@@ -78,7 +78,7 @@ margin-top:15px;
 ===================== -->
 <div id="planning" class="view active">
 
-<h2>🏆 Padel-Götter V2.2</h2>
+<h2>🏆 Padel-Götter V2.3</h2>
 
 <div class="section">
 <h3>Spieler</h3>
@@ -93,7 +93,6 @@ margin-top:15px;
 
 <div class="section">
 <h3>Zeit</h3>
-
 <select id="totalTime">
 <option value="120">120</option>
 <option value="180" selected>180</option>
@@ -110,6 +109,7 @@ margin-top:15px;
 <button onclick="generate()">Spielplan erstellen</button>
 <button onclick="remix()">Neu mischen</button>
 <button onclick="openKiosk()">▶ Kiosk starten</button>
+<button onclick="toggleFullscreen()">⛶ Fullscreen</button>
 </div>
 
 <div id="planOutput"></div>
@@ -142,26 +142,26 @@ margin-top:15px;
    STATE
 ===================== */
 
-let mode = "turnier";
+let mode="turnier";
+let players=["Marco","Stefan","David","Tobias","Chris","Werner"];
+let active={};
 
-let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
-let active = {};
+let schedule=[];
+let index=0;
 
-let schedule = [];
-let index = 0;
-let fixedTeams = [];
+let fixedTeams=[];
 
-let interval = null;   // 🔥 FIX: kein Konflikt mehr
-let running = false;
-let timeLeft = 18 * 60;
+let interval=null;
+let running=false;
+let timeLeft=18*60;
 
 /* =====================
-   INIT PLAYERS
+   INIT
 ===================== */
 
 function init(){
 
-let box = document.getElementById("players");
+let box=document.getElementById("players");
 
 players.forEach(p=>{
 active[p]=true;
@@ -203,19 +203,38 @@ mode=m;
 }
 
 /* =====================
-   TEAMS (GRUPPE)
+   GROUP TEAMS FIXED
 ===================== */
 
 function createTeams(p){
 
-let pool = shuffle(p);
+let pool=shuffle(p);
 
-fixedTeams = [
+fixedTeams=[
 [pool[0],pool[1]],
 [pool[2],pool[3]],
 [pool[4],pool[5]]
 ];
 
+}
+
+/* =====================
+   NO DUPLICATE CHECK
+===================== */
+
+let history = [];
+
+function isDuplicate(a,b){
+
+let key1=a.join()+b.join();
+let key2=b.join()+a.join();
+
+return history.includes(key1)||history.includes(key2);
+
+}
+
+function savePair(a,b){
+history.push(a.join()+b.join());
 }
 
 /* =====================
@@ -233,20 +252,31 @@ let rounds=Math.floor(total/match);
 
 schedule=[];
 index=0;
+history=[];
 
 if(mode==="gruppe") createTeams(p);
 
 for(let r=0;r<rounds;r++){
 
+let round;
+
 if(mode==="turnier"){
 
-let pool=shuffle(p);
+let pool;
+let a,b;
 
-schedule.push({
-a:[pool[0],pool[1]],
-b:[pool[2],pool[3]],
+do{
+pool=shuffle(p);
+a=[pool[0],pool[1]];
+b=[pool[2],pool[3]];
+}while(isDuplicate(a,b));
+
+savePair(a,b);
+
+round={
+a,b,
 bank:[pool[4],pool[5]]
-});
+};
 
 }
 
@@ -254,13 +284,15 @@ if(mode==="gruppe"){
 
 let t=fixedTeams;
 
-schedule.push({
+round={
 a:t[r%3],
 b:t[(r+1)%3],
 bank:t[(r+2)%3]
-});
+};
 
 }
+
+schedule.push(round);
 
 }
 
@@ -327,8 +359,6 @@ function loadMatch(){
 
 let s=schedule[index];
 
-if(!s) return;
-
 match.innerText=
 s.a.join(" & ")+" vs "+s.b.join(" & ");
 
@@ -351,7 +381,7 @@ String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
 }
 
 /* =====================
-   START TIMER (FIXED)
+   START + SOUND
 ===================== */
 
 function start(){
@@ -359,6 +389,8 @@ function start(){
 if(running) return;
 
 running=true;
+
+playBeep();
 
 clearInterval(interval);
 
@@ -373,6 +405,15 @@ updateTimer();
 
 }
 
+/* SOUND */
+function playBeep(){
+let ctx=new AudioContext();
+let osc=ctx.createOscillator();
+osc.connect(ctx.destination);
+osc.start();
+osc.stop(ctx.currentTime+0.2);
+}
+
 /* =====================
    MATCHENDE
 ===================== */
@@ -380,23 +421,21 @@ updateTimer();
 function endMatch(){
 
 clearInterval(interval);
-
 running=false;
-
 timeLeft=0;
-
 updateTimer();
+
+playBeep();
 
 }
 
 /* =====================
-   NEXT
+   NEXT MATCH
 ===================== */
 
 function next(){
 
 clearInterval(interval);
-
 running=false;
 
 index++;
@@ -404,11 +443,9 @@ index++;
 if(index>=schedule.length) index=0;
 
 let match=+matchTime.value;
-
 timeLeft=match*60;
 
 loadMatch();
-
 updateTimer();
 
 }
@@ -420,11 +457,24 @@ updateTimer();
 function exitKiosk(){
 
 clearInterval(interval);
-
 running=false;
 
 kiosk.classList.remove("active");
 planning.classList.add("active");
+
+}
+
+/* =====================
+   FULLSCREEN
+===================== */
+
+function toggleFullscreen(){
+
+if(!document.fullscreenElement){
+document.documentElement.requestFullscreen();
+}else{
+document.exitFullscreen();
+}
 
 }
 
