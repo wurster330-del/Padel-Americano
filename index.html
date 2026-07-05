@@ -13,9 +13,11 @@ background:#061b12;
 color:white;
 }
 
+/* VIEWS */
 .view{display:none;padding:15px;}
 .view.active{display:block;}
 
+/* PLANUNG */
 .section{
 background:#124d35;
 margin:10px 0;
@@ -32,8 +34,13 @@ font-weight:bold;
 cursor:pointer;
 }
 
-.player{display:flex;gap:10px;margin:5px 0;}
+.player{
+display:flex;
+gap:10px;
+margin:5px 0;
+}
 
+/* KIOSK */
 #kiosk{
 text-align:center;
 background:black;
@@ -56,6 +63,7 @@ opacity:0.95;
 margin-top:15px;
 }
 
+/* BUTTONS */
 .start{background:#1f6f4a;color:white;}
 .next{background:#444;color:white;}
 .end{background:#b30000;color:white;}
@@ -85,6 +93,7 @@ margin-top:15px;
 
 <div class="section">
 <h3>Zeit</h3>
+
 <select id="totalTime">
 <option value="120">120</option>
 <option value="180" selected>180</option>
@@ -133,26 +142,26 @@ margin-top:15px;
    STATE
 ===================== */
 
-let mode="turnier";
+let mode = "turnier";
 
-let players=["Marco","Stefan","David","Tobias","Chris","Werner"];
-let active={};
+let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
+let active = {};
 
-let schedule=[];
-let index=0;
-let fixedTeams=[];
+let schedule = [];
+let index = 0;
+let fixedTeams = [];
 
-let timer=null;
-let running=false;
-let timeLeft=18*60;
+let interval = null;   // 🔥 FIX: kein Konflikt mehr
+let running = false;
+let timeLeft = 18 * 60;
 
 /* =====================
-   INIT
+   INIT PLAYERS
 ===================== */
 
 function init(){
 
-let box=document.getElementById("players");
+let box = document.getElementById("players");
 
 players.forEach(p=>{
 active[p]=true;
@@ -194,14 +203,14 @@ mode=m;
 }
 
 /* =====================
-   TEAMS (GRUPPE FIX)
+   TEAMS (GRUPPE)
 ===================== */
 
 function createTeams(p){
 
-let pool=shuffle(p);
+let pool = shuffle(p);
 
-fixedTeams=[
+fixedTeams = [
 [pool[0],pool[1]],
 [pool[2],pool[3]],
 [pool[4],pool[5]]
@@ -210,7 +219,7 @@ fixedTeams=[
 }
 
 /* =====================
-   GENERATE ENGINE
+   GENERATE
 ===================== */
 
 function generate(){
@@ -292,7 +301,7 @@ planOutput.innerHTML+=
 }
 
 /* =====================
-   KIOSK
+   KIOSK OPEN
 ===================== */
 
 function openKiosk(){
@@ -300,7 +309,13 @@ function openKiosk(){
 planning.classList.remove("active");
 kiosk.classList.add("active");
 
+index=0;
 loadMatch();
+
+let match=+matchTime.value;
+timeLeft=match*60;
+
+updateTimer();
 
 }
 
@@ -336,7 +351,7 @@ String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
 }
 
 /* =====================
-   START
+   START TIMER (FIXED)
 ===================== */
 
 function start(){
@@ -345,7 +360,9 @@ if(running) return;
 
 running=true;
 
-timer=setInterval(()=>{
+clearInterval(interval);
+
+interval=setInterval(()=>{
 
 if(timeLeft>0){
 timeLeft--;
@@ -362,7 +379,7 @@ updateTimer();
 
 function endMatch(){
 
-clearInterval(timer);
+clearInterval(interval);
 
 running=false;
 
@@ -378,7 +395,8 @@ updateTimer();
 
 function next(){
 
-clearInterval(timer);
+clearInterval(interval);
+
 running=false;
 
 index++;
@@ -401,7 +419,7 @@ updateTimer();
 
 function exitKiosk(){
 
-clearInterval(timer);
+clearInterval(interval);
 
 running=false;
 
