@@ -3,107 +3,87 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel-Götter V2.1 Integrated</title>
+<title>Padel-Götter V2.2</title>
 
 <style>
 body{
-  margin:0;
-  font-family:Arial;
-  background:#061b12;
-  color:white;
+margin:0;
+font-family:Arial;
+background:#061b12;
+color:white;
 }
 
-#app{
-  display:flex;
-  height:100vh;
-}
+.view{display:none;padding:15px;}
+.view.active{display:block;}
 
-/* LEFT: CONTROL */
-#control{
-  width:35%;
-  padding:15px;
-  background:#124d35;
-  overflow:auto;
-}
-
-/* RIGHT: KIOSK */
-#kiosk{
-  width:65%;
-  background:#000;
-  text-align:center;
-  padding:20px;
-}
-
-/* UI */
 .section{
-  margin-bottom:15px;
+background:#124d35;
+margin:10px 0;
+padding:10px;
+border-radius:10px;
 }
 
 button{
-  padding:10px 14px;
-  margin:5px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
+padding:10px 14px;
+margin:5px;
+border:none;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.player{display:flex;gap:10px;margin:5px 0;}
+
+#kiosk{
+text-align:center;
+background:black;
+height:100vh;
+}
+
+.title{font-size:40px;font-weight:bold;}
+
+.match{font-size:70px;margin:20px 0;font-weight:bold;}
+
+.timer{
+font-size:200px;
+color:#00ff99;
+font-weight:bold;
+}
+
+.bank{
+font-size:55px;
+opacity:0.95;
+margin-top:15px;
 }
 
 .start{background:#1f6f4a;color:white;}
 .next{background:#444;color:white;}
 .end{background:#b30000;color:white;}
 .exit{background:#666;color:white;}
-
-/* KIOSK UI */
-.big{
-  font-size:40px;
-  font-weight:bold;
-}
-
-.match{
-  font-size:70px;
-  margin:20px 0;
-  font-weight:bold;
-}
-
-.timer{
-  font-size:200px;
-  color:#00ff99;
-  font-weight:bold;
-  line-height:1;
-}
-
-.bank{
-  font-size:55px;
-  opacity:0.95;
-  margin-top:15px;
-}
-
-.player{
-  display:flex;
-  gap:10px;
-  margin:5px 0;
-}
 </style>
 </head>
 
 <body>
 
-<div id="app">
-
 <!-- =====================
-     CONTROL PANEL
+     PLANUNG
 ===================== -->
-<div id="control">
+<div id="planning" class="view active">
 
-<h2>🏆 Padel-Götter V2.1</h2>
+<h2>🏆 Padel-Götter V2.2</h2>
 
+<div class="section">
 <h3>Spieler</h3>
 <div id="players"></div>
+</div>
 
+<div class="section">
 <h3>Modus</h3>
 <button onclick="setMode('turnier')">Turnier</button>
 <button onclick="setMode('gruppe')">Gruppe</button>
+</div>
 
+<div class="section">
 <h3>Zeit</h3>
 <select id="totalTime">
 <option value="120">120</option>
@@ -115,20 +95,24 @@ button{
 <option value="18" selected>18</option>
 <option value="20">20</option>
 </select>
+</div>
 
 <div class="section">
 <button onclick="generate()">Spielplan erstellen</button>
 <button onclick="remix()">Neu mischen</button>
+<button onclick="openKiosk()">▶ Kiosk starten</button>
 </div>
+
+<div id="planOutput"></div>
 
 </div>
 
 <!-- =====================
      KIOSK
 ===================== -->
-<div id="kiosk">
+<div id="kiosk" class="view">
 
-<div class="big">🏆 PADEL-GÖTTER</div>
+<div class="title">🏆 PADEL-GÖTTER</div>
 
 <div class="match" id="match">---</div>
 
@@ -136,14 +120,10 @@ button{
 
 <div class="bank" id="bank">-</div>
 
-<div>
 <button class="start" onclick="start()">START</button>
 <button class="end" onclick="endMatch()">MATCHENDE</button>
 <button class="next" onclick="next()">NEXT</button>
 <button class="exit" onclick="exitKiosk()">EXIT</button>
-</div>
-
-</div>
 
 </div>
 
@@ -153,41 +133,44 @@ button{
    STATE
 ===================== */
 
-let mode = "turnier";
-let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
-let active = {};
-let schedule = [];
-let index = 0;
+let mode="turnier";
 
-let fixedTeams = [];
+let players=["Marco","Stefan","David","Tobias","Chris","Werner"];
+let active={};
 
-let timeLeft = 18 * 60;
-let timer = null;
-let running = false;
+let schedule=[];
+let index=0;
+let fixedTeams=[];
+
+let timer=null;
+let running=false;
+let timeLeft=18*60;
 
 /* =====================
-   INIT PLAYERS
+   INIT
 ===================== */
 
 function init(){
-  let box = document.getElementById("players");
 
-  players.forEach(p=>{
-    active[p] = true;
+let box=document.getElementById("players");
 
-    let row = document.createElement("div");
-    row.className = "player";
+players.forEach(p=>{
+active[p]=true;
 
-    let cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = true;
-    cb.onchange = ()=> active[p] = cb.checked;
+let d=document.createElement("div");
+d.className="player";
 
-    row.appendChild(cb);
-    row.appendChild(document.createTextNode(p));
+let cb=document.createElement("input");
+cb.type="checkbox";
+cb.checked=true;
+cb.onchange=()=>active[p]=cb.checked;
 
-    box.appendChild(row);
-  });
+d.appendChild(cb);
+d.appendChild(document.createTextNode(p));
+
+box.appendChild(d);
+});
+
 }
 
 /* =====================
@@ -195,11 +178,11 @@ function init(){
 ===================== */
 
 function getPlayers(){
-  return players.filter(p=>active[p]);
+return players.filter(p=>active[p]);
 }
 
-function shuffle(arr){
-  return [...arr].sort(()=>Math.random()-0.5);
+function shuffle(a){
+return [...a].sort(()=>Math.random()-0.5);
 }
 
 /* =====================
@@ -207,74 +190,23 @@ function shuffle(arr){
 ===================== */
 
 function setMode(m){
-  mode = m;
+mode=m;
 }
 
 /* =====================
-   GROUP FIXED TEAMS
+   TEAMS (GRUPPE FIX)
 ===================== */
 
 function createTeams(p){
 
-  let pool = shuffle(p);
-  fixedTeams = [];
+let pool=shuffle(p);
 
-  if(pool.length === 6){
-    fixedTeams = [
-      [pool[0],pool[1]],
-      [pool[2],pool[3]],
-      [pool[4],pool[5]]
-    ];
-  }
+fixedTeams=[
+[pool[0],pool[1]],
+[pool[2],pool[3]],
+[pool[4],pool[5]]
+];
 
-  if(pool.length === 5){
-    fixedTeams = [
-      [pool[0],pool[1]],
-      [pool[2],pool[3]],
-      [pool[4]]
-    ];
-  }
-
-  if(pool.length === 4){
-    fixedTeams = [
-      [pool[0],pool[1]],
-      [pool[2],pool[3]]
-    ];
-  }
-}
-
-/* =====================
-   TURNIER ROUND
-===================== */
-
-function turnierRound(p){
-
-  let pool = shuffle(p);
-
-  return {
-    a:[pool[0],pool[1]],
-    b:[pool[2],pool[3]],
-    bank: pool.length === 6 ? [pool[4],pool[5]] : [pool[4] || ""]
-  };
-}
-
-/* =====================
-   GROUP ROUND (FIXED TEAMS)
-===================== */
-
-function groupRound(r){
-
-  let t = fixedTeams;
-
-  if(t.length === 2){
-    return {a:t[0], b:t[1], bank:[]};
-  }
-
-  switch(r % 3){
-    case 0: return {a:t[0], b:t[1], bank:t[2]};
-    case 1: return {a:t[1], b:t[2], bank:t[0]};
-    case 2: return {a:t[2], b:t[0], bank:t[1]};
-  }
 }
 
 /* =====================
@@ -283,34 +215,48 @@ function groupRound(r){
 
 function generate(){
 
-  let p = getPlayers();
+let p=getPlayers();
 
-  const total = Number(document.getElementById("totalTime").value);
-  const match = Number(document.getElementById("matchTime").value);
+let total=+totalTime.value;
+let match=+matchTime.value;
 
-  const rounds = Math.floor(total / match);
+let rounds=Math.floor(total/match);
 
-  schedule = [];
-  index = 0;
+schedule=[];
+index=0;
 
-  if(mode === "gruppe"){
-    createTeams(p);
-  }
+if(mode==="gruppe") createTeams(p);
 
-  for(let r=0;r<rounds;r++){
+for(let r=0;r<rounds;r++){
 
-    let round;
+if(mode==="turnier"){
 
-    if(mode === "turnier"){
-      round = turnierRound(p);
-    } else {
-      round = groupRound(r);
-    }
+let pool=shuffle(p);
 
-    schedule.push(round);
-  }
+schedule.push({
+a:[pool[0],pool[1]],
+b:[pool[2],pool[3]],
+bank:[pool[4],pool[5]]
+});
 
-  render();
+}
+
+if(mode==="gruppe"){
+
+let t=fixedTeams;
+
+schedule.push({
+a:t[r%3],
+b:t[(r+1)%3],
+bank:t[(r+2)%3]
+});
+
+}
+
+}
+
+renderPlan();
+
 }
 
 /* =====================
@@ -319,31 +265,60 @@ function generate(){
 
 function remix(){
 
-  schedule = [];
-  index = 0;
+schedule=[];
+index=0;
 
-  if(mode === "gruppe"){
-    createTeams(getPlayers());
-  }
+if(mode==="gruppe") createTeams(getPlayers());
 
-  generate();
+generate();
+
 }
 
 /* =====================
-   KIOSK RENDER
+   PLAN OUTPUT
 ===================== */
 
-function render(){
+function renderPlan(){
 
-  let s = schedule[index];
+planOutput.innerHTML="";
 
-  if(!s) return;
+schedule.forEach((s,i)=>{
 
-  document.getElementById("match").innerText =
-    s.a.join(" & ") + " vs " + s.b.join(" & ");
+planOutput.innerHTML+=
+`R${i+1}: ${s.a.join(" & ")} vs ${s.b.join(" & ")} | Bank: ${s.bank.join(", ")}<br>`;
 
-  document.getElementById("bank").innerText =
-    "Bank: " + (s.bank.join(", ") || "-");
+});
+
+}
+
+/* =====================
+   KIOSK
+===================== */
+
+function openKiosk(){
+
+planning.classList.remove("active");
+kiosk.classList.add("active");
+
+loadMatch();
+
+}
+
+/* =====================
+   LOAD MATCH
+===================== */
+
+function loadMatch(){
+
+let s=schedule[index];
+
+if(!s) return;
+
+match.innerText=
+s.a.join(" & ")+" vs "+s.b.join(" & ");
+
+bank.innerText="Bank: "+s.bank.join(", ");
+
 }
 
 /* =====================
@@ -352,11 +327,12 @@ function render(){
 
 function updateTimer(){
 
-  let m = Math.floor(timeLeft / 60);
-  let s = timeLeft % 60;
+let m=Math.floor(timeLeft/60);
+let s=timeLeft%60;
 
-  document.getElementById("timer").innerText =
-    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+timer.innerText=
+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+
 }
 
 /* =====================
@@ -365,20 +341,19 @@ function updateTimer(){
 
 function start(){
 
-  if(running) return;
+if(running) return;
 
-  running = true;
+running=true;
 
-  timer = setInterval(()=>{
+timer=setInterval(()=>{
 
-    if(timeLeft > 0){
-      timeLeft--;
-      updateTimer();
-    } else {
-      endMatch();
-    }
+if(timeLeft>0){
+timeLeft--;
+updateTimer();
+}else endMatch();
 
-  },1000);
+},1000);
+
 }
 
 /* =====================
@@ -387,11 +362,14 @@ function start(){
 
 function endMatch(){
 
-  clearInterval(timer);
-  running = false;
+clearInterval(timer);
 
-  timeLeft = 0;
-  updateTimer();
+running=false;
+
+timeLeft=0;
+
+updateTimer();
+
 }
 
 /* =====================
@@ -400,20 +378,21 @@ function endMatch(){
 
 function next(){
 
-  clearInterval(timer);
-  running = false;
+clearInterval(timer);
+running=false;
 
-  index++;
+index++;
 
-  if(index >= schedule.length){
-    index = 0;
-  }
+if(index>=schedule.length) index=0;
 
-  const match = Number(document.getElementById("matchTime").value);
-  timeLeft = match * 60;
+let match=+matchTime.value;
 
-  render();
-  updateTimer();
+timeLeft=match*60;
+
+loadMatch();
+
+updateTimer();
+
 }
 
 /* =====================
@@ -422,11 +401,13 @@ function next(){
 
 function exitKiosk(){
 
-  clearInterval(timer);
-  running = false;
+clearInterval(timer);
 
-  document.getElementById("match").innerText = "⛔ KIOSK PAUSIERT";
-  document.getElementById("bank").innerText = "-";
+running=false;
+
+kiosk.classList.remove("active");
+planning.classList.add("active");
+
 }
 
 /* INIT */
