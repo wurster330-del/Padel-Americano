@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -58,16 +58,12 @@ opacity:0.95;
 margin-top:15px;
 }
 
-/* Buttons */
+/* BUTTONS */
 .start{background:#1f6f4a;color:white;}
 .next{background:#444;color:white;}
 .end{background:#b30000;color:white;}
 .exit{background:#666;color:white;}
-
-.fullscreen{
-background:#222;
-color:white;
-}
+.fullscreen{background:#222;color:white;}
 </style>
 </head>
 
@@ -109,7 +105,7 @@ color:white;
 <button onclick="generate()">Spielplan erstellen</button>
 <button onclick="remix()">Neu mischen</button>
 <button onclick="openKiosk()">▶ Kiosk starten</button>
-<button onclick="toggleFullscreen()">⛶ Fullscreen</button>
+<button class="fullscreen" onclick="toggleFullscreen()">⛶ Fullscreen</button>
 </div>
 
 <div id="planOutput"></div>
@@ -143,6 +139,7 @@ color:white;
 ===================== */
 
 let mode="turnier";
+
 let players=["Marco","Stefan","David","Tobias","Chris","Werner"];
 let active={};
 
@@ -203,7 +200,7 @@ mode=m;
 }
 
 /* =====================
-   GROUP TEAMS FIXED
+   GROUP TEAMS
 ===================== */
 
 function createTeams(p){
@@ -219,18 +216,14 @@ fixedTeams=[
 }
 
 /* =====================
-   NO DUPLICATE CHECK
+   NO DUPLICATES
 ===================== */
 
-let history = [];
+let history=[];
 
 function isDuplicate(a,b){
-
-let key1=a.join()+b.join();
-let key2=b.join()+a.join();
-
-return history.includes(key1)||history.includes(key2);
-
+return history.includes(a.join()+b.join()) ||
+history.includes(b.join()+a.join());
 }
 
 function savePair(a,b){
@@ -274,7 +267,8 @@ b=[pool[2],pool[3]];
 savePair(a,b);
 
 round={
-a,b,
+a,
+b,
 bank:[pool[4],pool[5]]
 };
 
@@ -333,7 +327,7 @@ planOutput.innerHTML+=
 }
 
 /* =====================
-   KIOSK OPEN
+   KIOSK
 ===================== */
 
 function openKiosk(){
@@ -390,7 +384,7 @@ if(running) return;
 
 running=true;
 
-playBeep();
+beep();
 
 clearInterval(interval);
 
@@ -405,9 +399,12 @@ updateTimer();
 
 }
 
-/* SOUND */
-function playBeep(){
-let ctx=new AudioContext();
+/* =====================
+   SOUND
+===================== */
+
+function beep(){
+let ctx=new (window.AudioContext||window.webkitAudioContext)();
 let osc=ctx.createOscillator();
 osc.connect(ctx.destination);
 osc.start();
@@ -424,13 +421,12 @@ clearInterval(interval);
 running=false;
 timeLeft=0;
 updateTimer();
-
-playBeep();
+beep();
 
 }
 
 /* =====================
-   NEXT MATCH
+   NEXT
 ===================== */
 
 function next(){
@@ -465,15 +461,27 @@ planning.classList.add("active");
 }
 
 /* =====================
-   FULLSCREEN
+   FULLSCREEN FIXED
 ===================== */
 
 function toggleFullscreen(){
 
-if(!document.fullscreenElement){
-document.documentElement.requestFullscreen();
+let el=document.documentElement;
+
+if(document.fullscreenElement ||
+document.webkitFullscreenElement ||
+document.msFullscreenElement){
+
+if(document.exitFullscreen) document.exitFullscreen();
+else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+else if(document.msExitFullscreen) document.msExitFullscreen();
+
 }else{
-document.exitFullscreen();
+
+if(el.requestFullscreen) el.requestFullscreen();
+else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+else if(el.msRequestFullscreen) el.msRequestFullscreen();
+
 }
 
 }
