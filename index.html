@@ -3,88 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel-Götter V2.1</title>
+<title>Padel-Götter Kiosk V2.1</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background:#061b12;
+  background:#000;
   color:white;
 }
 
-#app{padding:12px;}
+#kiosk{
+  text-align:center;
+  padding:20px;
+}
 
-.section{
-  background:#124d35;
+.big{
+  font-size:40px;
+  font-weight:bold;
+}
+
+.timer{
+  font-size:70px;
+  margin:20px 0;
+  color:#00ff99;
+}
+
+.match{
+  font-size:30px;
   margin:10px 0;
-  padding:10px;
-  border-radius:10px;
+}
+
+.bank{
+  font-size:20px;
+  opacity:0.7;
 }
 
 button{
-  padding:10px 14px;
+  padding:12px 18px;
   margin:5px;
   border:none;
   border-radius:8px;
-  background:#1f6f4a;
-  color:white;
-  font-weight:bold;
+  font-size:18px;
   cursor:pointer;
 }
 
-.player{
-  display:flex;
-  gap:10px;
-  margin:5px 0;
-}
+.start{background:#1f6f4a;color:white;}
+.next{background:#444;color:white;}
+.end{background:#b30000;color:white;}
 </style>
 </head>
 
 <body>
 
-<div id="app">
+<div id="kiosk">
 
-<h2>🏆 Padel-Götter V2.1</h2>
+<div class="big">🏆 PADEL-GÖTTER</div>
 
-<div class="section">
-<h3>Spieler</h3>
-<div id="players"></div>
-</div>
+<div class="match" id="match">---</div>
 
-<div class="section">
-<h3>Modus</h3>
-<button onclick="setMode('turnier')">Turnier</button>
-<button onclick="setMode('gruppe')">Gruppe</button>
-</div>
+<div class="timer" id="timer">00:00</div>
 
-<div class="section">
-<h3>Zeit</h3>
+<div class="bank" id="bank">Bank: -</div>
 
-<label>Gesamtzeit</label>
-<select id="totalTime">
-<option value="120">120</option>
-<option value="180" selected>180</option>
-</select>
-
-<br><br>
-
-<label>Matchzeit</label>
-<select id="matchTime">
-<option value="15">15</option>
-<option value="18" selected>18</option>
-<option value="20">20</option>
-</select>
-</div>
-
-<div class="section">
-<button onclick="generate()">Spielplan erstellen</button>
-<button onclick="remix()">Neu mischen</button>
-</div>
-
-<div class="section">
-<h3>Spielplan</h3>
-<div id="output"></div>
+<div>
+<button class="start" onclick="start()">START</button>
+<button class="end" onclick="endMatch()">MATCHENDE</button>
+<button class="next" onclick="next()">NEXT</button>
 </div>
 
 </div>
@@ -92,219 +77,112 @@ button{
 <script>
 
 /* =====================
-   STATE
+   DEMO SPIELPLAN (kommt aus Engine)
 ===================== */
 
-let mode = "turnier";
+let schedule = [
+  {a:["Marco","Stefan"], b:["David","Tobias"], bank:["Chris","Werner"]},
+  {a:["Marco","David"], b:["Stefan","Chris"], bank:["Tobias","Werner"]},
+  {a:["Marco","Tobias"], b:["Stefan","Werner"], bank:["David","Chris"]}
+];
 
-let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
-let active = {};
-let schedule = [];
+let index = 0;
+
+let timeLeft = 18 * 60;
+let timer = null;
+let running = false;
+
+/* =====================
+   UI UPDATE
+===================== */
+
+function render(){
+  let s = schedule[index];
+
+  document.getElementById("match").innerText =
+    s.a.join(" & ") + " vs " + s.b.join(" & ");
+
+  document.getElementById("bank").innerText =
+    "Bank: " + (s.bank.join(", ") || "-");
+}
+
+/* =====================
+   TIMER
+===================== */
+
+function updateTimer(){
+  let m = Math.floor(timeLeft / 60);
+  let s = timeLeft % 60;
+
+  document.getElementById("timer").innerText =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+}
+
+/* =====================
+   START
+===================== */
+
+function start(){
+
+  if(running) return;
+
+  running = true;
+
+  timer = setInterval(()=>{
+
+    if(timeLeft > 0){
+      timeLeft--;
+      updateTimer();
+    } else {
+      endMatch();
+    }
+
+  },1000);
+}
+
+/* =====================
+   MATCHENDE
+===================== */
+
+function endMatch(){
+
+  clearInterval(timer);
+  running = false;
+
+  timeLeft = 0;
+  updateTimer();
+
+  // optional: Sound
+  console.log("🔔 Match beendet");
+}
+
+/* =====================
+   NEXT MATCH
+===================== */
+
+function next(){
+
+  clearInterval(timer);
+  running = false;
+
+  index++;
+
+  if(index >= schedule.length){
+    index = 0;
+  }
+
+  timeLeft = 18 * 60;
+
+  render();
+  updateTimer();
+}
 
 /* =====================
    INIT
 ===================== */
 
-function init(){
-  let box = document.getElementById("players");
-  box.innerHTML = "";
-
-  players.forEach(p=>{
-    active[p] = true;
-
-    let row = document.createElement("div");
-    row.className = "player";
-
-    let cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = true;
-    cb.onchange = ()=> active[p] = cb.checked;
-
-    row.appendChild(cb);
-    row.appendChild(document.createTextNode(p));
-
-    box.appendChild(row);
-  });
-}
-
-/* =====================
-   HELPERS
-===================== */
-
-function getPlayers(){
-  return players.filter(p=>active[p]);
-}
-
-function shuffle(arr){
-  return [...arr].sort(()=>Math.random()-0.5);
-}
-
-/* =====================
-   MODE
-===================== */
-
-function setMode(m){
-  mode = m;
-}
-
-/* =====================
-   TURNIER (Partner wechseln jede Runde)
-===================== */
-
-function turnierRound(p){
-
-  let pool = shuffle(p);
-
-  return {
-    a:[pool[0], pool[1]],
-    b:[pool[2], pool[3]],
-    bank: pool.length === 6 ? [pool[4], pool[5]] : [pool[4] || ""]
-  };
-}
-
-/* =====================
-   GRUPPE (FESTE TEAMS)
-===================== */
-
-let fixedTeams = [];
-
-function createFixedTeams(p){
-
-  let pool = shuffle(p);
-
-  fixedTeams = [];
-
-  if(pool.length === 6){
-    fixedTeams = [
-      [pool[0], pool[1]],
-      [pool[2], pool[3]],
-      [pool[4], pool[5]]
-    ];
-  }
-
-  if(pool.length === 5){
-    fixedTeams = [
-      [pool[0], pool[1]],
-      [pool[2], pool[3]],
-      [pool[4]]
-    ];
-  }
-
-  if(pool.length === 4){
-    fixedTeams = [
-      [pool[0], pool[1]],
-      [pool[2], pool[3]]
-    ];
-  }
-}
-
-/* =====================
-   GROUP ROUND (TEAMS BLEIBEN FIX)
-===================== */
-
-function groupRound(r){
-
-  let t = fixedTeams;
-
-  if(t.length === 2){
-    return {
-      a:t[0],
-      b:t[1],
-      bank:[]
-    };
-  }
-
-  if(t.length === 3){
-
-    switch(r % 3){
-      case 0: return {a:t[0], b:t[1], bank:t[2]};
-      case 1: return {a:t[1], b:t[2], bank:t[0]};
-      case 2: return {a:t[2], b:t[0], bank:t[1]};
-    }
-  }
-
-  return {a:[],b:[],bank:[]};
-}
-
-/* =====================
-   GENERATE
-===================== */
-
-function generate(){
-
-  let p = getPlayers();
-
-  if(p.length < 4){
-    alert("Mindestens 4 Spieler");
-    return;
-  }
-
-  const total = Number(document.getElementById("totalTime").value);
-  const match = Number(document.getElementById("matchTime").value);
-
-  const rounds = Math.floor(total / match);
-
-  schedule = [];
-
-  // 🔥 GROUP FIXED TEAMS ONLY ONCE
-  if(mode === "gruppe"){
-    createFixedTeams(p);
-  }
-
-  for(let r=0;r<rounds;r++){
-
-    let round;
-
-    if(mode === "turnier"){
-      round = turnierRound(p);
-    } else {
-      round = groupRound(r);
-    }
-
-    schedule.push(round);
-  }
-
-  render();
-}
-
-/* =====================
-   REMIX
-===================== */
-
-function remix(){
-
-  schedule = [];
-
-  if(mode === "gruppe"){
-    createFixedTeams(getPlayers());
-  }
-
-  generate();
-}
-
-/* =====================
-   OUTPUT
-===================== */
-
-function render(){
-
-  let box = document.getElementById("output");
-  box.innerHTML = "";
-
-  schedule.forEach((s,i)=>{
-
-    let div = document.createElement("div");
-
-    div.innerHTML =
-      `<b>R${i+1}</b>: ${s.a.join(" & ")} vs ${s.b.join(" & ")}
-      <br>Bank: ${s.bank.join(", ") || "keine"}`;
-
-    box.appendChild(div);
-  });
-}
-
-/* INIT */
-init();
+render();
+updateTimer();
 
 </script>
 
