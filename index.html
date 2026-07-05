@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Padel-Götter V2.0</title>
+<title>Padel-Götter V2.1 Engine</title>
 
 <style>
 body{
@@ -16,15 +15,6 @@ body{
 
 #app{padding:12px;}
 
-.topbar{
-  background:#0f3a28;
-  padding:12px;
-  font-size:20px;
-  font-weight:bold;
-  display:flex;
-  justify-content:space-between;
-}
-
 .section{
   background:#124d35;
   margin:10px 0;
@@ -33,42 +23,19 @@ body{
 }
 
 button{
-  padding:12px 16px;
+  padding:10px 14px;
   margin:5px;
   border:none;
-  border-radius:10px;
+  border-radius:8px;
   background:#1f6f4a;
   color:white;
   font-weight:bold;
-  cursor:pointer;
 }
 
-.kiosk{
-  display:none;
-  height:100vh;
-  background:black;
-  text-align:center;
-  padding-top:20px;
-}
-
-.kioskMode #app{display:none;}
-.kioskMode .kiosk{display:block;}
-
-#timer{
-  font-size:150px;
-  color:#00ff99;
-  font-weight:bold;
-}
-
-.match{
-  font-size:38px;
-  margin-top:20px;
-}
-
-.bank{
-  font-size:28px;
-  color:#ffd54a;
-  margin-top:10px;
+.player{
+  display:flex;
+  gap:10px;
+  margin:5px 0;
 }
 </style>
 </head>
@@ -77,10 +44,7 @@ button{
 
 <div id="app">
 
-<div class="topbar">
-<div>🏆 Padel-Götter V2.0</div>
-<button onclick="openKiosk()">Kiosk</button>
-</div>
+<h2>🏆 Padel-Götter V2.1 ENGINE</h2>
 
 <div class="section">
 <h3>Spieler</h3>
@@ -88,55 +52,18 @@ button{
 </div>
 
 <div class="section">
-<h3>Setup</h3>
-
-<label>Gesamtzeit</label>
-<select id="totalTime">
-<option value="120">120</option>
-<option value="180" selected>180</option>
-</select>
-
-<br><br>
-
-<label>Matchzeit</label>
-<select id="matchTime">
-<option value="15">15</option>
-<option value="18" selected>18</option>
-<option value="20">20</option>
-</select>
-</div>
-
-<div class="section">
 <h3>Modus</h3>
-<button onclick="mode='turnier'">Turnier</button>
-<button onclick="mode='gruppe'">Gruppe</button>
-</div>
-
-<div class="section">
-<button onclick="generate()">Spielplan erstellen</button>
-<button onclick="remix()">Neu mischen</button>
+<button onclick="setMode('turnier')">Turnier</button>
+<button onclick="setMode('gruppe')">Gruppe</button>
 </div>
 
 <div class="section">
 <h3>Spielplan</h3>
-<div id="preview"></div>
+<button onclick="generate()">Spielplan erstellen</button>
+<button onclick="remix()">Neu mischen</button>
+
+<div id="output"></div>
 </div>
-
-</div>
-
-<!-- KIOSK -->
-<div class="kiosk">
-
-<div id="timer">00:00</div>
-<div id="match" class="match"></div>
-<div id="bank" class="bank"></div>
-
-<br>
-
-<button onclick="startMatch()">Start</button>
-<button onclick="next()">Next</button>
-<button onclick="endMatch()">Matchende</button>
-<button onclick="closeKiosk()">Exit</button>
 
 </div>
 
@@ -149,33 +76,27 @@ button{
 let mode = "turnier";
 
 let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
-let selected = {};
-
+let active = {};
 let schedule = [];
-let index = 0;
-
-let timer = null;
-let running = false;
-let timeLeft = 0;
 
 /* =====================
-   INIT PLAYERS
+   INIT
 ===================== */
 
 function init(){
-  const box = document.getElementById("players");
+  let box = document.getElementById("players");
   box.innerHTML = "";
 
   players.forEach(p=>{
-    selected[p] = true;
+    active[p] = true;
 
-    const row = document.createElement("div");
+    let row = document.createElement("div");
+    row.className="player";
 
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = true;
-
-    cb.onchange = ()=> selected[p] = cb.checked;
+    let cb = document.createElement("input");
+    cb.type="checkbox";
+    cb.checked=true;
+    cb.onchange=()=>active[p]=cb.checked;
 
     row.appendChild(cb);
     row.appendChild(document.createTextNode(p));
@@ -185,48 +106,83 @@ function init(){
 }
 
 /* =====================
-   ACTIVE PLAYERS
+   HELPERS
 ===================== */
 
-function activePlayers(){
-  return players.filter(p=>selected[p]);
+function getPlayers(){
+  return players.filter(p=>active[p]);
+}
+
+function shuffle(arr){
+  return [...arr].sort(()=>Math.random()-0.5);
 }
 
 /* =====================
-   GROUP ENGINE
+   GROUP ENGINE (FIXED FAIR ROTATION)
 ===================== */
 
 function groupRound(p,r){
 
-  if(p.length===4)
-    return {a:[p[0],p[1]],b:[p[2],p[3]],bank:[]};
+  const n = p.length;
 
-  if(p.length===5){
-    return (r%2===0)
-      ? {a:[p[0],p[1]],b:[p[2],p[3]],bank:[p[4]]}
-      : {a:[p[2],p[3]],b:[p[0],p[1]],bank:[p[4]]};
+  if(n === 4){
+    return {a:[p[0],p[1]], b:[p[2],p[3]], bank:[]};
   }
 
-  if(p.length===6){
-    const A=[p[0],p[1]];
-    const B=[p[2],p[3]];
-    const C=[p[4],p[5]];
+  if(n === 5){
+    const order = [...p];
+    return (r%2===0)
+      ? {a:[order[0],order[1]], b:[order[2],order[3]], bank:[order[4]]}
+      : {a:[order[1],order[2]], b:[order[3],order[4]], bank:[order[0]]};
+  }
 
-    if(r%3===0) return {a:A,b:B,bank:C};
-    if(r%3===1) return {a:B,b:C,bank:A};
-    return {a:C,b:A,bank:B};
+  if(n === 6){
+
+    const A = [p[0],p[1]];
+    const B = [p[2],p[3]];
+    const C = [p[4],p[5]];
+
+    switch(r % 3){
+      case 0: return {a:A, b:B, bank:C};
+      case 1: return {a:B, b:C, bank:A};
+      case 2: return {a:C, b:A, bank:B};
+    }
   }
 
   return {a:[],b:[],bank:[]};
 }
 
 /* =====================
-   GENERATE (TIME FIXED)
+   TURNIER ENGINE (BANK FIXED)
+===================== */
+
+function turnierRound(p){
+
+  const pool = shuffle(p);
+
+  let a = [pool[0], pool[1]];
+  let b = [pool[2], pool[3]];
+
+  let bank = [];
+
+  if(pool.length === 6){
+    bank = [pool[4], pool[5]];
+  }
+
+  if(pool.length === 5){
+    bank = [pool[4]];
+  }
+
+  return {a,b,bank};
+}
+
+/* =====================
+   GENERATE
 ===================== */
 
 function generate(){
 
-  let p = activePlayers();
+  let p = getPlayers();
 
   if(p.length < 4){
     alert("Mindestens 4 Spieler");
@@ -234,38 +190,24 @@ function generate(){
   }
 
   schedule = [];
-  index = 0;
 
-  let total = parseInt(document.getElementById("totalTime").value);
-  let match = parseInt(document.getElementById("matchTime").value);
-
-  let rounds = Math.floor(total / match);
+  let rounds = 6;
 
   for(let r=0;r<rounds;r++){
 
-    let a=[], b=[], bank=[];
+    let round;
 
     if(mode === "turnier"){
-
-      let pool = [...p].sort(()=>Math.random()-0.5);
-
-      a = [pool[0], pool[1]];
-      b = [pool[2], pool[3]];
-      bank = pool[4] ? [pool[4]] : [];
+      round = turnierRound(p);
+    } else {
+      let shuffled = shuffle(p);
+      round = groupRound(shuffled,r);
     }
 
-    if(mode === "gruppe"){
-      let g = groupRound(p,r);
-      a = g.a;
-      b = g.b;
-      bank = g.bank;
-    }
-
-    schedule.push({a,b,bank});
+    schedule.push(round);
   }
 
   render();
-  update();
 }
 
 /* =====================
@@ -274,112 +216,28 @@ function generate(){
 
 function remix(){
   schedule = [];
-  index = 0;
   generate();
 }
 
 /* =====================
-   RENDER
+   OUTPUT
 ===================== */
 
 function render(){
-  let box = document.getElementById("preview");
+
+  let box = document.getElementById("output");
   box.innerHTML = "";
 
   schedule.forEach((s,i)=>{
-    let d = document.createElement("div");
-    d.innerText = `R${i+1}: ${s.a.join("/")} vs ${s.b.join("/")} | Bank: ${s.bank.join(",")||"keine"}`;
-    box.appendChild(d);
+
+    let div = document.createElement("div");
+
+    div.innerHTML =
+      `<b>R${i+1}</b>: ${s.a.join(" & ")} vs ${s.b.join(" & ")}
+       <br>Bank: ${s.bank.join(", ") || "keine"}`;
+
+    box.appendChild(div);
   });
-}
-
-/* =====================
-   KIOSK
-===================== */
-
-function openKiosk(){
-  document.body.classList.add("kioskMode");
-}
-
-function closeKiosk(){
-  document.body.classList.remove("kioskMode");
-}
-
-/* =====================
-   MATCH VIEW
-===================== */
-
-function update(){
-
-  let s = schedule[index];
-  if(!s) return;
-
-  document.getElementById("match").innerText =
-    s.a.join(" & ") + " 🆚 " + s.b.join(" & ");
-
-  document.getElementById("bank").innerText =
-    "Bank: " + (s.bank.join(", ") || "keine");
-}
-
-/* =====================
-   TIMER (START FIX)
-===================== */
-
-function startMatch(){
-
-  if(!schedule.length) return;
-
-  let match = parseInt(document.getElementById("matchTime").value) * 60;
-
-  timeLeft = match;
-  running = true;
-
-  clearInterval(timer);
-
-  timer = setInterval(()=>{
-
-    if(timeLeft <= 0){
-      clearInterval(timer);
-      running = false;
-      document.getElementById("timer").innerText = "00:00";
-      return;
-    }
-
-    timeLeft--;
-
-    let m = Math.floor(timeLeft / 60);
-    let s = timeLeft % 60;
-
-    if(s < 10) s = "0"+s;
-
-    document.getElementById("timer").innerText = `${m}:${s}`;
-
-  },1000);
-}
-
-/* =====================
-   NEXT
-===================== */
-
-function next(){
-
-  if(!schedule.length) return;
-
-  index = (index + 1) % schedule.length;
-  update();
-
-  startMatch();
-}
-
-/* =====================
-   MATCH ENDE
-===================== */
-
-function endMatch(){
-  clearInterval(timer);
-  running = false;
-  timeLeft = 0;
-  document.getElementById("timer").innerText = "00:00";
 }
 
 /* INIT */
