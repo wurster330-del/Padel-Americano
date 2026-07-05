@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel-Götter V2.1 Engine FIX</title>
+<title>Padel-Götter V2.1 Group FIX</title>
 
 <style>
 body{
@@ -45,7 +45,7 @@ button{
 
 <div id="app">
 
-<h2>🏆 Padel-Götter V2.1 ENGINE FIX</h2>
+<h2>🏆 Padel-Götter V2.1 GROUP FIX</h2>
 
 <div class="section">
 <h3>Spieler</h3>
@@ -99,8 +99,8 @@ let mode = "turnier";
 
 let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
 let active = {};
+
 let schedule = [];
-let index = 0;
 
 /* =====================
    INIT
@@ -129,7 +129,7 @@ function init(){
 }
 
 /* =====================
-   HELPERS
+   HELPERS (IMPORTANT FIX)
 ===================== */
 
 function getPlayers(){
@@ -141,7 +141,7 @@ function shuffle(arr){
 }
 
 /* =====================
-   MODE SWITCH
+   MODE
 ===================== */
 
 function setMode(m){
@@ -154,7 +154,7 @@ function setMode(m){
 
 function turnierRound(p){
 
-  const pool = shuffle(p);
+  let pool = shuffle(p);
 
   let a = [pool[0], pool[1]];
   let b = [pool[2], pool[3]];
@@ -163,9 +163,7 @@ function turnierRound(p){
 
   if(pool.length === 6){
     bank = [pool[4], pool[5]];
-  }
-
-  if(pool.length === 5){
+  } else if(pool.length === 5){
     bank = [pool[4]];
   }
 
@@ -173,28 +171,28 @@ function turnierRound(p){
 }
 
 /* =====================
-   GRUPPE
+   GRUPPE (FIXED ROTATION)
 ===================== */
 
 function groupRound(p,r){
 
-  const n = p.length;
+  let pool = shuffle(p); // 🔥 FIX: JEDER CALL NEU RANDOM
 
-  if(n === 4){
-    return {a:[p[0],p[1]], b:[p[2],p[3]], bank:[]};
+  if(pool.length === 4){
+    return {a:[pool[0],pool[1]], b:[pool[2],pool[3]], bank:[]};
   }
 
-  if(n === 5){
-    return (r%2===0)
-      ? {a:[p[0],p[1]], b:[p[2],p[3]], bank:[p[4]]}
-      : {a:[p[1],p[2]], b:[p[3],p[4]], bank:[p[0]]};
+  if(pool.length === 5){
+    return (r % 2 === 0)
+      ? {a:[pool[0],pool[1]], b:[pool[2],pool[3]], bank:[pool[4]]}
+      : {a:[pool[1],pool[2]], b:[pool[3],pool[4]], bank:[pool[0]]};
   }
 
-  if(n === 6){
+  if(pool.length === 6){
 
-    const A = [p[0],p[1]];
-    const B = [p[2],p[3]];
-    const C = [p[4],p[5]];
+    const A = [pool[0],pool[1]];
+    const B = [pool[2],pool[3]];
+    const C = [pool[4],pool[5]];
 
     switch(r % 3){
       case 0: return {a:A, b:B, bank:C};
@@ -207,7 +205,7 @@ function groupRound(p,r){
 }
 
 /* =====================
-   GENERATE (FIXED TIME LOGIC)
+   GENERATE (FULL RESET FIX)
 ===================== */
 
 function generate(){
@@ -219,14 +217,14 @@ function generate(){
     return;
   }
 
-  // 🔥 FIX: stabile Werte direkt aus UI
+  // 🔥 FIX: echte saubere Werte
   const total = Number(document.getElementById("totalTime").value);
   const match = Number(document.getElementById("matchTime").value);
 
   const rounds = Math.floor(total / match);
 
+  // 🔥 FULL RESET (WICHTIG FÜR TEST 2)
   schedule = [];
-  index = 0;
 
   for(let r=0;r<rounds;r++){
 
@@ -235,8 +233,7 @@ function generate(){
     if(mode === "turnier"){
       round = turnierRound(p);
     } else {
-      let shuffled = shuffle(p);
-      round = groupRound(shuffled, r);
+      round = groupRound(p, r); // 🔥 FIX: kein alter Zustand mehr
     }
 
     schedule.push(round);
@@ -244,19 +241,22 @@ function generate(){
 
   render();
 
-  // Debug (optional)
-  console.log("TOTAL:", total);
-  console.log("MATCH:", match);
+  console.log("MODE:", mode);
   console.log("ROUNDS:", rounds);
 }
 
 /* =====================
-   REMIX
+   REMIX (FORCED NEW STATE)
 ===================== */
 
 function remix(){
+
+  // 🔥 WICHTIG: kompletter HARD RESET
   schedule = [];
-  index = 0;
+
+  // kleine Random-Änderung im Seed
+  players = [...players].sort(()=>Math.random()-0.5);
+
   generate();
 }
 
@@ -275,7 +275,7 @@ function render(){
 
     div.innerHTML =
       `<b>R${i+1}</b>: ${s.a.join(" & ")} vs ${s.b.join(" & ")}
-      <br>Bank: ${s.bank.join(", ") || "keine"}`;
+       <br>Bank: ${s.bank.join(", ") || "keine"}`;
 
     box.appendChild(div);
   });
