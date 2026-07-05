@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Padel-Götter V2.1 Engine</title>
+<title>Padel-Götter V2.1 Engine FIX</title>
 
 <style>
 body{
@@ -30,6 +30,7 @@ button{
   background:#1f6f4a;
   color:white;
   font-weight:bold;
+  cursor:pointer;
 }
 
 .player{
@@ -44,7 +45,7 @@ button{
 
 <div id="app">
 
-<h2>🏆 Padel-Götter V2.1 ENGINE</h2>
+<h2>🏆 Padel-Götter V2.1 ENGINE FIX</h2>
 
 <div class="section">
 <h3>Spieler</h3>
@@ -58,10 +59,31 @@ button{
 </div>
 
 <div class="section">
-<h3>Spielplan</h3>
+<h3>Zeit</h3>
+
+<label>Gesamtzeit</label>
+<select id="totalTime">
+<option value="120">120</option>
+<option value="180" selected>180</option>
+</select>
+
+<br><br>
+
+<label>Matchzeit</label>
+<select id="matchTime">
+<option value="15">15</option>
+<option value="18" selected>18</option>
+<option value="20">20</option>
+</select>
+</div>
+
+<div class="section">
 <button onclick="generate()">Spielplan erstellen</button>
 <button onclick="remix()">Neu mischen</button>
+</div>
 
+<div class="section">
+<h3>Spielplan</h3>
 <div id="output"></div>
 </div>
 
@@ -78,6 +100,7 @@ let mode = "turnier";
 let players = ["Marco","Stefan","David","Tobias","Chris","Werner"];
 let active = {};
 let schedule = [];
+let index = 0;
 
 /* =====================
    INIT
@@ -91,12 +114,12 @@ function init(){
     active[p] = true;
 
     let row = document.createElement("div");
-    row.className="player";
+    row.className = "player";
 
     let cb = document.createElement("input");
-    cb.type="checkbox";
-    cb.checked=true;
-    cb.onchange=()=>active[p]=cb.checked;
+    cb.type = "checkbox";
+    cb.checked = true;
+    cb.onchange = ()=> active[p] = cb.checked;
 
     row.appendChild(cb);
     row.appendChild(document.createTextNode(p));
@@ -118,42 +141,15 @@ function shuffle(arr){
 }
 
 /* =====================
-   GROUP ENGINE (FIXED FAIR ROTATION)
+   MODE SWITCH
 ===================== */
 
-function groupRound(p,r){
-
-  const n = p.length;
-
-  if(n === 4){
-    return {a:[p[0],p[1]], b:[p[2],p[3]], bank:[]};
-  }
-
-  if(n === 5){
-    const order = [...p];
-    return (r%2===0)
-      ? {a:[order[0],order[1]], b:[order[2],order[3]], bank:[order[4]]}
-      : {a:[order[1],order[2]], b:[order[3],order[4]], bank:[order[0]]};
-  }
-
-  if(n === 6){
-
-    const A = [p[0],p[1]];
-    const B = [p[2],p[3]];
-    const C = [p[4],p[5]];
-
-    switch(r % 3){
-      case 0: return {a:A, b:B, bank:C};
-      case 1: return {a:B, b:C, bank:A};
-      case 2: return {a:C, b:A, bank:B};
-    }
-  }
-
-  return {a:[],b:[],bank:[]};
+function setMode(m){
+  mode = m;
 }
 
 /* =====================
-   TURNIER ENGINE (BANK FIXED)
+   TURNIER
 ===================== */
 
 function turnierRound(p){
@@ -177,7 +173,41 @@ function turnierRound(p){
 }
 
 /* =====================
-   GENERATE
+   GRUPPE
+===================== */
+
+function groupRound(p,r){
+
+  const n = p.length;
+
+  if(n === 4){
+    return {a:[p[0],p[1]], b:[p[2],p[3]], bank:[]};
+  }
+
+  if(n === 5){
+    return (r%2===0)
+      ? {a:[p[0],p[1]], b:[p[2],p[3]], bank:[p[4]]}
+      : {a:[p[1],p[2]], b:[p[3],p[4]], bank:[p[0]]};
+  }
+
+  if(n === 6){
+
+    const A = [p[0],p[1]];
+    const B = [p[2],p[3]];
+    const C = [p[4],p[5]];
+
+    switch(r % 3){
+      case 0: return {a:A, b:B, bank:C};
+      case 1: return {a:B, b:C, bank:A};
+      case 2: return {a:C, b:A, bank:B};
+    }
+  }
+
+  return {a:[],b:[],bank:[]};
+}
+
+/* =====================
+   GENERATE (FIXED TIME LOGIC)
 ===================== */
 
 function generate(){
@@ -189,9 +219,14 @@ function generate(){
     return;
   }
 
-  schedule = [];
+  // 🔥 FIX: stabile Werte direkt aus UI
+  const total = Number(document.getElementById("totalTime").value);
+  const match = Number(document.getElementById("matchTime").value);
 
-  let rounds = 6;
+  const rounds = Math.floor(total / match);
+
+  schedule = [];
+  index = 0;
 
   for(let r=0;r<rounds;r++){
 
@@ -201,13 +236,18 @@ function generate(){
       round = turnierRound(p);
     } else {
       let shuffled = shuffle(p);
-      round = groupRound(shuffled,r);
+      round = groupRound(shuffled, r);
     }
 
     schedule.push(round);
   }
 
   render();
+
+  // Debug (optional)
+  console.log("TOTAL:", total);
+  console.log("MATCH:", match);
+  console.log("ROUNDS:", rounds);
 }
 
 /* =====================
@@ -216,6 +256,7 @@ function generate(){
 
 function remix(){
   schedule = [];
+  index = 0;
   generate();
 }
 
@@ -234,7 +275,7 @@ function render(){
 
     div.innerHTML =
       `<b>R${i+1}</b>: ${s.a.join(" & ")} vs ${s.b.join(" & ")}
-       <br>Bank: ${s.bank.join(", ") || "keine"}`;
+      <br>Bank: ${s.bank.join(", ") || "keine"}`;
 
     box.appendChild(div);
   });
