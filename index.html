@@ -2,67 +2,243 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>PADEL-GÖTTER PRO 1.0 Build 1.1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PADEL-GÖTTER PRO</title>
+
 <style>
-body{font-family:Arial,sans-serif;background:#f2f2f2;padding:20px}
-.box{max-width:900px;margin:auto;background:white;padding:20px;border-radius:20px}
-button,input,select{font-size:22px;padding:12px;margin:5px;border-radius:10px}
-button{cursor:pointer}
-.green{background:#198754;color:white}
-.red{background:#dc3545;color:white}
-.card{background:#eee;padding:15px;margin:10px;border-radius:12px;font-size:22px}
-#kiosk{display:none;position:fixed;inset:0;background:#111;color:white;text-align:center;padding:30px}
-.big{font-size:55px;font-weight:bold}
-.timer{font-size:120px;font-weight:bold}
-</style>
-</head>
-<body>
-<div class="box" id="planung">
-<h1>🏆 PADEL-GÖTTER PRO</h1>
-<p>Spieler</p>
-<input id="names" value="Marco,Stefan,David,Tobias,Chris,Werner">
-<p>Gesamtzeit Minuten</p>
-<input id="time" value="180">
-<br>
-<button class="green" onclick="createPlan()">SPIELPLAN ERSTELLEN</button>
-<div id="list"></div>
-</div>
-
-<div id="kiosk">
-<div class="big">🏆 PADEL-GÖTTER PRO</div>
-<div id="round" class="big"></div>
-<div id="match" class="big"></div>
-<div class="timer" id="clock">00:00</div>
-<button class="green" onclick="start()">START</button>
-<button onclick="pause()">PAUSE</button>
-<button class="green" onclick="next()">NÄCHSTE RUNDE</button>
-<br>
-<button class="red" onclick="exitKiosk()">EXIT</button>
-</div>
-
-<script>
-let games=[],idx=0,sec=0,handle=null;
-
-function createPlan(){
- let p=document.getElementById('names').value.split(',').map(x=>x.trim());
- let t=Math.floor(Number(document.getElementById('time').value)/15);
- games=[];
- for(let i=0;i<15;i++){
-  games.push({a:p[i%6]+" + "+p[(i+1)%6],b:p[(i+2)%6]+" + "+p[(i+3)%6],bank:p[(i+4)%6]+", "+p[(i+5)%6],min:t});
- }
- let out="<h2>Spielplan</h2>";
- games.forEach((g,i)=>out+=`<div class="card">Runde ${i+1}<br>${g.a}<br>gegen<br>${g.b}<br>Bank: ${g.bank}<br>${g.min} Minuten</div>`);
- out+="<button class='green' onclick='openKiosk()'>KIOSK STARTEN</button>";
- document.getElementById('list').innerHTML=out;
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+    padding: 20px;
 }
 
-function openKiosk(){planung.style.display='none';kiosk.style.display='block';idx=0;show();}
-function show(){let g=games[idx];round.innerHTML="Runde "+(idx+1)+" / "+games.length;match.innerHTML=g.a+"<br>VS<br>"+g.b+"<br>Bank: "+g.bank;sec=g.min*60;display();}
-function display(){clock.innerHTML=String(Math.floor(sec/60)).padStart(2,'0')+":"+String(sec%60).padStart(2,'0');}
-function start(){if(handle)return;handle=setInterval(()=>{if(sec>0){sec--;display()}else{next()}},1000)}
-function pause(){clearInterval(handle);handle=null}
-function next(){pause();idx++;if(idx<games.length)show();else{round.innerHTML="🏆 beendet";match.innerHTML=""}}
-function exitKiosk(){pause();kiosk.style.display='none';planung.style.display='block'}
+h1 {
+    font-size: 32px;
+}
+
+input {
+    font-size: 20px;
+    padding: 8px;
+    margin: 5px;
+    width: 220px;
+}
+
+button {
+    font-size: 22px;
+    padding: 15px 25px;
+    margin: 8px;
+    border-radius: 12px;
+    border: none;
+}
+
+.start {background:#2ecc71;}
+.stop {background:#f39c12;}
+.reset {background:#e74c3c;}
+.next {background:#3498db;}
+
+.box {
+    background:#222;
+    padding:20px;
+    border-radius:15px;
+    margin:20px auto;
+    max-width:500px;
+}
+
+.timer {
+    font-size:80px;
+    font-weight:bold;
+}
+
+.team {
+    font-size:28px;
+    margin:15px;
+}
+
+.small {
+    font-size:20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🏆 PADEL-GÖTTER PRO</h1>
+
+<div id="setup" class="box">
+
+<h2>Spieler eingeben</h2>
+
+<input id="p1" value="Marco"><br>
+<input id="p2" value="Stefan"><br>
+<input id="p3" value="David"><br>
+<input id="p4" value="Tobias"><br>
+<input id="p5" value="Chris"><br>
+<input id="p6" value="Werner"><br>
+
+<br>
+
+<button onclick="teamsAuslosen()">🎲 Teams auslosen</button>
+
+</div>
+
+
+<div id="spiel" class="box" style="display:none">
+
+<h2 id="runde"></h2>
+
+<div class="team" id="match"></div>
+
+<div class="team" id="bank"></div>
+
+<div class="timer" id="timer">00:00</div>
+
+<button class="start" onclick="start()">▶ START</button>
+<button class="stop" onclick="stop()">⏸ STOPP</button>
+<button class="reset" onclick="reset()">🔄 RESET</button>
+
+<br>
+
+<button class="next" onclick="naechstesMatch()">➡ NÄCHSTES MATCH</button>
+
+<div class="small" id="meldung"></div>
+
+</div>
+
+
+<script>
+
+let teams=[];
+let aktuell=0;
+let sekunden=0;
+let lauf=null;
+let runde=1;
+
+
+// feste Rotation
+let rotation=[
+ [0,1,2],
+ [1,2,0],
+ [0,2,1]
+];
+
+
+function teamsAuslosen(){
+
+let spieler=[
+p1.value,p2.value,p3.value,
+p4.value,p5.value,p6.value
+];
+
+spieler.sort(()=>Math.random()-0.5);
+
+teams=[
+ [spieler[0],spieler[1]],
+ [spieler[2],spieler[3]],
+ [spieler[4],spieler[5]]
+];
+
+
+document.getElementById("setup").style.display="none";
+document.getElementById("spiel").style.display="block";
+
+zeigeMatch();
+
+}
+
+
+function zeigeMatch(){
+
+let r=rotation[aktuell%3];
+
+document.getElementById("runde").innerHTML=
+"Runde "+runde;
+
+document.getElementById("match").innerHTML=
+"🎾 "+teams[r[0]].join(" + ")
++"<br>🆚<br>"
++teams[r[1]].join(" + ");
+
+
+document.getElementById("bank").innerHTML=
+"🪑 Bank: "+teams[r[2]].join(" + ");
+
+}
+
+
+function anzeigen(){
+
+let m=Math.floor(sekunden/60);
+let s=sekunden%60;
+
+timer.innerHTML=
+String(m).padStart(2,"0")
++":"
++String(s).padStart(2,"0");
+
+
+if(sekunden==1080){
+
+meldung.innerHTML=
+"🔔 MATCH ENDE – WECHSEL!";
+
+navigator.vibrate?.(500);
+
+}
+
+}
+
+
+function start(){
+
+if(lauf==null){
+
+lauf=setInterval(()=>{
+
+sekunden++;
+anzeigen();
+
+},1000);
+
+}
+
+}
+
+
+function stop(){
+
+clearInterval(lauf);
+lauf=null;
+
+}
+
+
+function reset(){
+
+stop();
+
+sekunden=0;
+meldung.innerHTML="";
+
+anzeigen();
+
+}
+
+
+function naechstesMatch(){
+
+reset();
+
+aktuell++;
+
+runde++;
+
+zeigeMatch();
+
+}
+
 </script>
+
 </body>
 </html>
