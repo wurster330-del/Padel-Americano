@@ -2,410 +2,67 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>PADEL-GÖTTER PRO 1.0 Build 1</title>
-
+<title>PADEL-GÖTTER PRO 1.0 Build 1.1</title>
 <style>
-body{
-    font-family: Arial, sans-serif;
-    background:#f4f4f4;
-    margin:0;
-    padding:20px;
-}
-
-h1{
-    text-align:center;
-}
-
-.container{
-    max-width:900px;
-    margin:auto;
-    background:white;
-    padding:20px;
-    border-radius:15px;
-}
-
-input,select,button{
-    font-size:18px;
-    padding:10px;
-    margin:5px;
-}
-
-button{
-    cursor:pointer;
-    border-radius:10px;
-}
-
-.primary{
-    background:#198754;
-    color:white;
-}
-
-.red{
-    background:#dc3545;
-    color:white;
-}
-
-.card{
-    background:#eee;
-    padding:15px;
-    margin:10px 0;
-    border-radius:10px;
-}
-
-.hidden{
-    display:none;
-}
-
-
-/* Kiosk */
-
-#kiosk{
-    position:fixed;
-    inset:0;
-    background:#111;
-    color:white;
-    display:none;
-    text-align:center;
-    padding-top:30px;
-}
-
-.big{
-    font-size:55px;
-}
-
-.medium{
-    font-size:35px;
-}
-
-.timer{
-    font-size:80px;
-    margin:20px;
-}
-
+body{font-family:Arial,sans-serif;background:#f2f2f2;padding:20px}
+.box{max-width:900px;margin:auto;background:white;padding:20px;border-radius:20px}
+button,input,select{font-size:22px;padding:12px;margin:5px;border-radius:10px}
+button{cursor:pointer}
+.green{background:#198754;color:white}
+.red{background:#dc3545;color:white}
+.card{background:#eee;padding:15px;margin:10px;border-radius:12px;font-size:22px}
+#kiosk{display:none;position:fixed;inset:0;background:#111;color:white;text-align:center;padding:30px}
+.big{font-size:55px;font-weight:bold}
+.timer{font-size:120px;font-weight:bold}
 </style>
 </head>
-
 <body>
-
-
-<div class="container" id="planung">
-
+<div class="box" id="planung">
 <h1>🏆 PADEL-GÖTTER PRO</h1>
-
-<h2>Spielplanung</h2>
-
-<label>Spieler:</label><br>
-
-<input id="p1" value="Marco">
-<input id="p2" value="Stefan">
-<input id="p3" value="David">
-<input id="p4" value="Tobias">
-<input id="p5" value="Chris">
-<input id="p6" value="Werner">
-
+<p>Spieler</p>
+<input id="names" value="Marco,Stefan,David,Tobias,Chris,Werner">
+<p>Gesamtzeit Minuten</p>
+<input id="time" value="180">
 <br>
-
-<label>Gesamtzeit Minuten:</label>
-
-<input id="gesamt" value="180">
-
-<br>
-
-<label>Modus:</label>
-
-<select id="modus">
-<option>Alle Paarungen</option>
-<option>Turnier</option>
-<option>Gruppe</option>
-</select>
-
-<br>
-
-<button class="primary" onclick="erstellePlan()">
-Spielplan erstellen
-</button>
-
-
-<div id="plan"></div>
-
+<button class="green" onclick="createPlan()">SPIELPLAN ERSTELLEN</button>
+<div id="list"></div>
 </div>
-
-
-
 
 <div id="kiosk">
-
-<div class="big">
-🏆 PADEL-GÖTTER PRO
-</div>
-
-<div class="medium" id="runde">
-</div>
-
-<div class="medium" id="match">
-</div>
-
-<div>
-<div class="timer" id="timer">
-00:00
-</div>
-
-<button class="primary" onclick="startTimer()">
-Start
-</button>
-
-<button onclick="pauseTimer()">
-Pause
-</button>
-
-</div>
-
-
+<div class="big">🏆 PADEL-GÖTTER PRO</div>
+<div id="round" class="big"></div>
+<div id="match" class="big"></div>
+<div class="timer" id="clock">00:00</div>
+<button class="green" onclick="start()">START</button>
+<button onclick="pause()">PAUSE</button>
+<button class="green" onclick="next()">NÄCHSTE RUNDE</button>
 <br>
-
-<button class="red" onclick="exitKiosk()">
-EXIT
-</button>
-
-
+<button class="red" onclick="exitKiosk()">EXIT</button>
 </div>
-
-
-
 
 <script>
+let games=[],idx=0,sec=0,handle=null;
 
-let spiele=[];
-let aktuelleRunde=0;
-
-let sekunden=0;
-let timer=null;
-
-
-
-function erstellePlan(){
-
-let spieler=[
-p1.value,
-p2.value,
-p3.value,
-p4.value,
-p5.value,
-p6.value
-];
-
-
-let minuten=parseInt(gesamt.value);
-
-
-let matchZeit=Math.floor(minuten/15);
-
-
-spiele=[];
-
-
-for(let i=0;i<15;i++){
-
-let a=spieler[i%6];
-let b=spieler[(i+1)%6];
-let c=spieler[(i+2)%6];
-let d=spieler[(i+3)%6];
-
-let bank=[
-spieler[(i+4)%6],
-spieler[(i+5)%6]
-];
-
-
-spiele.push({
-
-runde:i+1,
-team1:a+" + "+b,
-team2:c+" + "+d,
-bank:bank.join(", "),
-zeit:matchZeit
-
-});
-
+function createPlan(){
+ let p=document.getElementById('names').value.split(',').map(x=>x.trim());
+ let t=Math.floor(Number(document.getElementById('time').value)/15);
+ games=[];
+ for(let i=0;i<15;i++){
+  games.push({a:p[i%6]+" + "+p[(i+1)%6],b:p[(i+2)%6]+" + "+p[(i+3)%6],bank:p[(i+4)%6]+", "+p[(i+5)%6],min:t});
+ }
+ let out="<h2>Spielplan</h2>";
+ games.forEach((g,i)=>out+=`<div class="card">Runde ${i+1}<br>${g.a}<br>gegen<br>${g.b}<br>Bank: ${g.bank}<br>${g.min} Minuten</div>`);
+ out+="<button class='green' onclick='openKiosk()'>KIOSK STARTEN</button>";
+ document.getElementById('list').innerHTML=out;
 }
 
-
-zeigePlan();
-
-}
-
-
-
-function zeigePlan(){
-
-let html="<h2>Spielplan</h2>";
-
-spiele.forEach(s=>{
-
-html+=`
-
-<div class="card">
-
-<b>Runde ${s.runde}</b><br>
-
-${s.team1}
-<br>
-gegen
-<br>
-${s.team2}
-
-<br><br>
-
-Bank:
-${s.bank}
-
-<br>
-
-${s.zeit} Minuten
-
-</div>
-
-`;
-
-});
-
-
-html+=`
-
-<button class="primary"
-onclick="startKiosk()">
-
-Kiosk starten
-
-</button>
-
-`;
-
-plan.innerHTML=html;
-
-}
-
-
-
-
-
-function startKiosk(){
-
-planung.style.display="none";
-kiosk.style.display="block";
-
-aktuelleRunde=0;
-
-zeigeRunde();
-
-}
-
-
-
-function zeigeRunde(){
-
-let s=spiele[aktuelleRunde];
-
-runde.innerHTML=
-"Runde "+s.runde+" / "+spiele.length;
-
-match.innerHTML=
-
-s.team1+
-"<br>VS<br>"+
-s.team2+
-"<br><br>Bank:<br>"+
-s.bank;
-
-
-sekunden=s.zeit*60;
-
-anzeigeTimer();
-
-}
-
-
-
-function startTimer(){
-
-if(timer)return;
-
-timer=setInterval(()=>{
-
-if(sekunden>0){
-
-sekunden--;
-
-anzeigeTimer();
-
-}
-else{
-
-nächsteRunde();
-
-}
-
-},1000);
-
-}
-
-
-
-function pauseTimer(){
-
-clearInterval(timer);
-
-timer=null;
-
-}
-
-
-
-function nächsteRunde(){
-
-pauseTimer();
-
-aktuelleRunde++;
-
-if(aktuelleRunde>=spiele.length){
-
-runde.innerHTML="🏆 Spielabend beendet";
-match.innerHTML="";
-return;
-
-}
-
-zeigeRunde();
-
-}
-
-
-
-function anzeigeTimer(){
-
-let m=Math.floor(sekunden/60);
-let s=sekunden%60;
-
-timer.innerHTML=
-String(m).padStart(2,"0")+":"+
-String(s).padStart(2,"0");
-
-}
-
-
-
-function exitKiosk(){
-
-pauseTimer();
-
-kiosk.style.display="none";
-planung.style.display="block";
-
-}
-
-
+function openKiosk(){planung.style.display='none';kiosk.style.display='block';idx=0;show();}
+function show(){let g=games[idx];round.innerHTML="Runde "+(idx+1)+" / "+games.length;match.innerHTML=g.a+"<br>VS<br>"+g.b+"<br>Bank: "+g.bank;sec=g.min*60;display();}
+function display(){clock.innerHTML=String(Math.floor(sec/60)).padStart(2,'0')+":"+String(sec%60).padStart(2,'0');}
+function start(){if(handle)return;handle=setInterval(()=>{if(sec>0){sec--;display()}else{next()}},1000)}
+function pause(){clearInterval(handle);handle=null}
+function next(){pause();idx++;if(idx<games.length)show();else{round.innerHTML="🏆 beendet";match.innerHTML=""}}
+function exitKiosk(){pause();kiosk.style.display='none';planung.style.display='block'}
 </script>
-
-
 </body>
 </html>
