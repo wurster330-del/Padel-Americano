@@ -1,53 +1,411 @@
-function generateFairPlay(players, mode){
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>PADEL-GÖTTER PRO 1.0 Build 1</title>
 
-  let p = [...players];
-  let rounds = [];
-  let historyPairs = new Set();
-
-  function pairKey(a,b){
-    return [a,b].sort().join("-");
-  }
-
-  function hasPlayedTogether(a,b){
-    return historyPairs.has(pairKey(a,b));
-  }
-
-  function savePair(a,b){
-    historyPairs.add(pairKey(a,b));
-  }
-
-  function shuffle(arr){
-    return [...arr].sort(()=>Math.random()-0.5);
-  }
-
-  // maximale Runden
-  let totalRounds = Math.floor((p.length * 30) / 12); 
-  // grobe Startlogik (wird später optimiert über Spielzeit)
-
-  for(let r=0; r<totalRounds; r++){
-
-    let pool = shuffle(p);
-
-    let teamA = [pool[0], pool[1]];
-    let teamB = [pool[2], pool[3]];
-    let bank = [pool[4], pool[5]];
-
-    // FAIRNESS CHECK (einfacher erster Schritt)
-    if(hasPlayedTogether(pool[0], pool[1]) || hasPlayedTogether(pool[2], pool[3])){
-      continue; // vermeiden von Wiederholung
-    }
-
-    savePair(pool[0], pool[1]);
-    savePair(pool[2], pool[3]);
-
-    rounds.push({
-      round: r+1,
-      a: teamA,
-      b: teamB,
-      bank: bank
-    });
-
-  }
-
-  return rounds;
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f4f4;
+    margin:0;
+    padding:20px;
 }
+
+h1{
+    text-align:center;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:15px;
+}
+
+input,select,button{
+    font-size:18px;
+    padding:10px;
+    margin:5px;
+}
+
+button{
+    cursor:pointer;
+    border-radius:10px;
+}
+
+.primary{
+    background:#198754;
+    color:white;
+}
+
+.red{
+    background:#dc3545;
+    color:white;
+}
+
+.card{
+    background:#eee;
+    padding:15px;
+    margin:10px 0;
+    border-radius:10px;
+}
+
+.hidden{
+    display:none;
+}
+
+
+/* Kiosk */
+
+#kiosk{
+    position:fixed;
+    inset:0;
+    background:#111;
+    color:white;
+    display:none;
+    text-align:center;
+    padding-top:30px;
+}
+
+.big{
+    font-size:55px;
+}
+
+.medium{
+    font-size:35px;
+}
+
+.timer{
+    font-size:80px;
+    margin:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+
+<div class="container" id="planung">
+
+<h1>🏆 PADEL-GÖTTER PRO</h1>
+
+<h2>Spielplanung</h2>
+
+<label>Spieler:</label><br>
+
+<input id="p1" value="Marco">
+<input id="p2" value="Stefan">
+<input id="p3" value="David">
+<input id="p4" value="Tobias">
+<input id="p5" value="Chris">
+<input id="p6" value="Werner">
+
+<br>
+
+<label>Gesamtzeit Minuten:</label>
+
+<input id="gesamt" value="180">
+
+<br>
+
+<label>Modus:</label>
+
+<select id="modus">
+<option>Alle Paarungen</option>
+<option>Turnier</option>
+<option>Gruppe</option>
+</select>
+
+<br>
+
+<button class="primary" onclick="erstellePlan()">
+Spielplan erstellen
+</button>
+
+
+<div id="plan"></div>
+
+</div>
+
+
+
+
+<div id="kiosk">
+
+<div class="big">
+🏆 PADEL-GÖTTER PRO
+</div>
+
+<div class="medium" id="runde">
+</div>
+
+<div class="medium" id="match">
+</div>
+
+<div>
+<div class="timer" id="timer">
+00:00
+</div>
+
+<button class="primary" onclick="startTimer()">
+Start
+</button>
+
+<button onclick="pauseTimer()">
+Pause
+</button>
+
+</div>
+
+
+<br>
+
+<button class="red" onclick="exitKiosk()">
+EXIT
+</button>
+
+
+</div>
+
+
+
+
+<script>
+
+let spiele=[];
+let aktuelleRunde=0;
+
+let sekunden=0;
+let timer=null;
+
+
+
+function erstellePlan(){
+
+let spieler=[
+p1.value,
+p2.value,
+p3.value,
+p4.value,
+p5.value,
+p6.value
+];
+
+
+let minuten=parseInt(gesamt.value);
+
+
+let matchZeit=Math.floor(minuten/15);
+
+
+spiele=[];
+
+
+for(let i=0;i<15;i++){
+
+let a=spieler[i%6];
+let b=spieler[(i+1)%6];
+let c=spieler[(i+2)%6];
+let d=spieler[(i+3)%6];
+
+let bank=[
+spieler[(i+4)%6],
+spieler[(i+5)%6]
+];
+
+
+spiele.push({
+
+runde:i+1,
+team1:a+" + "+b,
+team2:c+" + "+d,
+bank:bank.join(", "),
+zeit:matchZeit
+
+});
+
+}
+
+
+zeigePlan();
+
+}
+
+
+
+function zeigePlan(){
+
+let html="<h2>Spielplan</h2>";
+
+spiele.forEach(s=>{
+
+html+=`
+
+<div class="card">
+
+<b>Runde ${s.runde}</b><br>
+
+${s.team1}
+<br>
+gegen
+<br>
+${s.team2}
+
+<br><br>
+
+Bank:
+${s.bank}
+
+<br>
+
+${s.zeit} Minuten
+
+</div>
+
+`;
+
+});
+
+
+html+=`
+
+<button class="primary"
+onclick="startKiosk()">
+
+Kiosk starten
+
+</button>
+
+`;
+
+plan.innerHTML=html;
+
+}
+
+
+
+
+
+function startKiosk(){
+
+planung.style.display="none";
+kiosk.style.display="block";
+
+aktuelleRunde=0;
+
+zeigeRunde();
+
+}
+
+
+
+function zeigeRunde(){
+
+let s=spiele[aktuelleRunde];
+
+runde.innerHTML=
+"Runde "+s.runde+" / "+spiele.length;
+
+match.innerHTML=
+
+s.team1+
+"<br>VS<br>"+
+s.team2+
+"<br><br>Bank:<br>"+
+s.bank;
+
+
+sekunden=s.zeit*60;
+
+anzeigeTimer();
+
+}
+
+
+
+function startTimer(){
+
+if(timer)return;
+
+timer=setInterval(()=>{
+
+if(sekunden>0){
+
+sekunden--;
+
+anzeigeTimer();
+
+}
+else{
+
+nächsteRunde();
+
+}
+
+},1000);
+
+}
+
+
+
+function pauseTimer(){
+
+clearInterval(timer);
+
+timer=null;
+
+}
+
+
+
+function nächsteRunde(){
+
+pauseTimer();
+
+aktuelleRunde++;
+
+if(aktuelleRunde>=spiele.length){
+
+runde.innerHTML="🏆 Spielabend beendet";
+match.innerHTML="";
+return;
+
+}
+
+zeigeRunde();
+
+}
+
+
+
+function anzeigeTimer(){
+
+let m=Math.floor(sekunden/60);
+let s=sekunden%60;
+
+timer.innerHTML=
+String(m).padStart(2,"0")+":"+
+String(s).padStart(2,"0");
+
+}
+
+
+
+function exitKiosk(){
+
+pauseTimer();
+
+kiosk.style.display="none";
+planung.style.display="block";
+
+}
+
+
+</script>
+
+
+</body>
+</html>
