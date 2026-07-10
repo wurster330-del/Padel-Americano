@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad</title><style>body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-align:center}.banner{background:#1e3d59;color:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 15px}.panel{background:#2c3e50;color:#fff;padding:30px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 6px 15px rgba(0,0,0,0.2)}.timer{font-size:120px;font-weight:900;font-family:monospace;color:#ff6e40;margin:10px 0}.btn{background:#ff6e40;color:#fff;border:none;padding:15px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;margin:5px;flex:1;min-width:150px}.btn-g{background:#2ecc71}.btn-m{background:#9b59b6}.btn-r{background:#7f8c8d;min-width:80px}.setup-box{background:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border-top:4px solid #9b59b6}.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}.setup-grid input{padding:8px;font-size:14px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}</style></head><body><div class="banner"><h1>Padel Turnier-Manager Pro</h1><p>9 Runden • 20 Min. • Restzeit ans Finale</p></div><div class="setup-box"><strong style="color:#1e3d59;">👥 Spieler-Anwesenheit (Namen bei Bedarf überschreiben):</strong><div class="setup-grid"><input type="text" id="sp1" value="Werner" oninput="renderTable()"><input type="text" id="sp2" value="Marco" oninput="renderTable()"><input type="text" id="sp3" value="Tobias" oninput="renderTable()"><input type="text" id="sp4" value="Stefan" oninput="renderTable()"><input type="text" id="sp5" value="Christian" oninput="renderTable()"><input type="text" id="sp6" value="David" oninput="renderTable()"></div></div><div class="panel"><div id="roundTitle" style="color:#bdc3c7;font-weight:bold">Runde 1 / 9</div><div class="timer" id="display">20:00</div><div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:20px">Gesammelte Restzeit: 00:00</div><div style="display:flex;flex-wrap:wrap;justify-content:center"><button class="btn" id="startBtn" onclick="toggleTimer()">START</button><button class="btn btn-g" onclick="saveRestTime()">Satz fertig!<br>Restzeit sichern</button><button class="btn btn-m" onclick="shufflePlayers()">Spieler<br>mischen</button><button class="btn btn-r" onclick="resetAll()">Reset</button></div></div><table id="planTable"><thead><tr><th>Runde</th><th>Match</th><th>Bank</th></tr></thead><tbody id="tableBody"></tbody></table><script>
-let spieler=["Werner","Marco","Tobias","Stefan","Christian","David"];const ablauf=[0,1,2,0,1,2,0,1,2];let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTime,totalBonusTime=0,timerInterval=null;
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v2</title><style>body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-align:center}.banner{background:#1e3d59;color:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 15px}.panel{background:#2c3e50;color:#fff;padding:30px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 6px 15px rgba(0,0,0,0.2)}.timer{font-size:120px;font-weight:900;font-family:monospace;color:#ff6e40;margin:10px 0}.btn{background:#ff6e40;color:#fff;border:none;padding:15px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;margin:5px;flex:1;min-width:150px}.btn-g{background:#2ecc71}.btn-g:disabled{background:#557a61;cursor:not-allowed;opacity:0.5}.btn-m{background:#9b59b6}.btn-r{background:#7f8c8d;min-width:80px}.setup-box{background:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border-top:4px solid #9b59b6}.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}.setup-grid input{padding:8px;font-size:14px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}</style></head><body><div class="banner"><h1>Padel Turnier-Manager Pro</h1><p>9 Reguläre Runden + Optionale Bonus-Runde 10</p></div><div class="setup-box"><strong style="color:#1e3d59;">👥 Spieler-Anwesenheit (Namen bei Bedarf überschreiben):</strong><div class="setup-grid"><input type="text" id="sp1" value="Werner" oninput="renderTable()"><input type="text" id="sp2" value="Marco" oninput="renderTable()"><input type="text" id="sp3" value="Tobias" oninput="renderTable()"><input type="text" id="sp4" value="Stefan" oninput="renderTable()"><input type="text" id="sp5" value="Christian" oninput="renderTable()"><input type="text" id="sp6" value="David" oninput="renderTable()"></div></div><div class="panel"><div id="roundTitle" style="color:#bdc3c7;font-weight:bold">Runde 1 / 9</div><div class="timer" id="display">20:00</div><div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:20px">Gesammelte Restzeit für Runde 10: 00:00</div><div style="display:flex;flex-wrap:wrap;justify-content:center"><button class="btn" id="startBtn" onclick="toggleTimer()">START</button><button class="btn btn-g" id="saveBtn" onclick="saveRestTime()">Satz fertig!<br>Restzeit sichern</button><button class="btn btn-m" onclick="shufflePlayers()">Spieler<br>mischen</button><button class="btn btn-r" onclick="resetAll()">Reset</button></div></div><table id="planTable"><thead><tr><th>Runde</th><th>Match</th><th>Bank</th></tr></thead><tbody id="tableBody"></tbody></table><script>
+let spieler=["Werner","Marco","Tobias","Stefan","Christian","David"];const ablauf=[0,1,2,0,1,2,0,1,2,0];let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTime,totalBonusTime=0,timerInterval=null;
 
 function updatePlayerNamesFromInputs() {
     for(let i=1; i<=6; i++) {
@@ -17,16 +17,110 @@ function formatTime(s){let m=Math.floor(s/60);s=s%60;return(m<10?'0':'')+m+':'+(
 
 function renderTable(){
     updatePlayerNamesFromInputs();
-    const t1=spieler[0]+" & "+spieler[1],t2=spieler[2]+" & "+spieler[3],t3=spieler[4]+" & "+spieler[5];let html="";for(let i=0;i<9;i++){let m="",b="",r=ablauf[i];if(r===0){m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 2</span>`;b=`<span class="badge-bank">Team 3 (${t3})</span>`}else if(r===1){m=`<span class="badge-team">Team 2</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`;b=`<span class="badge-bank">Team 1 (${t1})</span>`}else{m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`;b=`<span class="badge-bank">Team 2 (${t2})</span>`}let c=(i+1===aktuelleRunde)?"class='active-row'":"";let ext=(i===8&&totalBonusTime>0)?" <small style='color:#2ecc71;'>(+ "+formatTime(totalBonusTime)+")</small>":"";html+=`<tr ${c}><td><strong>${i+1}</strong>${ext}</td><td>${m}</td><td>${b}</td></tr>`}document.getElementById('tableBody').innerHTML=html;document.getElementById('roundTitle').textContent=`Runde ${aktuelleRunde} / 9`}
+    const t1=spieler[0]+" & "+spieler[1],t2=spieler[2]+" & "+spieler[3],t3=spieler[4]+" & "+spieler[5];
+    let html="";
+    let rundenAnzahl = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+    
+    for(let i=0;i<rundenAnzahl;i++){
+        let m="",b="",r=ablauf[i];
+        if(r===0){
+            m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 2</span>`;
+            b=`<span class="badge-bank">Team 3 (${t3})</span>`;
+        }else if(r===1){
+            m=`<span class="badge-team">Team 2</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`;
+            b=`<span class="badge-bank">Team 1 (${t1})</span>`;
+        }else{
+            m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`;
+            b=`<span class="badge-bank">Team 2 (${t2})</span>`;
+        }
+        let c=(i+1===aktuelleRunde)?"class='active-row'":"";
+        let rName = (i === 9) ? "10 (Bonus)" : (i+1);
+        let ext = (i === 9) ? ` <small style='color:#2ecc71;'>(Gesamte Verlängerung)</small>` : "";
+        html+=`<tr ${c}><td><strong>${rName}</strong>${ext}</td><td>${m}</td><td>${b}</td></tr>`;
+    }
+    document.getElementById('tableBody').innerHTML=html;
+    document.getElementById('roundTitle').textContent = (aktuelleRunde === 10) ? `Runde 10 / 10 (BONUS-MATCH)` : `Runde ${aktuelleRunde} / 9`;
+    
+    // Deaktiviere "Restzeit sichern" in Runde 9 und 10
+    document.getElementById('saveBtn').disabled = (aktuelleRunde >= 9);
+}
 
-function updateDisplay(){document.getElementById('display').textContent=formatTime(timeLeft);document.getElementById('bonusDisplay').textContent=`Gesammelte Restzeit fürs Finale: ${formatTime(totalBonusTime)}`}function toggleTimer(){const btn=document.getElementById('startBtn');if(timerInterval){clearInterval(timerInterval);timerInterval=null;btn.textContent='START';btn.style.backgroundColor='#ff6e40'}else{btn.textContent='PAUSE';btn.style.backgroundColor='#e74c3c';timerInterval=setInterval(()=>{if(timeLeft>0){timeLeft--;updateDisplay()}else{clearInterval(timerInterval);timerInterval=null;btn.textContent='START';btn.style.backgroundColor='#ff6e40';if(aktuelleRunde<9){aktuelleRunde++;timeLeft=(aktuelleRunde===9)?(baseTime+totalBonusTime):baseTime;renderTable();updateDisplay()}else{alert("Turnier vorbei!")}}},1000)}}function saveRestTime(){if(aktuelleRunde>=9){alert("In Runde 9 kann keine Zeit mehr gesammelt werden!");return}let r=timeLeft;if(r<=0)return;if(confirm(`${formatTime(r)} Restzeit fürs Finale sichern?`)){if(timerInterval){clearInterval(timerInterval);timerInterval=null;document.getElementById('startBtn').textContent='START';document.getElementById('startBtn').style.backgroundColor='#ff6e40'}totalBonusTime+=r;aktuelleRunde++;timeLeft=(aktuelleRunde===9)?(baseTime+totalBonusTime):baseTime;renderTable();updateDisplay()}}function resetAll(){if(!confirm("Turnier zurücksetzen?"))return;clearInterval(timerInterval);timerInterval=null;aktuelleRunde=1;timeLeft=baseTime;totalBonusTime=0;document.getElementById('startBtn').textContent='START';document.getElementById('startBtn').style.backgroundColor='#ff6e40';renderTable();updateDisplay()}
+function updateDisplay(){
+    document.getElementById('display').textContent=formatTime(timeLeft);
+    document.getElementById('bonusDisplay').textContent=`Gesammelte Restzeit für Runde 10: ${formatTime(totalBonusTime)}`;
+}
 
-// iPad-Sicherung: Erzwingt das Laden direkt beim Start
-window.onload = function() {
+function toggleTimer(){
+    const btn=document.getElementById('startBtn');
+    if(timerInterval){
+        clearInterval(timerInterval);
+        timerInterval=null;
+        btn.textContent='START';
+        btn.style.backgroundColor='#ff6e40';
+    }else{
+        btn.textContent='PAUSE';
+        btn.style.backgroundColor='#e74c3c';
+        timerInterval=setInterval(()=>{
+            if(timeLeft > 0){
+                timeLeft--;
+                updateDisplay();
+            }else{
+                clearInterval(timerInterval);
+                timerInterval=null;
+                btn.textContent='START';
+                btn.style.backgroundColor='#ff6e40';
+                
+                if(aktuelleRunde < 9){
+                    aktuelleRunde++;
+                    timeLeft=baseTime;
+                    renderTable();
+                    updateDisplay();
+                } else if(aktuelleRunde === 9 && totalBonusTime > 0) {
+                    alert("Reguläre Runden beendet! Da ihr Zeit gespart habt, starten wir jetzt die BONUS-RUNDE 10!");
+                    aktuelleRunde = 10;
+                    timeLeft = totalBonusTime;
+                    renderTable();
+                    updateDisplay();
+                } else {
+                    alert("Turnier offiziell beendet!");
+                }
+            }
+        },1000);
+    }
+}
+
+function saveRestTime(){
+    if(aktuelleRunde >= 9){return}
+    let r=timeLeft;
+    if(r<=0)return;
+    if(confirm(`${formatTime(r)} Restzeit für Runde 10 sichern?`)){
+        if(timerInterval){
+            clearInterval(timerInterval);
+            timerInterval=null;
+            document.getElementById('startBtn').textContent='START';
+            document.getElementById('startBtn').style.backgroundColor='#ff6e40';
+        }
+        totalBonusTime+=r;
+        aktuelleRunde++;
+        timeLeft=baseTime;
+        renderTable();
+        updateDisplay();
+    }
+}
+
+function resetAll(){
+    if(!confirm("Turnier zurücksetzen?"))return;
+    clearInterval(timerInterval);
+    timerInterval=null;
+    aktuelleRunde=1;
+    timeLeft=baseTime;
+    totalBonusTime=0;
+    document.getElementById('startBtn').textContent='START';
+    document.getElementById('startBtn').style.backgroundColor='#ff6e40';
     renderTable();
     updateDisplay();
-};
-// Falls window.onload auf alten iPads verzögert, direkt noch einmal ausführen
-renderTable();
-updateDisplay();
+}
+
+window.onload = function() { renderTable(); updateDisplay(); };
+renderTable(); updateDisplay();
 </script></body></html>
