@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v5</title><style>
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v6</title><style>
 body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-align:center}
 .banner{background:#1e3d59;color:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 15px;position:relative}
 .banner h1{margin:5px 0}
@@ -7,12 +7,20 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
 .total-timer-time{font-family:monospace;font-size:20px;font-weight:bold;color:#fff;margin-right:8px}
 .total-btn{background:#fff;color:#1e3d59;border:none;padding:4px 10px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer;margin-right:4px}
 .total-btn:hover{background:#e0e0e0}
-/* Kleiner Reset-Link für die Gesamtzeit */
 .total-reset-link{color:rgba(255,255,255,0.7);font-size:11px;text-decoration:underline;cursor:pointer;margin-left:6px}
 .total-reset-link:hover{color:#fff}
 
 .panel{background:#2c3e50;color:#fff;padding:30px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 6px 15px rgba(0,0,0,0.2)}
-.timer{font-size:150px;font-weight:900;font-family:monospace;color:#ff6e40;margin:5px 0;line-height:1.1}
+.timer{font-size:150px;font-weight:900;font-family:monospace;color:#ff6e40;margin:5px 0;line-height:1.1;transition: color 0.3s;}
+
+/* --- NEU: BLINK-EFFEKT FÜR DIE LETZTE MINUTE --- */
+.timer-warn {
+    color: #e74c3c !important;
+    animation: blinker 1s linear infinite;
+}
+@keyframes blinker {
+    50% { opacity: 0.3; }
+}
 
 .btn-container{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:15px}
 .btn{background:#ff6e40;color:#fff;border:none;padding:15px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;flex:1;min-width:140px}
@@ -32,7 +40,6 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
         <span>⏱️ Gesamtzeit: </span>
         <span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
-        <!-- NEU: RESET FÜR DIE GESAMTZEIT -->
         <span class="total-reset-link" onclick="resetTotalTimer()">Reset</span>
     </div>
 </div>
@@ -41,6 +48,7 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
 
 <div class="panel">
     <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:18px;">Runde 1 / 9</div>
+    <!-- TIMER ELEMENT -->
     <div class="timer" id="display">20:00</div>
     <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:15px">Gesammelte Restzeit für Runde 10: 00:00</div>
     
@@ -58,6 +66,37 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
 <script>
 let spieler=["Werner","Marco","Tobias","Stefan","Christian","David"];const ablauf=[0,1,2,0,1,2,0,1,2,0];let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTime,totalBonusTime=0,timerInterval=null;
 let totalSeconds = 0; let totalTimerInterval = null;
+
+// NEU: AUDIO-SYNTHESIZER (Erzeugt einen Hupton komplett ohne externe Musikdatei)
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playHornSound() {
+    try {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.type = 'sawtooth'; // Aggressiver Hallen-Sound
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // Tieferer Hupton
+        
+        // Erzeugt 3 kurze Signaltöne hintereinander
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.4);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.45);
+        
+        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.55);
+        gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.9);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.95);
+        
+        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 1.05);
+        gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 1.5);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.6);
+        
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 1.7);
+    } catch(e) { console.log("Audio blockiert oder nicht unterstützt", e); }
+}
 
 function updatePlayerNamesFromInputs() {
     for(let i=1; i<=6; i++) {
@@ -91,19 +130,16 @@ function toggleTotalTimer() {
         clearInterval(totalTimerInterval); totalTimerInterval = null;
         btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59';
     } else {
+        if(audioCtx.state === 'suspended') { audioCtx.resume(); } // Aktiviert Audio auf dem iPad
         btn.textContent = 'PAUSE'; btn.style.background = '#e74c3c'; btn.style.color = '#fff';
         totalTimerInterval = setInterval(() => { totalSeconds++; document.getElementById('totalDisplay').textContent = formatTotalTime(totalSeconds); }, 1000);
     }
 }
 
-// NEU: NUR DEN GESAMT-TIMER ZURÜCKSETZEN
 function resetTotalTimer() {
     if(!confirm("Gesamtzeit wirklich zurücksetzen?")) return;
-    if(totalTimerInterval) {
-        clearInterval(totalTimerInterval); totalTimerInterval = null;
-    }
-    totalSeconds = 0;
-    document.getElementById('totalDisplay').textContent = "00:00:00";
+    if(totalTimerInterval) { clearInterval(totalTimerInterval); totalTimerInterval = null; }
+    totalSeconds = 0; document.getElementById('totalDisplay').textContent = "00:00:00";
     const btn = document.getElementById('totalStartBtn');
     btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59';
 }
@@ -135,9 +171,18 @@ function renderTable(){
     document.getElementById('saveBtn').disabled = (aktuelleRunde >= 9);
 }
 
+// ANZEIGE-UPDATE MIT BLINK-LOGIK
 function updateDisplay(){
-    document.getElementById('display').textContent=formatTime(timeLeft);
-    document.getElementById('bonusDisplay').textContent=`Gesammelte Restzeit für Runde 10: ${formatTime(totalBonusTime)}`;
+    const displayEl = document.getElementById('display');
+    displayEl.textContent = formatTime(timeLeft);
+    document.getElementById('bonusDisplay').textContent = `Gesammelte Restzeit für Runde 10: ${formatTime(totalBonusTime)}`;
+    
+    // Unter 60 Sekunden -> Rot blinken lassen
+    if(timeLeft > 0 && timeLeft < 60 && timerInterval !== null) {
+        displayEl.classList.add('timer-warn');
+    } else {
+        displayEl.classList.remove('timer-warn');
+    }
 }
 
 function toggleTimer(){
@@ -145,12 +190,20 @@ function toggleTimer(){
     if(timerInterval){
         clearInterval(timerInterval); timerInterval=null;
         btn.textContent='START'; btn.style.backgroundColor='#ff6e40';
+        updateDisplay();
     }else{
+        if(audioCtx.state === 'suspended') { audioCtx.resume(); } // Aktiviert Audio auf dem iPad
         btn.textContent='PAUSE'; btn.style.backgroundColor='#e74c3c';
         timerInterval=setInterval(()=>{
-            if(timeLeft > 0){ timeLeft--; updateDisplay(); }else{
+            if(timeLeft > 0){
+                timeLeft--; updateDisplay();
+            }else{
                 clearInterval(timerInterval); timerInterval=null;
                 btn.textContent='START'; btn.style.backgroundColor='#ff6e40';
+                updateDisplay();
+                
+                playHornSound(); // NEU: Alarmsound abspielen bei 00:00
+                
                 if(aktuelleRunde < 9){
                     aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay();
                 } else if(aktuelleRunde === 9 && totalBonusTime > 0) {
