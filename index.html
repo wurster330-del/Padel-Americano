@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v6</title><style>
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v7</title><style>
 body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-align:center}
 .banner{background:#1e3d59;color:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 15px;position:relative}
 .banner h1{margin:5px 0}
@@ -13,7 +13,6 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
 .panel{background:#2c3e50;color:#fff;padding:30px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 6px 15px rgba(0,0,0,0.2)}
 .timer{font-size:150px;font-weight:900;font-family:monospace;color:#ff6e40;margin:5px 0;line-height:1.1;transition: color 0.3s;}
 
-/* --- NEU: BLINK-EFFEKT FÜR DIE LETZTE MINUTE --- */
 .timer-warn {
     color: #e74c3c !important;
     animation: blinker 1s linear infinite;
@@ -30,7 +29,16 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
 .btn-abort{background:#e74c3c}
 .btn-r{background:#7f8c8d;min-width:80px;max-width:100px}
 
-.setup-box{background:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border-top:4px solid #9b59b6}.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}.setup-grid input{padding:8px;font-size:14px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}
+.setup-box{background:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border-top:4px solid #9b59b6}.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}.setup-grid input{padding:8px;font-size:14px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}
+
+table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto 20px;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}
+
+/* --- NEU: ZUSÄTZLICHER STYLE FÜR DIE ERGEBNIS-BOX & RANGLISTE --- */
+.score-box{background:#fff;padding:20px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:4px solid #2ecc71}
+.score-select{padding:10px;font-size:16px;font-weight:bold;border-radius:4px;border:1px solid #ccc;color:#2c3e50;max-width:90%;margin-bottom:10px}
+.score-btn{background:#2ecc71;color:#fff;border:none;padding:10px 20px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer}
+.rank-th{background:#2ecc71}
+.gold-row{background:#fff9c4!important;font-weight:bold}
 </style></head><body>
 
 <div class="banner">
@@ -44,11 +52,10 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
     </div>
 </div>
 
-<div class="setup-box"><strong style="color:#1e3d59;">👥 Spieler-Anwesenheit (Namen bei Bedarf einfach überschreiben):</strong><div class="setup-grid"><input type="text" id="sp1" value="Werner" oninput="renderTable()"><input type="text" id="sp2" value="Marco" oninput="renderTable()"><input type="text" id="sp3" value="Tobias" oninput="renderTable()"><input type="text" id="sp4" value="Stefan" oninput="renderTable()"><input type="text" id="sp5" value="Christian" oninput="renderTable()"><input type="text" id="sp6" value="David" oninput="renderTable()"></div></div>
+<div class="setup-box"><strong style="color:#1e3d59;">👥 Spieler-Anwesenheit (Namen bei Bedarf einfach überschreiben):</strong><div class="setup-grid"><input type="text" id="sp1" value="Werner" oninput="initStats();renderTable()"><input type="text" id="sp2" value="Marco" oninput="initStats();renderTable()"><input type="text" id="sp3" value="Tobias" oninput="initStats();renderTable()"><input type="text" id="sp4" value="Stefan" oninput="initStats();renderTable()"><input type="text" id="sp5" value="Christian" oninput="initStats();renderTable()"><input type="text" id="sp6" value="David" oninput="initStats();renderTable()"></div></div>
 
 <div class="panel">
     <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:18px;">Runde 1 / 9</div>
-    <!-- TIMER ELEMENT -->
     <div class="timer" id="display">20:00</div>
     <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:15px">Gesammelte Restzeit für Runde 10: 00:00</div>
     
@@ -61,41 +68,67 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
     </div>
 </div>
 
+<!-- NEU: INTERAKTIVE ERGEBNISEINGABE -->
+<div class="score-box">
+    <strong style="color:#2ecc71; font-size:18px; display:block; margin-bottom:10px;">🏆 Turniersieger ermitteln</strong>
+    <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; margin-bottom:5px;">Ergebnis für aktuelle Runde eintragen:</span>
+    <select id="matchWinnerSelect" class="score-select">
+        <!-- Wird dynamisch befüllt -->
+    </select>
+    <br>
+    <button class="score-btn" onclick="submitRoundScore()">Ergebnis sichern & eintragen</button>
+</div>
+
+<!-- NEU: LIVE-RANGLISTE (BLITZTABELLE) -->
+<h3 style="color:#1e3d59; margin-top:20px;">📊 Aktuelle Tabelle (Live-Rangliste)</h3>
+<table>
+    <thead>
+        <tr>
+            <th class="rank-th" style="width:60px">Platz</th>
+            <th class="rank-th">Spieler</th>
+            <th class="rank-th" style="width:50px">Sp</th>
+            <th class="rank-th" style="width:50px">S</th>
+            <th class="rank-th" style="width:50px">U</th>
+            <th class="rank-th" style="width:50px">N</th>
+            <th class="rank-th" style="width:70px; background:#27ae60;">Pkt</th>
+        </tr>
+    </thead>
+    <tbody id="rankTableBody">
+        <!-- Wird dynamisch generiert -->
+    </tbody>
+</table>
+
+<h3 style="color:#1e3d59;">📅 Spielplan</h3>
 <table id="planTable"><thead><tr><th>Runde</th><th>Match</th><th>Bank</th></tr></thead><tbody id="tableBody"></tbody></table>
 
 <script>
 let spieler=["Werner","Marco","Tobias","Stefan","Christian","David"];const ablauf=[0,1,2,0,1,2,0,1,2,0];let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTime,totalBonusTime=0,timerInterval=null;
 let totalSeconds = 0; let totalTimerInterval = null;
 
-// NEU: AUDIO-SYNTHESIZER (Erzeugt einen Hupton komplett ohne externe Musikdatei)
+// NEU: DATA-STRUCTURE FÜR DIe STATISTIKEN
+let spielerStats = {};
+function initStats() {
+    updatePlayerNamesFromInputs();
+    // Behalte Punkte bei Namensänderung bei, falls Spieler schon existiert, sonst neu
+    let alteStats = {...spielerStats};
+    spielerStats = {};
+    spieler.forEach(name => {
+        spielerStats[name] = alteStats[name] || { sp: 0, s: 0, u: 0, n: 0, pkt: 0 };
+    });
+    renderRankTable();
+}
+
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playHornSound() {
     try {
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        
-        osc.type = 'sawtooth'; // Aggressiver Hallen-Sound
-        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // Tieferer Hupton
-        
-        // Erzeugt 3 kurze Signaltöne hintereinander
+        let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, audioCtx.currentTime);
         gain.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.4);
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.45);
-        
-        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.55);
-        gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.9);
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.95);
-        
-        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 1.05);
-        gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 1.5);
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.6);
-        
-        osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 1.7);
-    } catch(e) { console.log("Audio blockiert oder nicht unterstützt", e); }
+        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.4); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.45);
+        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.55); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.9); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.95);
+        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 1.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 1.5); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.6);
+        osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 1.7);
+    } catch(e) { console.log("Audio blockiert", e); }
 }
 
 function updatePlayerNamesFromInputs() {
@@ -107,18 +140,19 @@ function updatePlayerNamesFromInputs() {
 
 function shufflePlayers(){
     if(timerInterval){alert("Bitte Match-Timer pausieren!");return}
-    if(!confirm("Teams neu auslosen? Der Plan wird gemischt.")) return;
+    if(!confirm("Teams neu auslosen? Der Plan wird gemischt. Statistiken werden zurückgesetzt.")) return;
     updatePlayerNamesFromInputs();
     for (let i = spieler.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         let temp = spieler[i]; spieler[i] = spieler[j]; spieler[j] = temp;
     }
     for(let i=1; i<=6; i++) { document.getElementById('sp' + i).value = spieler[i-1]; }
+    spielerStats = {};
+    initStats();
     renderTable();
 }
 
 function formatTime(s){let m=Math.floor(s/60);s=s%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
-
 function formatTotalTime(totalSecs) {
     let h = Math.floor(totalSecs / 3600); let m = Math.floor((totalSecs % 3600) / 60); let s = totalSecs % 60;
     return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
@@ -130,7 +164,7 @@ function toggleTotalTimer() {
         clearInterval(totalTimerInterval); totalTimerInterval = null;
         btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59';
     } else {
-        if(audioCtx.state === 'suspended') { audioCtx.resume(); } // Aktiviert Audio auf dem iPad
+        if(audioCtx.state === 'suspended') { audioCtx.resume(); }
         btn.textContent = 'PAUSE'; btn.style.background = '#e74c3c'; btn.style.color = '#fff';
         totalTimerInterval = setInterval(() => { totalSeconds++; document.getElementById('totalDisplay').textContent = formatTotalTime(totalSeconds); }, 1000);
     }
@@ -142,6 +176,93 @@ function resetTotalTimer() {
     totalSeconds = 0; document.getElementById('totalDisplay').textContent = "00:00:00";
     const btn = document.getElementById('totalStartBtn');
     btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59';
+}
+
+// NEU: DIE AKTUELLEN MATCHPARTNER ERMITTELN FÜR JEDE RUNDE
+function getTeamsForRound(rIndex) {
+    const t1=[spieler[0], spieler[1]], t2=[spieler[2], spieler[3]], t3=[spieler[4], spieler[5]];
+    let r=ablauf[rIndex];
+    if(r===0) return { teamA: t1, teamB: t2, nameA: "Team 1", nameB: "Team 2" };
+    if(r===1) return { teamA: t2, teamB: t3, nameA: "Team 2", nameB: "Team 3" };
+    return { teamA: t1, teamB: t3, nameA: "Team 1", nameB: "Team 3" };
+}
+
+// NEU: ANZEIGE DER AUSWAHLBOX FÜR DAS ERGEBNIS UPDATEN
+function updateScoreSelectOption() {
+    const select = document.getElementById('matchWinnerSelect');
+    const prompt = document.getElementById('scorePrompt');
+    let maxRunden = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+    
+    if (aktuelleRunde > maxRunden) {
+        prompt.textContent = "Turnier komplett beendet!";
+        select.innerHTML = `<option>Keine aktiven Runden mehr</option>`;
+        return;
+    }
+    
+    let rName = (aktuelleRunde === 10) ? "Runde 10 (Bonus)" : "Runde " + aktuelleRunde;
+    prompt.textContent = `Ergebnis für ${rName} eintragen:`;
+    
+    let teams = getTeamsForRound(aktuelleRunde - 1);
+    let nameA = `${teams.nameA} (${teams.teamA[0]} & ${teams.teamA[1]})`;
+    let nameB = `${teams.nameB} (${teams.teamB[0]} & ${teams.teamB[1]})`;
+    
+    select.innerHTML = `
+        <option value="A">${nameA} gewinnt</option>
+        <option value="B">${nameB} gewinnt</option>
+        <option value="U">Unentschieden</option>
+    `;
+}
+
+// NEU: RUNDENERGEBNIS IN DIE TABELLE REINRECHNEN
+function submitRoundScore() {
+    let maxRunden = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+    if(aktuelleRunde > maxRunden) { alert("Das Turnier ist bereits vorbei."); return; }
+    
+    const select = document.getElementById('matchWinnerSelect');
+    let result = select.value;
+    let teams = getTeamsForRound(aktuelleRunde - 1);
+    
+    if(!confirm("Ergebnis wirklich so eintragen? Kann nicht rückgängig gemacht werden.")) return;
+    
+    // Punkte verteilen
+    if(result === "A") {
+        teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; });
+        teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; });
+    } else if (result === "B") {
+        teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; });
+        teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; });
+    } else if (result === "U") {
+        teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; });
+        teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; });
+    }
+    
+    renderRankTable();
+    alert("Ergebnis erfolgreich eingetragen!");
+}
+
+// NEU: DIE BLITZTABELLE ANZEIGEN & SORTIEREN
+function renderRankTable() {
+    let sortable = [];
+    for (let p in spielerStats) {
+        sortable.push({ name: p, ...spielerStats[p] });
+    }
+    // Sortiere nach Punkten (absteigend), bei Gleichstand nach Siegen
+    sortable.sort((a, b) => b.pkt - a.pkt || b.s - a.s);
+    
+    let html = "";
+    sortable.forEach((row, index) => {
+        let c = (index === 0 && row.pkt > 0) ? "class='gold-row'" : ""; // Platz 1 gelb markieren
+        html += `<tr ${c}>
+            <td><strong>${index + 1}.</strong></td>
+            <td><strong>${row.name}</strong></td>
+            <td>${row.sp}</td>
+            <td>${row.s}</td>
+            <td>${row.u}</td>
+            <td>${row.n}</td>
+            <td style="font-weight:bold; color:#27ae60;">${row.pkt}</td>
+        </tr>`;
+    });
+    document.getElementById('rankTableBody').innerHTML = html;
 }
 
 function renderTable(){
@@ -169,82 +290,62 @@ function renderTable(){
     document.getElementById('tableBody').innerHTML=html;
     document.getElementById('roundTitle').textContent = (aktuelleRunde === 10) ? `Runde 10 / 10 (BONUS-MATCH)` : `Runde ${aktuelleRunde} / 9`;
     document.getElementById('saveBtn').disabled = (aktuelleRunde >= 9);
+    updateScoreSelectOption();
 }
 
-// ANZEIGE-UPDATE MIT BLINK-LOGIK
 function updateDisplay(){
     const displayEl = document.getElementById('display');
     displayEl.textContent = formatTime(timeLeft);
     document.getElementById('bonusDisplay').textContent = `Gesammelte Restzeit für Runde 10: ${formatTime(totalBonusTime)}`;
-    
-    // Unter 60 Sekunden -> Rot blinken lassen
-    if(timeLeft > 0 && timeLeft < 60 && timerInterval !== null) {
-        displayEl.classList.add('timer-warn');
-    } else {
-        displayEl.classList.remove('timer-warn');
-    }
+    if(timeLeft > 0 && timeLeft < 60 && timerInterval !== null) { displayEl.classList.add('timer-warn'); } else { displayEl.classList.remove('timer-warn'); }
 }
 
 function toggleTimer(){
     const btn=document.getElementById('startBtn');
     if(timerInterval){
-        clearInterval(timerInterval); timerInterval=null;
-        btn.textContent='START'; btn.style.backgroundColor='#ff6e40';
-        updateDisplay();
+        clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; updateDisplay();
     }else{
-        if(audioCtx.state === 'suspended') { audioCtx.resume(); } // Aktiviert Audio auf dem iPad
+        if(audioCtx.state === 'suspended') { audioCtx.resume(); }
         btn.textContent='PAUSE'; btn.style.backgroundColor='#e74c3c';
         timerInterval=setInterval(()=>{
-            if(timeLeft > 0){
-                timeLeft--; updateDisplay();
-            }else{
-                clearInterval(timerInterval); timerInterval=null;
-                btn.textContent='START'; btn.style.backgroundColor='#ff6e40';
-                updateDisplay();
-                
-                playHornSound(); // NEU: Alarmsound abspielen bei 00:00
-                
+            if(timeLeft > 0){ timeLeft--; updateDisplay(); }else{
+                clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; updateDisplay();
+                playHornSound();
                 if(aktuelleRunde < 9){
                     aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay();
                 } else if(aktuelleRunde === 9 && totalBonusTime > 0) {
                     alert("Reguläre Runden beendet! Weiter geht's mit der BONUS-RUNDE 10!");
                     aktuelleRunde = 10; timeLeft = totalBonusTime; renderTable(); updateDisplay();
-                } else { alert("Turnier offiziell beendet!"); }
+                } else { alert("Turnier offiziell beendet! Prüft die Live-Rangliste oben auf euren Champion!"); }
             }
         },1000);
     }
 }
 
 function resetCurrentMatch() {
-    if(timerInterval){ 
-        clearInterval(timerInterval); timerInterval = null; 
-        document.getElementById('startBtn').textContent = 'START';
-        document.getElementById('startBtn').style.backgroundColor = '#ff6e40';
-    }
-    timeLeft = (aktuelleRunde === 10) ? totalBonusTime : baseTime;
-    updateDisplay();
+    if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; document.getElementById('startBtn').style.backgroundColor = '#ff6e40'; }
+    timeLeft = (aktuelleRunde === 10) ? totalBonusTime : baseTime; updateDisplay();
 }
 
 function saveRestTime(){
     if(aktuelleRunde >= 9){return}
     let r=timeLeft; if(r<=0)return;
     if(confirm(`${formatTime(r)} Restzeit für Runde 10 sichern?`)){
-        if(timerInterval){
-            clearInterval(timerInterval); timerInterval=null;
-            document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40';
-        }
+        if(timerInterval){ clearInterval(timerInterval); timerInterval=null; document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40'; }
         totalBonusTime+=r; aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay();
     }
 }
 
 function resetAll(){
-    if(!confirm("Gesamtes Turnier zurücksetzen? (Gesamt-Timer bleibt bestehen)"))return;
+    if(!confirm("Gesamtes Turnier zurücksetzen? Alle Statistiken/Punkte werden gelöscht!"))return;
     clearInterval(timerInterval); timerInterval=null;
     aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0;
     document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40';
+    spielerStats = {};
+    initStats();
     renderTable(); updateDisplay();
 }
 
-window.onload = function() { renderTable(); updateDisplay(); };
-renderTable(); updateDisplay();
+window.onload = function() { initStats(); renderTable(); updateDisplay(); };
+initStats(); renderTable(); updateDisplay();
 </script></body></html>
