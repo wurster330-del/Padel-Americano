@@ -1,36 +1,63 @@
 <!DOCTYPE html>
-<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v3</title><style>
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v5</title><style>
 body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-align:center}
 .banner{background:#1e3d59;color:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 15px;position:relative}
 .banner h1{margin:5px 0}
-/* --- NEU: GESAMT-TIMER DESIGN --- */
 .total-timer-box{background:rgba(255,255,255,0.15);padding:8px 12px;border-radius:6px;display:inline-block;margin-top:5px;border:1px solid rgba(255,255,255,0.3)}
 .total-timer-time{font-family:monospace;font-size:20px;font-weight:bold;color:#fff;margin-right:8px}
-.total-btn{background:#fff;color:#1e3d59;border:none;padding:4px 10px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer}
+.total-btn{background:#fff;color:#1e3d59;border:none;padding:4px 10px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer;margin-right:4px}
 .total-btn:hover{background:#e0e0e0}
+/* Kleiner Reset-Link für die Gesamtzeit */
+.total-reset-link{color:rgba(255,255,255,0.7);font-size:11px;text-decoration:underline;cursor:pointer;margin-left:6px}
+.total-reset-link:hover{color:#fff}
 
-.panel{background:#2c3e50;color:#fff;padding:30px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 6px 15px rgba(0,0,0,0.2)}.timer{font-size:120px;font-weight:900;font-family:monospace;color:#ff6e40;margin:10px 0}.btn{background:#ff6e40;color:#fff;border:none;padding:15px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;margin:5px;flex:1;min-width:150px}.btn-g{background:#2ecc71}.btn-g:disabled{background:#557a61;cursor:not-allowed;opacity:0.5}.btn-m{background:#9b59b6}.btn-r{background:#7f8c8d;min-width:80px}.setup-box{background:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border-top:4px solid #9b59b6}.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}.setup-grid input{padding:8px;font-size:14px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}
+.panel{background:#2c3e50;color:#fff;padding:30px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 6px 15px rgba(0,0,0,0.2)}
+.timer{font-size:150px;font-weight:900;font-family:monospace;color:#ff6e40;margin:5px 0;line-height:1.1}
+
+.btn-container{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:15px}
+.btn{background:#ff6e40;color:#fff;border:none;padding:15px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;flex:1;min-width:140px}
+.btn-g{background:#2ecc71}
+.btn-g:disabled{background:#557a61;cursor:not-allowed;opacity:0.5}
+.btn-m{background:#9b59b6}
+.btn-abort{background:#e74c3c}
+.btn-r{background:#7f8c8d;min-width:80px;max-width:100px}
+
+.setup-box{background:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border-top:4px solid #9b59b6}.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}.setup-grid input{padding:8px;font-size:14px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}
 </style></head><body>
 
 <div class="banner">
     <h1>Padel Turnier-Manager Pro</h1>
     <p style="margin:0 0 10px 0;">9 Reguläre Runden + Optionale Bonus-Runde 10</p>
-    
     <div class="total-timer-box">
         <span>⏱️ Gesamtzeit: </span>
         <span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
+        <!-- NEU: RESET FÜR DIE GESAMTZEIT -->
+        <span class="total-reset-link" onclick="resetTotalTimer()">Reset</span>
     </div>
 </div>
 
-<div class="setup-box"><strong style="color:#1e3d59;">👥 Spieler-Anwesenheit (Namen bei Bedarf einfach überschreiben):</strong><div class="setup-grid"><input type="text" id="sp1" value="Werner" oninput="renderTable()"><input type="text" id="sp2" value="Marco" oninput="renderTable()"><input type="text" id="sp3" value="Tobias" oninput="renderTable()"><input type="text" id="sp4" value="Stefan" oninput="renderTable()"><input type="text" id="sp5" value="Christian" oninput="renderTable()"><input type="text" id="sp6" value="David" oninput="renderTable()"></div></div><div class="panel"><div id="roundTitle" style="color:#bdc3c7;font-weight:bold">Runde 1 / 9</div><div class="timer" id="display">20:00</div><div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:20px">Gesammelte Restzeit für Runde 10: 00:00</div><div style="display:flex;flex-wrap:wrap;justify-content:center"><button class="btn" id="startBtn" onclick="toggleTimer()">START</button><button class="btn btn-g" id="saveBtn" onclick="saveRestTime()">Satz fertig!<br>Restzeit sichern</button><button class="btn btn-m" onclick="shufflePlayers()">Spieler<br>mischen</button><button class="btn btn-r" onclick="resetAll()">Reset</button></div></div><table id="planTable"><thead><tr><th>Runde</th><th>Match</th><th>Bank</th></tr></thead><tbody id="tableBody"></tbody></table>
+<div class="setup-box"><strong style="color:#1e3d59;">👥 Spieler-Anwesenheit (Namen bei Bedarf einfach überschreiben):</strong><div class="setup-grid"><input type="text" id="sp1" value="Werner" oninput="renderTable()"><input type="text" id="sp2" value="Marco" oninput="renderTable()"><input type="text" id="sp3" value="Tobias" oninput="renderTable()"><input type="text" id="sp4" value="Stefan" oninput="renderTable()"><input type="text" id="sp5" value="Christian" oninput="renderTable()"><input type="text" id="sp6" value="David" oninput="renderTable()"></div></div>
+
+<div class="panel">
+    <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:18px;">Runde 1 / 9</div>
+    <div class="timer" id="display">20:00</div>
+    <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:15px">Gesammelte Restzeit für Runde 10: 00:00</div>
+    
+    <div class="btn-container">
+        <button class="btn" id="startBtn" onclick="toggleTimer()">START</button>
+        <button class="btn btn-abort" onclick="resetCurrentMatch()">Fehlstart!<br><span style="font-size:11px;font-weight:normal;">Match-Reset</span></button>
+        <button class="btn btn-g" id="saveBtn" onclick="saveRestTime()">Satz fertig!<br><span style="font-size:11px;font-weight:normal;">Restzeit sichern</span></button>
+        <button class="btn btn-m" onclick="shufflePlayers()">Spieler<br>mischen</button>
+        <button class="btn btn-r" onclick="resetAll()">Turnier<br>Reset</button>
+    </div>
+</div>
+
+<table id="planTable"><thead><tr><th>Runde</th><th>Match</th><th>Bank</th></tr></thead><tbody id="tableBody"></tbody></table>
 
 <script>
 let spieler=["Werner","Marco","Tobias","Stefan","Christian","David"];const ablauf=[0,1,2,0,1,2,0,1,2,0];let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTime,totalBonusTime=0,timerInterval=null;
-
-// NEUE VARIABLEN FÜR DEN GESAMT-TIMER
-let totalSeconds = 0;
-let totalTimerInterval = null;
+let totalSeconds = 0; let totalTimerInterval = null;
 
 function updatePlayerNamesFromInputs() {
     for(let i=1; i<=6; i++) {
@@ -39,64 +66,52 @@ function updatePlayerNamesFromInputs() {
     }
 }
 
-// IPAD-OPTIMIERTES MISCHEN (FEHLERTOLERANT)
 function shufflePlayers(){
     if(timerInterval){alert("Bitte Match-Timer pausieren!");return}
     if(!confirm("Teams neu auslosen? Der Plan wird gemischt.")) return;
-    
     updatePlayerNamesFromInputs();
-    
-    // Klassischer robuster Shuffle
     for (let i = spieler.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        let temp = spieler[i];
-        spieler[i] = spieler[j];
-        spieler[j] = temp;
+        let temp = spieler[i]; spieler[i] = spieler[j]; spieler[j] = temp;
     }
-    
-    // Werte direkt wieder zurück in die Eingabefelder schreiben, damit man sieht, was passiert ist
-    for(let i=1; i<=6; i++) {
-        document.getElementById('sp' + i).value = spieler[i-1];
-    }
-    
+    for(let i=1; i<=6; i++) { document.getElementById('sp' + i).value = spieler[i-1]; }
     renderTable();
 }
 
 function formatTime(s){let m=Math.floor(s/60);s=s%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
 
-// FORMATIERUNG FÜR DEN GESAMT-TIMER (HH:MM:SS)
 function formatTotalTime(totalSecs) {
-    let h = Math.floor(totalSecs / 3600);
-    let m = Math.floor((totalSecs % 3600) / 60);
-    let s = totalSecs % 60;
+    let h = Math.floor(totalSecs / 3600); let m = Math.floor((totalSecs % 3600) / 60); let s = totalSecs % 60;
     return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 }
 
-// STEUERUNG GESAMT-TIMER
 function toggleTotalTimer() {
     const btn = document.getElementById('totalStartBtn');
     if(totalTimerInterval) {
-        clearInterval(totalTimerInterval);
-        totalTimerInterval = null;
-        btn.textContent = 'START';
-        btn.style.background = '#fff';
-        btn.style.color = '#1e3d59';
+        clearInterval(totalTimerInterval); totalTimerInterval = null;
+        btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59';
     } else {
-        btn.textContent = 'PAUSE';
-        btn.style.background = '#e74c3c';
-        btn.style.color = '#fff';
-        totalTimerInterval = setInterval(() => {
-            totalSeconds++;
-            document.getElementById('totalDisplay').textContent = formatTotalTime(totalSeconds);
-        }, 1000);
+        btn.textContent = 'PAUSE'; btn.style.background = '#e74c3c'; btn.style.color = '#fff';
+        totalTimerInterval = setInterval(() => { totalSeconds++; document.getElementById('totalDisplay').textContent = formatTotalTime(totalSeconds); }, 1000);
     }
+}
+
+// NEU: NUR DEN GESAMT-TIMER ZURÜCKSETZEN
+function resetTotalTimer() {
+    if(!confirm("Gesamtzeit wirklich zurücksetzen?")) return;
+    if(totalTimerInterval) {
+        clearInterval(totalTimerInterval); totalTimerInterval = null;
+    }
+    totalSeconds = 0;
+    document.getElementById('totalDisplay').textContent = "00:00:00";
+    const btn = document.getElementById('totalStartBtn');
+    btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59';
 }
 
 function renderTable(){
     updatePlayerNamesFromInputs();
     const t1=spieler[0]+" & "+spieler[1],t2=spieler[2]+" & "+spieler[3],t3=spieler[4]+" & "+spieler[5];
-    let html="";
-    let rundenAnzahl = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+    let html=""; let rundenAnzahl = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
     
     for(let i=0;i<rundenAnzahl;i++){
         let m="",b="",r=ablauf[i];
@@ -128,72 +143,53 @@ function updateDisplay(){
 function toggleTimer(){
     const btn=document.getElementById('startBtn');
     if(timerInterval){
-        clearInterval(timerInterval);
-        timerInterval=null;
-        btn.textContent='START';
-        btn.style.backgroundColor='#ff6e40';
+        clearInterval(timerInterval); timerInterval=null;
+        btn.textContent='START'; btn.style.backgroundColor='#ff6e40';
     }else{
-        btn.textContent='PAUSE';
-        btn.style.backgroundColor='#e74c3c';
+        btn.textContent='PAUSE'; btn.style.backgroundColor='#e74c3c';
         timerInterval=setInterval(()=>{
-            if(timeLeft > 0){
-                timeLeft--;
-                updateDisplay();
-            }else{
-                clearInterval(timerInterval);
-                timerInterval=null;
-                btn.textContent='START';
-                btn.style.backgroundColor='#ff6e40';
-                
+            if(timeLeft > 0){ timeLeft--; updateDisplay(); }else{
+                clearInterval(timerInterval); timerInterval=null;
+                btn.textContent='START'; btn.style.backgroundColor='#ff6e40';
                 if(aktuelleRunde < 9){
-                    aktuelleRunde++;
-                    timeLeft=baseTime;
-                    renderTable();
-                    updateDisplay();
+                    aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay();
                 } else if(aktuelleRunde === 9 && totalBonusTime > 0) {
                     alert("Reguläre Runden beendet! Weiter geht's mit der BONUS-RUNDE 10!");
-                    aktuelleRunde = 10;
-                    timeLeft = totalBonusTime;
-                    renderTable();
-                    updateDisplay();
-                } else {
-                    alert("Turnier offiziell beendet!");
-                }
+                    aktuelleRunde = 10; timeLeft = totalBonusTime; renderTable(); updateDisplay();
+                } else { alert("Turnier offiziell beendet!"); }
             }
         },1000);
     }
 }
 
+function resetCurrentMatch() {
+    if(timerInterval){ 
+        clearInterval(timerInterval); timerInterval = null; 
+        document.getElementById('startBtn').textContent = 'START';
+        document.getElementById('startBtn').style.backgroundColor = '#ff6e40';
+    }
+    timeLeft = (aktuelleRunde === 10) ? totalBonusTime : baseTime;
+    updateDisplay();
+}
+
 function saveRestTime(){
     if(aktuelleRunde >= 9){return}
-    let r=timeLeft;
-    if(r<=0)return;
+    let r=timeLeft; if(r<=0)return;
     if(confirm(`${formatTime(r)} Restzeit für Runde 10 sichern?`)){
         if(timerInterval){
-            clearInterval(timerInterval);
-            timerInterval=null;
-            document.getElementById('startBtn').textContent='START';
-            document.getElementById('startBtn').style.backgroundColor='#ff6e40';
+            clearInterval(timerInterval); timerInterval=null;
+            document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40';
         }
-        totalBonusTime+=r;
-        aktuelleRunde++;
-        timeLeft=baseTime;
-        renderTable();
-        updateDisplay();
+        totalBonusTime+=r; aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay();
     }
 }
 
 function resetAll(){
     if(!confirm("Gesamtes Turnier zurücksetzen? (Gesamt-Timer bleibt bestehen)"))return;
-    clearInterval(timerInterval);
-    timerInterval=null;
-    aktuelleRunde=1;
-    timeLeft=baseTime;
-    totalBonusTime=0;
-    document.getElementById('startBtn').textContent='START';
-    document.getElementById('startBtn').style.backgroundColor='#ff6e40';
-    renderTable();
-    updateDisplay();
+    clearInterval(timerInterval); timerInterval=null;
+    aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0;
+    document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40';
+    renderTable(); updateDisplay();
 }
 
 window.onload = function() { renderTable(); updateDisplay(); };
