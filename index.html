@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v7</title><style>
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Padel Pro iPad v8</title><style>
 body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-align:center}
 .banner{background:#1e3d59;color:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 15px;position:relative}
 .banner h1{margin:5px 0}
@@ -10,6 +10,9 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
 .total-reset-link{color:rgba(255,255,255,0.7);font-size:11px;text-decoration:underline;cursor:pointer;margin-left:6px}
 .total-reset-link:hover{color:#fff}
 
+.mode-selector{background:#fff;padding:10px;border-radius:6px;max-width:800px;margin:0 auto 15px;box-shadow:0 2px 4px rgba(0,0,0,0.05);font-weight:bold;color:#1e3d59;}
+.mode-select{padding:6px 12px;font-size:14px;font-weight:bold;border-radius:4px;border:1px solid #1e3d59;color:#1e3d59;margin-left:10px}
+
 .panel{background:#2c3e50;color:#fff;padding:30px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 6px 15px rgba(0,0,0,0.2)}
 .timer{font-size:150px;font-weight:900;font-family:monospace;color:#ff6e40;margin:5px 0;line-height:1.1;transition: color 0.3s;}
 
@@ -17,9 +20,7 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
     color: #e74c3c !important;
     animation: blinker 1s linear infinite;
 }
-@keyframes blinker {
-    50% { opacity: 0.3; }
-}
+@keyframes blinker { 50% { opacity: 0.3; } }
 
 .btn-container{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:15px}
 .btn{background:#ff6e40;color:#fff;border:none;padding:15px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;flex:1;min-width:140px}
@@ -33,7 +34,6 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
 
 table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto 20px;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}
 
-/* --- NEU: ZUSÄTZLICHER STYLE FÜR DIE ERGEBNIS-BOX & RANGLISTE --- */
 .score-box{background:#fff;padding:20px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:4px solid #2ecc71}
 .score-select{padding:10px;font-size:16px;font-weight:bold;border-radius:4px;border:1px solid #ccc;color:#2c3e50;max-width:90%;margin-bottom:10px}
 .score-btn{background:#2ecc71;color:#fff;border:none;padding:10px 20px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer}
@@ -43,7 +43,7 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
 
 <div class="banner">
     <h1>Padel Turnier-Manager Pro</h1>
-    <p style="margin:0 0 10px 0;">9 Reguläre Runden + Optionale Bonus-Runde 10</p>
+    <p style="margin:0 0 10px 0;">9-10 Runden Zeitmanagement & Turniersieg</p>
     <div class="total-timer-box">
         <span>⏱️ Gesamtzeit: </span>
         <span class="total-timer-time" id="totalDisplay">00:00:00</span>
@@ -52,10 +52,22 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
     </div>
 </div>
 
-<div class="setup-box"><strong style="color:#1e3d59;">👥 Spieler-Anwesenheit (Namen bei Bedarf einfach überschreiben):</strong><div class="setup-grid"><input type="text" id="sp1" value="Werner" oninput="initStats();renderTable()"><input type="text" id="sp2" value="Marco" oninput="initStats();renderTable()"><input type="text" id="sp3" value="Tobias" oninput="initStats();renderTable()"><input type="text" id="sp4" value="Stefan" oninput="initStats();renderTable()"><input type="text" id="sp5" value="Christian" oninput="initStats();renderTable()"><input type="text" id="sp6" value="David" oninput="initStats();renderTable()"></div></div>
+<div class="mode-selector">
+    👥 Modus wählen:
+    <select id="modeSelect" class="mode-select" onchange="changeTournamentMode()">
+        <option value="6">6 Spieler (3 feste Teams / 9 Runden + Bonus)</option>
+        <option value="5">5 Spieler (Einzelspieler-Wechsel / 10 feste Runden)</option>
+    </select>
+</div>
+
+<div class="setup-box">
+    <strong style="color:#1e3d59;">👥 Spieler-Anwesenheit:</strong>
+    <div class="setup-grid" id="inputGrid">
+        </div>
+</div>
 
 <div class="panel">
-    <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:18px;">Runde 1 / 9</div>
+    <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:18px;">Runde 1</div>
     <div class="timer" id="display">20:00</div>
     <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:15px">Gesammelte Restzeit für Runde 10: 00:00</div>
     
@@ -63,23 +75,19 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
         <button class="btn" id="startBtn" onclick="toggleTimer()">START</button>
         <button class="btn btn-abort" onclick="resetCurrentMatch()">Fehlstart!<br><span style="font-size:11px;font-weight:normal;">Match-Reset</span></button>
         <button class="btn btn-g" id="saveBtn" onclick="saveRestTime()">Satz fertig!<br><span style="font-size:11px;font-weight:normal;">Restzeit sichern</span></button>
-        <button class="btn btn-m" onclick="shufflePlayers()">Spieler<br>mischen</button>
+        <button class="btn btn-m" id="mixBtn" onclick="shufflePlayers()">Spieler<br>mischen</button>
         <button class="btn btn-r" onclick="resetAll()">Turnier<br>Reset</button>
     </div>
 </div>
 
-<!-- NEU: INTERAKTIVE ERGEBNISEINGABE -->
 <div class="score-box">
     <strong style="color:#2ecc71; font-size:18px; display:block; margin-bottom:10px;">🏆 Turniersieger ermitteln</strong>
     <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; margin-bottom:5px;">Ergebnis für aktuelle Runde eintragen:</span>
-    <select id="matchWinnerSelect" class="score-select">
-        <!-- Wird dynamisch befüllt -->
-    </select>
+    <select id="matchWinnerSelect" class="score-select"></select>
     <br>
     <button class="score-btn" onclick="submitRoundScore()">Ergebnis sichern & eintragen</button>
 </div>
 
-<!-- NEU: LIVE-RANGLISTE (BLITZTABELLE) -->
 <h3 style="color:#1e3d59; margin-top:20px;">📊 Aktuelle Tabelle (Live-Rangliste)</h3>
 <table>
     <thead>
@@ -93,32 +101,98 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
             <th class="rank-th" style="width:70px; background:#27ae60;">Pkt</th>
         </tr>
     </thead>
-    <tbody id="rankTableBody">
-        <!-- Wird dynamisch generiert -->
-    </tbody>
+    <tbody id="rankTableBody"></tbody>
 </table>
 
 <h3 style="color:#1e3d59;">📅 Spielplan</h3>
 <table id="planTable"><thead><tr><th>Runde</th><th>Match</th><th>Bank</th></tr></thead><tbody id="tableBody"></tbody></table>
 
 <script>
-let spieler=["Werner","Marco","Tobias","Stefan","Christian","David"];const ablauf=[0,1,2,0,1,2,0,1,2,0];let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTime,totalBonusTime=0,timerInterval=null;
-let totalSeconds = 0; let totalTimerInterval = null;
+let currentMode = "6"; 
+let spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"];
+let spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
 
-// NEU: DATA-STRUCTURE FÜR DIe STATISTIKEN
+// Spielpläne
+const ablauf6 = [0,1,2,0,1,2,0,1,2,0]; // 0=T1vsT2, 1=T2vsT3, 2=T1vsT3
+// Perfekter 5-Spieler Americano Plan (2x wiederholt für 10 Runden)
+const ablauf5 = [
+    {a:[0,1], b:[2,3], pause:[4]}, // R1
+    {a:[0,2], b:[1,4], pause:[3]}, // R2
+    {a:[0,3], b:[4,2], pause:[1]}, // R3
+    {a:[0,4], b:[3,1], pause:[2]}, // R4
+    {a:[1,2], b:[3,4], pause:[0]}, // R5
+    {a:[0,1], b:[2,3], pause:[4]}, // R6
+    {a:[0,2], b:[1,4], pause:[3]}, // R7
+    {a:[0,3], b:[4,2], pause:[1]}, // R8
+    {a:[0,4], b:[3,1], pause:[2]}, // R9
+    {a:[1,2], b:[3,4], pause:[0]}  // R10
+];
+
+let spieler = [...spieler6];
+let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTime,totalBonusTime=0,timerInterval=null;
+let totalSeconds = 0; let totalTimerInterval = null;
 let spielerStats = {};
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function buildInputGrid() {
+    let count = parseInt(currentMode);
+    let html = "";
+    let defaultNames = currentMode === "6" ? spieler6 : spieler5;
+    for(let i=1; i<=count; i++) {
+        html += `<input type="text" id="sp${i}" value="${defaultNames[i-1]}" oninput="initStats();renderTable()">`;
+    }
+    document.getElementById('inputGrid').innerHTML = html;
+}
+
+function changeTournamentMode() {
+    currentMode = document.getElementById('modeSelect').value;
+    spieler = currentMode === "6" ? [...spieler6] : [...spieler5];
+    
+    // UI Elemente anpassen
+    if(currentMode === "5") {
+        document.getElementById('bonusDisplay').style.display = "none";
+        document.getElementById('saveBtn').style.display = "none"; // Zeit sichern macht bei fixen 10 Runden keinen Sinn
+    } else {
+        document.getElementById('bonusDisplay').style.display = "block";
+        document.getElementById('saveBtn').style.display = "block";
+    }
+    
+    buildInputGrid();
+    resetAll(true);
+}
+
+function updatePlayerNamesFromInputs() {
+    let count = parseInt(currentMode);
+    for(let i=1; i<=count; i++) {
+        let val = document.getElementById('sp' + i).value.trim();
+        if(val !== "") { spieler[i-1] = val; } else { spieler[i-1] = "Spieler " + i; }
+    }
+    if(currentMode === "6") spieler6 = [...spieler]; else spieler5 = [...spieler];
+}
+
 function initStats() {
     updatePlayerNamesFromInputs();
-    // Behalte Punkte bei Namensänderung bei, falls Spieler schon existiert, sonst neu
     let alteStats = {...spielerStats};
     spielerStats = {};
-    spieler.forEach(name => {
-        spielerStats[name] = alteStats[name] || { sp: 0, s: 0, u: 0, n: 0, pkt: 0 };
-    });
+    spieler.forEach(name => { spielerStats[name] = alteStats[name] || { sp: 0, s: 0, u: 0, n: 0, pkt: 0 }; });
     renderRankTable();
 }
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function shufflePlayers(){
+    if(timerInterval){alert("Bitte Match-Timer pausieren!");return}
+    if(!confirm("Teams neu auslosen? Statistiken werden zurückgesetzt.")) return;
+    updatePlayerNamesFromInputs();
+    for (let i = spieler.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        let temp = spieler[i]; spieler[i] = spieler[j]; spieler[j] = temp;
+    }
+    for(let i=1; i<=spieler.length; i++) { document.getElementById('sp' + i).value = spieler[i-1]; }
+    spielerStats = {};
+    initStats();
+    renderTable();
+}
+
 function playHornSound() {
     try {
         let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
@@ -128,28 +202,7 @@ function playHornSound() {
         gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.55); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.9); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.95);
         gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 1.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 1.5); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.6);
         osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 1.7);
-    } catch(e) { console.log("Audio blockiert", e); }
-}
-
-function updatePlayerNamesFromInputs() {
-    for(let i=1; i<=6; i++) {
-        let val = document.getElementById('sp' + i).value.trim();
-        if(val !== "") { spieler[i-1] = val; } else { spieler[i-1] = "Spieler " + i; }
-    }
-}
-
-function shufflePlayers(){
-    if(timerInterval){alert("Bitte Match-Timer pausieren!");return}
-    if(!confirm("Teams neu auslosen? Der Plan wird gemischt. Statistiken werden zurückgesetzt.")) return;
-    updatePlayerNamesFromInputs();
-    for (let i = spieler.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        let temp = spieler[i]; spieler[i] = spieler[j]; spieler[j] = temp;
-    }
-    for(let i=1; i<=6; i++) { document.getElementById('sp' + i).value = spieler[i-1]; }
-    spielerStats = {};
-    initStats();
-    renderTable();
+    } catch(e) {}
 }
 
 function formatTime(s){let m=Math.floor(s/60);s=s%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
@@ -178,20 +231,25 @@ function resetTotalTimer() {
     btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59';
 }
 
-// NEU: DIE AKTUELLEN MATCHPARTNER ERMITTELN FÜR JEDE RUNDE
 function getTeamsForRound(rIndex) {
-    const t1=[spieler[0], spieler[1]], t2=[spieler[2], spieler[3]], t3=[spieler[4], spieler[5]];
-    let r=ablauf[rIndex];
-    if(r===0) return { teamA: t1, teamB: t2, nameA: "Team 1", nameB: "Team 2" };
-    if(r===1) return { teamA: t2, teamB: t3, nameA: "Team 2", nameB: "Team 3" };
-    return { teamA: t1, teamB: t3, nameA: "Team 1", nameB: "Team 3" };
+    if (currentMode === "6") {
+        const t1=[spieler[0], spieler[1]], t2=[spieler[2], spieler[3]], t3=[spieler[4], spieler[5]];
+        let r=ablauf6[rIndex];
+        if(r===0) return { teamA: t1, teamB: t2, nameA: "Team 1", nameB: "Team 2" };
+        if(r===1) return { teamA: t2, teamB: t3, nameA: "Team 2", nameB: "Team 3" };
+        return { teamA: t1, teamB: t3, nameA: "Team 1", nameB: "Team 3" };
+    } else {
+        let match = ablauf5[rIndex];
+        let tA = [spieler[match.a[0]], spieler[match.a[1]]];
+        let tB = [spieler[match.b[0]], spieler[match.b[1]]];
+        return { teamA: tA, teamB: tB, nameA: tA[0]+" & "+tA[1], nameB: tB[0]+" & "+tB[1] };
+    }
 }
 
-// NEU: ANZEIGE DER AUSWAHLBOX FÜR DAS ERGEBNIS UPDATEN
 function updateScoreSelectOption() {
     const select = document.getElementById('matchWinnerSelect');
     const prompt = document.getElementById('scorePrompt');
-    let maxRunden = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+    let maxRunden = currentMode === "6" ? ((totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9) : 10;
     
     if (aktuelleRunde > maxRunden) {
         prompt.textContent = "Turnier komplett beendet!";
@@ -199,12 +257,12 @@ function updateScoreSelectOption() {
         return;
     }
     
-    let rName = (aktuelleRunde === 10) ? "Runde 10 (Bonus)" : "Runde " + aktuelleRunde;
+    let rName = (currentMode === "6" && aktuelleRunde === 10) ? "Runde 10 (Bonus)" : "Runde " + aktuelleRunde;
     prompt.textContent = `Ergebnis für ${rName} eintragen:`;
     
     let teams = getTeamsForRound(aktuelleRunde - 1);
-    let nameA = `${teams.nameA} (${teams.teamA[0]} & ${teams.teamA[1]})`;
-    let nameB = `${teams.nameB} (${teams.teamB[0]} & ${teams.teamB[1]})`;
+    let nameA = currentMode === "6" ? `Team 1/2/3 (${teams.nameA})` : teams.nameA;
+    let nameB = currentMode === "6" ? `Team 1/2/3 (${teams.nameB})` : teams.nameB;
     
     select.innerHTML = `
         <option value="A">${nameA} gewinnt</option>
@@ -213,18 +271,16 @@ function updateScoreSelectOption() {
     `;
 }
 
-// NEU: RUNDENERGEBNIS IN DIE TABELLE REINRECHNEN
 function submitRoundScore() {
-    let maxRunden = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+    let maxRunden = currentMode === "6" ? ((totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9) : 10;
     if(aktuelleRunde > maxRunden) { alert("Das Turnier ist bereits vorbei."); return; }
     
     const select = document.getElementById('matchWinnerSelect');
     let result = select.value;
     let teams = getTeamsForRound(aktuelleRunde - 1);
     
-    if(!confirm("Ergebnis wirklich so eintragen? Kann nicht rückgängig gemacht werden.")) return;
+    if(!confirm("Ergebnis wirklich so eintragen?")) return;
     
-    // Punkte verteilen
     if(result === "A") {
         teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; });
         teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; });
@@ -237,21 +293,17 @@ function submitRoundScore() {
     }
     
     renderRankTable();
-    alert("Ergebnis erfolgreich eingetragen!");
+    alert("Ergebnis eingetragen!");
 }
 
-// NEU: DIE BLITZTABELLE ANZEIGEN & SORTIEREN
 function renderRankTable() {
     let sortable = [];
-    for (let p in spielerStats) {
-        sortable.push({ name: p, ...spielerStats[p] });
-    }
-    // Sortiere nach Punkten (absteigend), bei Gleichstand nach Siegen
+    for (let p in spielerStats) { sortable.push({ name: p, ...spielerStats[p] }); }
     sortable.sort((a, b) => b.pkt - a.pkt || b.s - a.s);
     
     let html = "";
     sortable.forEach((row, index) => {
-        let c = (index === 0 && row.pkt > 0) ? "class='gold-row'" : ""; // Platz 1 gelb markieren
+        let c = (index === 0 && row.pkt > 0) ? "class='gold-row'" : "";
         html += `<tr ${c}>
             <td><strong>${index + 1}.</strong></td>
             <td><strong>${row.name}</strong></td>
@@ -267,36 +319,46 @@ function renderRankTable() {
 
 function renderTable(){
     updatePlayerNamesFromInputs();
-    const t1=spieler[0]+" & "+spieler[1],t2=spieler[2]+" & "+spieler[3],t3=spieler[4]+" & "+spieler[5];
-    let html=""; let rundenAnzahl = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+    let html="";
     
-    for(let i=0;i<rundenAnzahl;i++){
-        let m="",b="",r=ablauf[i];
-        if(r===0){
-            m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 2</span>`;
-            b=`<span class="badge-bank">Team 3 (${t3})</span>`;
-        }else if(r===1){
-            m=`<span class="badge-team">Team 2</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`;
-            b=`<span class="badge-bank">Team 1 (${t1})</span>`;
-        }else{
-            m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`;
-            b=`<span class="badge-bank">Team 2 (${t2})</span>`;
+    if (currentMode === "6") {
+        let rundenAnzahl = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+        const t1=spieler[0]+" & "+spieler[1],t2=spieler[2]+" & "+spieler[3],t3=spieler[4]+" & "+spieler[5];
+        for(let i=0;i<rundenAnzahl;i++){
+            let m="",b="",r=ablauf6[i];
+            if(r===0){ m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 2</span>`; b=`<span class="badge-bank">Team 3 (${t3})</span>`; }
+            else if(r===1){ m=`<span class="badge-team">Team 2</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`; b=`<span class="badge-bank">Team 1 (${t1})</span>`; }
+            else{ m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`; b=`<span class="badge-bank">Team 2 (${t2})</span>`; }
+            let c=(i+1===aktuelleRunde)?"class='active-row'":"";
+            let rName = (i === 9) ? "10 (Bonus)" : (i+1);
+            let ext = (i === 9) ? ` <small style='color:#2ecc71;'>(Gesamte Verlängerung)</small>` : "";
+            html+=`<tr ${c}><td><strong>${rName}</strong>${ext}</td><td>${m}</td><td>${b}</td></tr>`;
         }
-        let c=(i+1===aktuelleRunde)?"class='active-row'":"";
-        let rName = (i === 9) ? "10 (Bonus)" : (i+1);
-        let ext = (i === 9) ? ` <small style='color:#2ecc71;'>(Gesamte Verlängerung)</small>` : "";
-        html+=`<tr ${c}><td><strong>${rName}</strong>${ext}</td><td>${m}</td><td>${b}</td></tr>`;
+        document.getElementById('roundTitle').textContent = (aktuelleRunde === 10) ? `Runde 10 / 10 (BONUS-MATCH)` : `Runde ${aktuelleRunde} / 9`;
+        document.getElementById('saveBtn').disabled = (aktuelleRunde >= 9);
+    } else {
+        // 5 Spieler Modus Tabelle
+        for(let i=0; i<10; i++) {
+            let match = ablauf5[i];
+            let pName = spieler[match.pause[0]];
+            let m = `<span class="badge-team">${spieler[match.a[0]]} & ${spieler[match.a[1]]}</span> <span class="vs">VS</span> <span class="badge-team">${spieler[match.b[0]]} & ${spieler[match.b[1]]}</span>`;
+            let b = `<span class="badge-bank">${pName} (Auszeit)</span>`;
+            let c=(i+1===aktuelleRunde)?"class='active-row'":"";
+            html+=`<tr ${c}><td><strong>Runde ${i+1}</strong></td><td>${m}</td><td>${b}</td></tr>`;
+        }
+        document.getElementById('roundTitle').textContent = `Runde ${aktuelleRunde} / 10`;
     }
+    
     document.getElementById('tableBody').innerHTML=html;
-    document.getElementById('roundTitle').textContent = (aktuelleRunde === 10) ? `Runde 10 / 10 (BONUS-MATCH)` : `Runde ${aktuelleRunde} / 9`;
-    document.getElementById('saveBtn').disabled = (aktuelleRunde >= 9);
     updateScoreSelectOption();
 }
 
 function updateDisplay(){
     const displayEl = document.getElementById('display');
     displayEl.textContent = formatTime(timeLeft);
-    document.getElementById('bonusDisplay').textContent = `Gesammelte Restzeit für Runde 10: ${formatTime(totalBonusTime)}`;
+    if(currentMode === "6") {
+        document.getElementById('bonusDisplay').textContent = `Gesammelte Restzeit für Runde 10: ${formatTime(totalBonusTime)}`;
+    }
     if(timeLeft > 0 && timeLeft < 60 && timerInterval !== null) { displayEl.classList.add('timer-warn'); } else { displayEl.classList.remove('timer-warn'); }
 }
 
@@ -311,12 +373,14 @@ function toggleTimer(){
             if(timeLeft > 0){ timeLeft--; updateDisplay(); }else{
                 clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; updateDisplay();
                 playHornSound();
-                if(aktuelleRunde < 9){
+                
+                let maxRunden = currentMode === "6" ? 9 : 10;
+                if(aktuelleRunde < maxRunden){
                     aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay();
-                } else if(aktuelleRunde === 9 && totalBonusTime > 0) {
+                } else if(currentMode === "6" && aktuelleRunde === 9 && totalBonusTime > 0) {
                     alert("Reguläre Runden beendet! Weiter geht's mit der BONUS-RUNDE 10!");
                     aktuelleRunde = 10; timeLeft = totalBonusTime; renderTable(); updateDisplay();
-                } else { alert("Turnier offiziell beendet! Prüft die Live-Rangliste oben auf euren Champion!"); }
+                } else { alert("Turnier offiziell beendet! Schaut in die Live-Rangliste!"); }
             }
         },1000);
     }
@@ -324,11 +388,11 @@ function toggleTimer(){
 
 function resetCurrentMatch() {
     if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; document.getElementById('startBtn').style.backgroundColor = '#ff6e40'; }
-    timeLeft = (aktuelleRunde === 10) ? totalBonusTime : baseTime; updateDisplay();
+    timeLeft = (currentMode === "6" && aktuelleRunde === 10) ? totalBonusTime : baseTime; updateDisplay();
 }
 
 function saveRestTime(){
-    if(aktuelleRunde >= 9){return}
+    if(currentMode === "5" || aktuelleRunde >= 9){return}
     let r=timeLeft; if(r<=0)return;
     if(confirm(`${formatTime(r)} Restzeit für Runde 10 sichern?`)){
         if(timerInterval){ clearInterval(timerInterval); timerInterval=null; document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40'; }
@@ -336,8 +400,8 @@ function saveRestTime(){
     }
 }
 
-function resetAll(){
-    if(!confirm("Gesamtes Turnier zurücksetzen? Alle Statistiken/Punkte werden gelöscht!"))return;
+function resetAll(silent = false){
+    if(!silent && !confirm("Gesamtes Turnier zurücksetzen? Alle Punkte werden gelöscht!")) return;
     clearInterval(timerInterval); timerInterval=null;
     aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0;
     document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40';
@@ -346,6 +410,5 @@ function resetAll(){
     renderTable(); updateDisplay();
 }
 
-window.onload = function() { initStats(); renderTable(); updateDisplay(); };
-initStats(); renderTable(); updateDisplay();
+window.onload = function() { buildInputGrid(); initStats(); renderTable(); updateDisplay(); };
 </script></body></html>
