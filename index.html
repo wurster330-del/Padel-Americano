@@ -1,25 +1,335 @@
-<!doctype html><html lang='de'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
-<title>Padel Götter Pro v3.0</title><style>
-body{font-family:Arial;background:#103b2d;color:#fff;max-width:900px;margin:auto;padding:16px}
-.card{background:#1b5a44;padding:14px;border-radius:10px;margin:12px 0}input{padding:6px;margin:3px}
-button{padding:10px 14px;margin:4px}#timer{font-size:80px;text-align:center;font-weight:bold}
-table{width:100%;border-collapse:collapse}td,th{border:1px solid #6ab;padding:6px}.act{background:#2d7}
-</style></head><body><h1>🏆 PADEL-GÖTTER PRO v3.0 (6 Spieler)</h1>
-<div class=card id=setup></div>
-<div class=card><div id=live></div><div id=timer>18:00</div>
-<button onclick='start()'>▶ Start</button><button onclick='pauseT()'>⏸ Pause</button><button onclick='resetT()'>🔄 Reset</button><button onclick='nextM()'>➡ Nächstes Match</button><div id=msg></div></div>
-<div class=card><h3>Spielplan</h3><table><thead><tr><th>Rd.</th><th>Match</th><th>Bank</th><th>Ergebnis</th></tr></thead><tbody id=tb></tbody></table></div>
-<script>
-setup.innerHTML=["Marco","Stefan","David","Tobias","Chris","Werner"].map((n,i)=>`<input id=p${i} value="${n}"><br>`).join("")+"<button onclick='draw()'>🎲 Teams auslosen</button>";
-let T=[],seq=[[0,1,2],[1,2,0],[0,2,1],[0,1,2],[1,2,0],[0,2,1],[0,1,2],[1,2,0],[0,2,1],[0,1,2]],r=0,s=1080,i=null;
-function sh(a){for(let k=a.length-1;k>0;k--){let j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}}
-function draw(){let a=[];for(let x=0;x<6;x++)a.push(document.getElementById("p"+x).value);sh(a);T=[[a[0],a[1]],[a[2],a[3]],[a[4],a[5]]];build();show();}
-function build(){tb.innerHTML="";seq.forEach((m,n)=>tb.innerHTML+=`<tr id=r${n}><td>${n+1}</td><td>${T[m[0]].join(" + ")} 🆚 ${T[m[1]].join(" + ")}</td><td>${T[m[2]].join(" + ")}</td><td contenteditable></td></tr>`)}
-function show(){document.querySelectorAll("tbody tr").forEach(e=>e.classList.remove("act"));let row=document.getElementById("r"+r);if(row)row.classList.add("act");let m=seq[r];live.innerHTML=`<h2>Runde ${r+1}/10</h2><h2>${T[m[0]].join(" + ")}<br>🆚<br>${T[m[1]].join(" + ")}</h2><h3>🪑 Bank: ${T[m[2]].join(" + ")}</h3>`;resetT();}
-function render(){timer.textContent=(String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"));}
-function tick(){if(s==0){pauseT();msg.textContent="🔔 Match beendet";navigator.vibrate&&navigator.vibrate(600);return;}s--;render();}
-function start(){if(!i)i=setInterval(tick,1000)} function pauseT(){clearInterval(i);i=null}
-function resetT(){pauseT();s=1080;msg.textContent="";render()}
-function nextM(){if(r<9){r++;show()}else alert("🏆 Turnier beendet!")}
-render();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Padel Pro-Turnier Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #2c3e50;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 15px;
+        }
+        .header-banner {
+            background-color: #1e3d59;
+            color: #ffffff;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 4px solid #ff6e40;
+            border-radius: 6px 6px 0 0;
+            max-width: 850px;
+            margin: 0 auto 15px auto;
+        }
+        .header-banner h1 { margin: 0; font-size: 22px; }
+        .header-banner p { margin: 5px 0 0 0; color: #e0e0e0; font-size: 13px; }
+        
+        /* --- RIESIGER TIMER BEREICH --- */
+        .control-panel {
+            background-color: #2c3e50;
+            color: #ffffff;
+            padding: 30px 15px;
+            border-radius: 6px;
+            text-align: center;
+            max-width: 850px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+        .round-indicator {
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #bdc3c7;
+            font-weight: bold;
+        }
+        .timer-display {
+            font-size: 120px; /* Extrem vergrößert für beste Lesbarkeit vom Court */
+            font-weight: 900;
+            font-family: 'Courier New', Courier, monospace;
+            color: #ff6e40;
+            margin: 10px 0;
+            line-height: 1;
+            letter-spacing: -2px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .bonus-display {
+            font-size: 16px;
+            color: #2ecc71;
+            font-weight: bold;
+            margin-bottom: 25px;
+            background: rgba(46, 204, 113, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        /* Größere, griffige Buttons */
+        .btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .timer-btn {
+            background-color: #ff6e40;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-transform: uppercase;
+            flex: 1;
+            min-width: 160px;
+            max-width: 220px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+        .timer-btn:hover { background-color: #e65c30; }
+        .btn-green { background-color: #2ecc71; }
+        .btn-green:hover { background-color: #27ae60; }
+        .btn-mix { background-color: #9b59b6; }
+        .btn-mix:hover { background-color: #8e44ad; }
+        .btn-reset { background-color: #7f8c8d; min-width: 90px; max-width: 100px; }
+        .btn-reset:hover { background-color: #6c7a7d; }
+
+        .rules-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+            max-width: 850px;
+            margin: 0 auto 20px auto;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .container { max-width: 850px; margin: 0 auto; }
+        .team-overview {
+            background-color: #ffffff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .team-box { padding: 10px; border: 1px solid #e0e0e0; border-radius: 4px; text-align: center; flex: 1; min-width: 180px; }
+        .team-box h3 { margin: 0 0 5px 0; color: #1e3d59; font-size: 15px; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        th { background-color: #1e3d59; color: #ffffff; text-align: left; padding: 12px; text-transform: uppercase; font-size: 12px; }
+        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .active-row { background-color: #e8f4fd !important; border-left: 4px solid #1e3d59; }
+        .badge-team { font-weight: bold; color: #1e3d59; }
+        .vs { color: #ff6e40; font-weight: bold; padding: 0 3px; }
+        .badge-bank { background-color: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-banner">
+        <h1>Padel Turnier-Manager Pro</h1>
+        <p>9 Runden • 20 Min. pro Match • Restzeit wandert ins Finale</p>
+    </div>
+
+    <div class="control-panel">
+        <div class="round-indicator" id="roundTitle">Runde 1 / 9</div>
+        <div class="timer-display" id="display">20:00</div>
+        <div class="bonus-display" id="bonusDisplay">Gesammelte Restzeit: 00:00</div>
+        
+        <div class="btn-container">
+            <button class="timer-btn" id="startBtn" onclick="toggleTimer()">START</button>
+            <button class="timer-btn btn-green" onclick="saveRestTime()">Satz fertig!<br><span style="font-size:11px;font-weight:normal;">Restzeit sichern</span></button>
+            <button class="timer-btn btn-mix" onclick="shufflePlayers()">Spieler<br><span style="font-size:11px;font-weight:normal;">durchmischen</span></button>
+            <button class="timer-btn btn-reset" onclick="resetAll()">Reset</button>
+        </div>
+    </div>
+
+    <div class="rules-box">
+        🏃‍♂️ <b>Modus:</b> Ziel sind 6 Punkte. Wer schneller fertig ist, drückt "Restzeit sichern". Die übrigen Minuten wandern automatisch in den Zeittopf für das große Finale (Runde 9)!
+    </div>
+
+    <div class="container">
+        <div class="team-overview">
+            <div class="team-box"><h3>Team 1</h3><span id="t1">Werner & Marco</span></div>
+            <div class="team-box"><h3>Team 2</h3><span id="t2">Tobias & Stefan</span></div>
+            <div class="team-box"><h3>Team 3</h3><span id="t3">Christian & David</span></div>
+        </div>
+
+        <table id="planTable">
+            <thead>
+                <tr>
+                    <th>Runde</th>
+                    <th>Match (2 vs 2)</th>
+                    <th>Pause (Bank)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        let spieler = ["Werner", "Marco", "Tobias", "Stefan", "Christian", "David"];
+        const ablauf = [0, 1, 2, 0, 1, 2, 0, 1, 2];
+        
+        let aktuelleRunde = 1;
+        let baseTime = 20 * 60; 
+        let timeLeft = baseTime;
+        let totalBonusTime = 0; 
+        let timerInterval = null;
+
+        function shufflePlayers() {
+            if (timerInterval) {
+                alert("Bitte pausiere den Timer, bevor du die Teams neu mischst!");
+                return;
+            }
+            if (!confirm("Möchtest du die Teams wirklich neu auslosen? Der aktuelle Spielplan wird angepasst.")) return;
+            
+            for (let i = spieler.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [spieler[i], spieler[j]] = [spieler[j], spieler[i]];
+            }
+            renderTable();
+        }
+
+        function formatTime(seconds) {
+            let m = Math.floor(seconds / 60);
+            let s = seconds % 60;
+            return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        function renderTable() {
+            const t1_names = spieler[0] + " & " + spieler[1];
+            const t2_names = spieler[2] + " & " + spieler[3];
+            const t3_names = spieler[4] + " & " + spieler[5];
+            
+            document.getElementById('t1').innerHTML = "<strong>" + t1_names + "</strong>";
+            document.getElementById('t2').innerHTML = "<strong>" + t2_names + "</strong>";
+            document.getElementById('t3').innerHTML = "<strong>" + t3_names + "</strong>";
+            
+            let html = "";
+            for (let i = 0; i < 9; i++) {
+                let matchText = "";
+                let bankText = "";
+                let rundenTyp = ablauf[i];
+                
+                if (rundenTyp === 0) {
+                    matchText = `<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 2</span>`;
+                    bankText = `<span class="badge-bank">Team 3 (${t3_names})</span>`;
+                } else if (rundenTyp === 1) {
+                    matchText = `<span class="badge-team">Team 2</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`;
+                    bankText = `<span class="badge-bank">Team 1 (${t1_names})</span>`;
+                } else {
+                    matchText = `<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`;
+                    bankText = `<span class="badge-bank">Team 2 (${t2_names})</span>`;
+                }
+                
+                let isCurrent = (i + 1 === aktuelleRunde) ? "class='active-row'" : "";
+                let infoRunde9 = (i === 8 && totalBonusTime > 0) ? " <small style='color:#2ecc71;'>(+ " + formatTime(totalBonusTime) + " Verläng.)</small>" : "";
+                
+                html += `<tr ${isCurrent}><td><strong>${i+1}</strong>${infoRunde9}</td><td>${matchText}</td><td>${bankText}</td></tr>`;
+            }
+            document.getElementById('tableBody').innerHTML = html;
+            document.getElementById('roundTitle').textContent = `Runde ${aktuelleRunde} / 9`;
+        }
+
+        function updateDisplay() {
+            document.getElementById('display').textContent = formatTime(timeLeft);
+            document.getElementById('bonusDisplay').textContent = `Gesammelte Restzeit fürs Finale: ${formatTime(totalBonusTime)}`;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('startBtn');
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                btn.textContent = 'START';
+                btn.style.backgroundColor = '#ff6e40';
+            } else {
+                btn.textContent = 'PAUSE';
+                btn.style.backgroundColor = '#e74c3c';
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        btn.textContent = 'START';
+                        btn.style.backgroundColor = '#ff6e40';
+                        
+                        if (aktuelleRunde < 9) {
+                            alert(`Runde ${aktuelleRunde} regulär beendet! Weiter zu Runde ${aktuelleRunde+1}.`);
+                            aktuelleRunde++;
+                            timeLeft = (aktuelleRunde === 9) ? (baseTime + totalBonusTime) : baseTime;
+                            renderTable();
+                            updateDisplay();
+                        } else {
+                            alert("Das gesamte Turnier inklusive aller gesammelten Verlängerungen ist vorbei!");
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        function saveRestTime() {
+            if (aktuelleRunde >= 9) {
+                alert("In der letzten Runde kann keine Restzeit mehr gesammelt werden!");
+                return;
+            }
+            
+            let rest = timeLeft;
+            if (rest <= 0) {
+                alert("Dieses Match hat keine verbleibende Restzeit mehr.");
+                return;
+            }
+            
+            if (confirm(`Möchtest du ${formatTime(rest)} Minuten Restzeit für das Finale sichern?`)) {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    document.getElementById('startBtn').textContent = 'START';
+                    document.getElementById('startBtn').style.backgroundColor = '#ff6e40';
+                }
+                
+                totalBonusTime += rest;
+                aktuelleRunde++;
+                timeLeft = (aktuelleRunde === 9) ? (baseTime + totalBonusTime) : baseTime;
+                
+                renderTable();
+                updateDisplay();
+            }
+        }
+
+        function resetAll() {
+            if (!confirm("Möchtest du das gesamte Turnier zurücksetzen?")) return;
+            clearInterval(timerInterval);
+            timerInterval = null;
+            aktuelleRunde = 1;
+            timeLeft = baseTime;
+            totalBonusTime = 0;
+            document.getElementById('startBtn').textContent = 'START';
+            document.getElementById('startBtn').style.backgroundColor = '#ff6e40';
+            renderTable();
+            updateDisplay();
+        }
+
+        renderTable();
+        updateDisplay();
+    </script>
+</body>
+</html>
