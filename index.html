@@ -1,475 +1,333 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v15</title>
+<title>Padel Pro iPad v16</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Padel Pro">
 
 <style>
-body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-align:center}
-.banner{background:#1e3d59;color:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 15px;position:relative}
-.banner h1{margin:5px 0}
-.total-timer-box{background:rgba(255,255,255,0.15);padding:8px 12px;border-radius:6px;display:inline-block;margin-top:5px;border:1px solid rgba(255,255,255,0.3)}
-.total-timer-time{font-family:monospace;font-size:20px;font-weight:bold;color:#fff;margin-right:8px}
-.total-btn{background:#fff;color:#1e3d59;border:none;padding:4px 10px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer;margin-right:4px}
-.total-btn:hover{background:#e0e0e0}
-.total-reset-link{color:rgba(255,255,255,0.7);font-size:11px;text-decoration:underline;cursor:pointer;margin-left:6px}
-.total-reset-link:hover{color:#fff}
+body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-align:center;margin:0}
+.banner{background:#1e3d59;color:#fff;padding:10px;border-radius:6px;max-width:1000px;margin:0 auto 10px;display:flex;justify-content:between;align-items:center;flex-wrap:wrap;justify-content:space-between;}
+.banner h1{margin:0;font-size:22px;text-align:left;padding-left:10px;}
+.total-timer-box{background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.3);font-size:13px;}
+.total-timer-time{font-family:monospace;font-size:16px;font-weight:bold;color:#fff;margin-right:5px}
+.total-btn{background:#fff;color:#1e3d59;border:none;padding:3px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer;}
+.total-reset-link{color:rgba(255,255,255,0.7);font-size:11px;text-decoration:underline;cursor:pointer;margin-left:5px}
 
-.mode-selector{background:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 15px;box-shadow:0 2px 4px rgba(0,0,0,0.05);font-weight:bold;color:#1e3d59;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:15px;}
-.mode-select{padding:6px 12px;font-size:14px;font-weight:bold;border-radius:4px;border:1px solid #1e3d59;color:#1e3d59;}
-.target-input{padding:5px;font-size:14px;width:50px;text-align:center;font-weight:bold;border:1px solid #1e3d59;border-radius:4px;}
+/* Einklappbarer Setup-Bereich */
+.collapsible-btn{background:#9b59b6;color:#fff;border:none;width:100%;max-width:1000px;padding:8px;font-size:14px;font-weight:bold;border-radius:6px;cursor:pointer;margin-bottom:5px;}
+.setup-content{max-width:1000px;margin:0 auto 10px;display:block;}
 
-.panel{background:#2c3e50;color:#fff;padding:30px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 6px 15px rgba(0,0,0,0.2)}
-.timer{font-size:150px;font-weight:900;font-family:monospace;color:#ff6e40;margin:5px 0;line-height:1.1;transition: color 0.3s;}
+.mode-selector{background:#fff;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.05);font-weight:bold;color:#1e3d59;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-bottom:5px;}
+.mode-select{padding:4px 8px;font-size:13px;font-weight:bold;border-radius:4px;border:1px solid #1e3d59;color:#1e3d59;}
+.target-input{padding:4px;font-size:13px;width:45px;text-align:center;font-weight:bold;border:1px solid #1e3d59;border-radius:4px;}
 
+.setup-box{background:#fff;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-top:3px solid #9b59b6}
+.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:5px}
+.setup-grid input{padding:6px;font-size:13px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}
+
+/* Haupt-Bedienfeld */
+.main-dashboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:1000px;margin:0 auto 10px;}
+@media(max-width:768px){.main-dashboard{grid-template-columns:1fr;}}
+
+.panel{background:#2c3e50;color:#fff;padding:15px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,0.15);display:flex;flex-direction:column;justify-content:center;}
+.timer{font-size:90px;font-weight:900;font-family:monospace;color:#ff6e40;margin:0;line-height:1.1;}
 .timer-warn { color: #e74c3c !important; animation: blinker 1s linear infinite; }
 @keyframes blinker { 50% { opacity: 0.3; } }
 
-.btn-container{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:15px}
-.btn{background:#ff6e40;color:#fff;border:none;padding:15px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;flex:1;min-width:140px}
+.btn-container{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:10px}
+.btn{background:#ff6e40;color:#fff;border:none;padding:10px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;flex:1;min-width:100px}
 .btn-g{background:#2ecc71}
-.btn-g:disabled{background:#557a61;cursor:not-allowed;opacity:0.5}
-.btn-m{background:#9b59b6}
+.btn-g:disabled{background:#557a61;opacity:0.5}
+.btn-m{background:#34495e;border:1px solid #7f8c8d}
 .btn-abort{background:#e74c3c}
-.btn-r{background:#7f8c8d;min-width:80px;max-width:100px}
+.btn-r{background:#7f8c8d;}
 
-.setup-box{background:#fff;padding:15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);border-top:4px solid #9b59b6}.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}.setup-grid input{padding:8px;font-size:14px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}
+.score-box{background:#fff;padding:15px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:3px solid #2ecc71;position:relative;display:flex;flex-direction:column;justify-content:center;}
+.score-btn{background:#2ecc71;color:#fff;border:none;padding:10px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;margin-top:8px}
+.score-input-field{padding:6px;font-size:18px;width:50px;text-align:center;font-weight:bold;margin:0 3px;border:2px solid #ccc;border-radius:4px;}
+.score-input-field.active-input-indicator{background:#e8f4fd;border-color:#1e3d59 !important;}
+.sum-warning{color:#e74c3c;font-weight:bold;font-size:12px;margin-top:3px;display:none;}
 
-table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto 20px;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}
+.info-icon-btn{position:absolute;top:10px;right:10px;background:#1e3d59;color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:12px;font-weight:bold;cursor:pointer;}
+.pad-container{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:420px;margin:8px auto 0;}
+.pad-btn{background:#e0e0e0;color:#2c3e50;border:none;padding:4px 8px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer;min-width:28px;}
 
-.score-box{background:#fff;padding:20px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:4px solid #2ecc71;position:relative;}
-.score-btn{background:#2ecc71;color:#fff;border:none;padding:10px 20px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;margin-top:15px}
-.score-input-field{padding:8px;font-size:18px;width:60px;text-align:center;font-weight:bold;margin:0 5px;border:2px solid #ccc;border-radius:4px;}
-.score-input-field:focus{border-color:#1e3d59;outline:none;}
-.score-input-field.error-input{border-color:#e74c3c;background:#fdecea;}
-.rank-th{background:#2ecc71}
+/* ZWEI-SPALTEN-LAYOUT FÜR TABELLE & SPIELPLAN (iPad Optimierung) */
+.data-layout{display:grid;grid-template-columns:1fr 1.2fr;gap:10px;max-width:1000px;margin:0 auto;}
+@media(max-width:768px){.data-layout{grid-template-columns:1fr;}}
+
+.section-box{background:#fff;border-radius:6px;box-shadow:0 2px 5px rgba(0,0,0,0.05);overflow:hidden;padding-bottom:5px;}
+.section-title{background:#1e3d59;color:#fff;margin:0;padding:8px;font-size:15px;font-weight:bold;text-align:left;}
+.section-title.rank-title{background:#2ecc71;}
+
+table{width:100%;border-collapse:collapse;background:#fff;}
+th{background:#f4f7f6;color:#1e3d59;padding:6px;font-size:11px;text-transform:uppercase;border-bottom:2px solid #e0e0e0;}
+td{padding:6px 4px;border-bottom:1px solid #e0e0e0;font-size:13px}
+tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:2px 5px;border-radius:4px;font-size:11px;font-weight:bold}
 .gold-row{background:#fff9c4!important;font-weight:bold}
 
-.info-icon-btn{position:absolute;top:15px;right:15px;background:#1e3d59;color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.info-icon-btn:hover{background:#2c5278}
-.pad-container{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;max-width:500px;margin:12px auto 5px;}
-.pad-btn{background:#e0e0e0;color:#2c3e50;border:none;padding:6px 10px;font-size:13px;font-weight:bold;border-radius:4px;cursor:pointer;min-width:32px;}
-.pad-btn:active{background:#b0b0b0}
-.active-input-indicator{background:#e8f4fd;border-color:#1e3d59 !important;}
-.sum-warning{color:#e74c3c;font-weight:bold;font-size:13px;margin-top:5px;display:none;}
-
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;display:none;}
-.modal-content{background:#fff;padding:25px;border-radius:8px;max-width:500px;width:90%;text-align:left;box-shadow:0 10px 25px rgba(0,0,0,0.3);position:relative;}
-.modal-close{position:absolute;top:10px;right:15px;font-size:24px;cursor:pointer;color:#7f8c8d;}
-.modal-close:hover{color:#000}
+.modal-content{background:#fff;padding:20px;border-radius:8px;max-width:450px;width:90%;text-align:left;position:relative;}
+.modal-close{position:absolute;top:5px;right:10px;font-size:20px;cursor:pointer;}
 </style></head><body>
 
 <div class="banner">
-    <h1>Padel Turnier-Manager Pro</h1>
-    <p style="margin:0 0 10px 0;">Premium Zeit- & Punktemanagement</p>
+    <h1>Padel Pro v16</h1>
     <div class="total-timer-box">
-        <span>⏱️ Gesamtzeit: </span>
-        <span class="total-timer-time" id="totalDisplay">00:00:00</span>
+        <span>⏱️ Gesamt: </span><span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
         <span class="total-reset-link" onclick="resetTotalTimer()">Reset</span>
     </div>
 </div>
 
-<div class="mode-selector">
-    <div>
-        👥 Modus:
-        <select id="modeSelect" class="mode-select" onchange="changeTournamentMode()">
-            <option value="6_zeit">6 Spieler (3 feste Teams / Zeit-Modus)</option>
-            <option value="6_americano">6 Spieler (Echtes Americano / Punkt-Modus)</option>
-            <option value="5_zeit">5 Spieler (Wechselnde Partner / Zeit-Modus)</option>
-            <option value="5_americano">5 Spieler (Echtes Americano / Punkt-Modus)</option>
-        </select>
+<button class="collapsible-btn" id="collapseBtn" onclick="toggleSetupView()">⚙️ Einstellungen & Spieler anzeigen/verbergen</button>
+<div class="setup-content" id="setupContent">
+    <div class="mode-selector">
+        <div>👥 Modus:
+            <select id="modeSelect" class="mode-select" onchange="changeTournamentMode()">
+                <option value="6_zeit">6 Spieler (3 feste Teams / Zeit)</option>
+                <option value="6_americano">6 Spieler (Americano / Punkte)</option>
+                <option value="5_zeit">5 Spieler (Wechselnd / Zeit)</option>
+                <option value="5_americano">5 Spieler (Americano / Punkte)</option>
+            </select>
+        </div>
+        <div id="roundsConfigContainer">🔄 Runden: <input type="number" id="maxRoundsInput" class="target-input" value="7" min="1" oninput="updateRoundsFromInput()"></div>
+        <div id="targetPointsContainer" style="display:none;">🎯 Punkte: <input type="number" id="targetPointsInput" class="target-input" value="32" min="1" oninput="validateLivePoints()"></div>
     </div>
-    
-    <div id="roundsConfigContainer">
-        🔄 Runden: 
-        <input type="number" id="maxRoundsInput" class="target-input" value="7" min="1" oninput="updateRoundsFromInput()">
-    </div>
-    
-    <div id="targetPointsContainer" style="display:none;">
-        🎯 Punkte pro Match: 
-        <input type="number" id="targetPointsInput" class="target-input" value="32" min="1" oninput="validateLivePoints()">
+    <div class="setup-box">
+        <div class="setup-grid" id="inputGrid"></div>
     </div>
 </div>
 
-<div class="setup-box">
-    <strong style="color:#1e3d59;">👥 Spieler-Anwesenheit:</strong>
-    <div class="setup-grid" id="inputGrid"></div>
-</div>
+<div class="main-dashboard">
+    <div class="panel" id="timerPanel">
+        <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:15px;">Runde 1</div>
+        <div class="timer" id="display">20:00</div>
+        <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;font-size:12px;margin-bottom:5px">Restzeit für Verlängerung: 00:00</div>
+        <div class="btn-container">
+            <button class="btn" id="startBtn" onclick="toggleTimer()">START</button>
+            <button class="btn btn-g" id="saveBtn" onclick="saveRestTime()">Zeit sichern</button>
+            <button class="btn btn-abort" onclick="resetCurrentMatch()">Reset Match</button>
+            <button class="btn btn-m" id="mixBtn" onclick="shufflePlayers()">Mischen</button>
+            <button class="btn btn-r" onclick="resetAll()">Reset All</button>
+        </div>
+    </div>
 
-<div class="panel" id="timerPanel">
-    <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:18px;">Runde 1</div>
-    <div class="timer" id="display">20:00</div>
-    <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:15px">Gesammelte Restzeit für Bonus-Runde: 00:00</div>
-    
-    <div class="btn-container">
-        <button class="btn" id="startBtn" onclick="toggleTimer()">START</button>
-        <button class="btn btn-abort" onclick="resetCurrentMatch()">Fehlstart!<br><span style="font-size:11px;font-weight:normal;">Match-Reset</span></button>
-        <button class="btn btn-g" id="saveBtn" onclick="saveRestTime()">Satz fertig!<br><span style="font-size:11px;font-weight:normal;">Restzeit sichern</span></button>
-        <button class="btn btn-m" id="mixBtn" onclick="shufflePlayers()">Spieler<br>mischen</button>
-        <button class="btn btn-r" onclick="resetAll()">Turnier<br>Reset</button>
+    <div class="score-box">
+        <button class="info-icon-btn" onclick="openInfoModal()">ℹ️</button>
+        <strong style="color:#2ecc71; font-size:15px; display:block; margin-bottom:5px;">🏆 Ergebnis eintragen</strong>
+        <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; font-size:13px; margin-bottom:5px;">Ergebnis:</span>
+        <div id="winSelectContainer"><select id="matchWinnerSelect" style="padding:6px; font-size:14px; font-weight:bold; border-radius:4px; width:90%;"></select></div>
+        <div id="pointInputContainer" style="display:none; font-size:14px; font-weight:bold; color:#1e3d59;">
+            <span id="nameLabelA">A</span> 
+            <input type="number" id="ptsA" class="score-input-field active-input-indicator" min="0" onfocus="setActiveField('ptsA')" oninput="validateLivePoints()"> : 
+            <input type="number" id="ptsB" class="score-input-field" min="0" onfocus="setActiveField('ptsB')" oninput="validateLivePoints()"> 
+            <span id="nameLabelB">B</span>
+            <div class="sum-warning" id="sumWarningField">⚠️ Summe zu hoch!</div>
+            <div class="pad-container" id="numPad"></div>
+        </div>
+        <button class="score-btn" onclick="submitRoundScore()">Sichern & Nächste Runde</button>
     </div>
 </div>
 
-<div class="score-box">
-    <button class="info-icon-btn" onclick="openInfoModal()">ℹ️</button>
-    <strong style="color:#2ecc71; font-size:18px; display:block; margin-bottom:10px;">🏆 Turniersieger ermitteln</strong>
-    <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; margin-bottom:10px;">Ergebnis eintragen:</span>
-    
-    <div id="winSelectContainer">
-        <select id="matchWinnerSelect" style="padding:10px; font-size:16px; font-weight:bold; border-radius:4px; border:1px solid #ccc; color:#2c3e50; max-width:90%;"></select>
+<div class="data-layout">
+    <div class="section-box">
+        <div class="section-title rank-title">📊 Rangliste (Live)</div>
+        <table>
+            <thead><tr><th style="width:30px">Pl.</th><th>Spieler</th><th style="width:30px">Sp</th><th style="width:25px">S</th><th style="width:25px">U</th><th style="width:25px">N</th><th style="width:45px; background:#2ecc71; color:#fff;" id="scoreColHeader">Pkt</th></tr></thead>
+            <tbody id="rankTableBody"></tbody>
+        </table>
     </div>
-    
-    <div id="pointInputContainer" style="display:none; font-size:16px; font-weight:bold; color:#1e3d59;">
-        <span id="nameLabelA">Team A</span> 
-        <input type="number" id="ptsA" class="score-input-field active-input-indicator" min="0" placeholder="0" onfocus="setActiveField('ptsA')" oninput="validateLivePoints()"> 
-        : 
-        <input type="number" id="ptsB" class="score-input-field" min="0" placeholder="0" onfocus="setActiveField('ptsB')" oninput="validateLivePoints()"> 
-        <span id="nameLabelB">Team B</span>
-        
-        <div class="sum-warning" id="sumWarningField">⚠️ Fehler: Die Summe übersteigt das Punktelimit!</div>
-        
-        <div class="pad-container" id="numPad"></div>
-    </div>
-    
-    <button class="score-btn" onclick="submitRoundScore()">Ergebnis sichern & eintragen</button>
-</div>
-
-<div class="modal-overlay" id="infoModal">
-    <div class="modal-content">
-        <span class="modal-close" onclick="closeInfoModal()">&times;</span>
-        <h3 style="color:#1e3d59; margin-top:0;">🎯 Wie werden die Punkte ermittelt?</h3>
-        <hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
-        <strong style="color:#ff6e40;">Zeit-Modus:</strong>
-        <p style="font-size:14px; line-height:1.4; margin-bottom:15px;">
-            Es wird auf Zeit gespielt. Am Ende wählst du einfach das Sieger-Team aus. Die Gewinner erhalten <strong>+3 Punkte</strong> in der Tabelle, bei Unentschieden erhalten beide Teams <strong>+1 Punkt</strong>. Die Verlierer erhalten 0 Punkte.
-        </p>
-        <strong style="color:#2ecc71;">Americano (Punkt-Modus):</strong>
-        <p style="font-size:14px; line-height:1.4;">
-            Jedes Match hat eine feste Gesamtanzahl an Punkten (z. B. 32 Punkte). Jeder während des Spiels gemachte Punkt zählt 1:1 direkt für das persönliche Tabellenkonto des Spielers.
-            <br><br>
-            <strong>Beispiel:</strong> Geht ein Match <code>18 : 14</code> aus, bekommen beide Gewinner jeweils <strong>+18 Punkte</strong> gutgeschrieben. Beide Verlierer erhalten jeweils <strong>+14 Punkte</strong>.
-        </p>
+    <div class="section-box">
+        <div class="section-title">📅 Spielplan (Bank-balanciert)</div>
+        <table>
+            <thead><tr><th style="width:65px">Runde</th><th>Match Paarung</th><th>Bank / Pause</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
     </div>
 </div>
 
-<h3 style="color:#1e3d59; margin-top:20px;">📊 Aktuelle Tabelle (Live-Rangliste)</h3>
-<table>
-    <thead>
-        <tr>
-            <th class="rank-th" style="width:60px">Platz</th>
-            <th class="rank-th">Spieler</th>
-            <th class="rank-th" style="width:50px">Sp</th>
-            <th class="rank-th" style="width:50px">S</th>
-            <th class="rank-th" style="width:50px">U</th>
-            <th class="rank-th" style="width:50px">N</th>
-            <th class="rank-th" style="width:80px; background:#27ae60;" id="scoreColHeader">Pkt</th>
-        </tr>
-    </thead>
-    <tbody id="rankTableBody"></tbody>
-</table>
-
-<h3 style="color:#1e3d59;">📅 Spielplan (Live-balancierte Bankzeiten)</h3>
-<table id="planTable"><thead><tr><th>Runde</th><th>Match</th><th>Bank</th></tr></thead><tbody id="tableBody"></tbody></table>
+<div class="modal-overlay" id="infoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal()">&times;</span><h3>🎯 Punkte-Logik</h3><p><b>Zeit-Modus:</b> Sieg = 3 Pkt, Unentschieden = 1 Pkt, Niederlage = 0 Pkt.<br><br><b>Americano:</b> Jeder im Match erzielte Punkt wird direkt 1:1 dem Konto des Spielers hinzugefügt.</p></div></div>
 
 <script>
-let currentMode = "6_zeit"; 
-let spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"];
-let spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
-
-let spieler = [...spieler6]; let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTime,totalBonusTime=0,timerInterval=null; let totalSeconds = 0; let totalTimerInterval = null; let spielerStats = {};
-let currentActiveField = "ptsA"; let customMaxRounds = 7;
-let generierterSpielplan = [];
+let currentMode = "6_zeit", spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"], spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
+let spieler = [...spieler6], aktuelleRunde=1, baseTime=20*60, timeLeft=baseTime, totalBonusTime=0, timerInterval=null, totalSeconds = 0, totalTimerInterval = null, spielerStats = {};
+let currentActiveField = "ptsA", customMaxRounds = 7, generierterSpielplan = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
+function toggleSetupView() {
+    let x = document.getElementById("setupContent");
+    x.style.display = (x.style.display === "none") ? "block" : "none";
+}
 function buildInputGrid() {
     let count = (currentMode.startsWith("6")) ? 6 : 5; let html = ""; let defaultNames = (count === 6) ? spieler6 : spieler5;
     for(let i=1; i<=count; i++) { html += `<input type="text" id="sp${i}" value="${defaultNames[i-1]}" oninput="initStats(); generateDynamicSchedule(); renderTable();">`; }
     document.getElementById('inputGrid').innerHTML = html;
 }
-
 function buildNumPad() {
     let html = ""; for(let i=0; i<=32; i++) { html += `<button class="pad-btn" onclick="pressPadNum(${i})">${i}</button>`; }
     document.getElementById('numPad').innerHTML = html;
 }
-
 function setActiveField(fieldId) {
     currentActiveField = fieldId;
     document.getElementById('ptsA').classList.remove('active-input-indicator');
     document.getElementById('ptsB').classList.remove('active-input-indicator');
     document.getElementById(fieldId).classList.add('active-input-indicator');
 }
-
 function pressPadNum(num) {
     document.getElementById(currentActiveField).value = num; validateLivePoints();
     if(currentActiveField === "ptsA") { setActiveField("ptsB"); }
 }
-
 function validateLivePoints() {
-    let valA = parseInt(document.getElementById('ptsA').value) || 0;
-    let valB = parseInt(document.getElementById('ptsB').value) || 0;
+    let valA = parseInt(document.getElementById('ptsA').value) || 0, valB = parseInt(document.getElementById('ptsB').value) || 0;
     let targetPoints = parseInt(document.getElementById('targetPointsInput').value) || 32;
-    let fA = document.getElementById('ptsA'); let fB = document.getElementById('ptsB'); let warn = document.getElementById('sumWarningField');
-    
-    if((valA + valB) > targetPoints) {
-        fA.classList.add('error-input'); fB.classList.add('error-input'); warn.style.display = "block";
-        warn.textContent = `⚠️ Fehler: Die Summe (${valA + valB}) ist größer als das Limit von ${targetPoints}!`;
-        return false;
-    } else {
-        fA.classList.remove('error-input'); fB.classList.remove('error-input'); warn.style.display = "none";
-        return true;
-    }
+    let fA = document.getElementById('ptsA'), fB = document.getElementById('ptsB'), warn = document.getElementById('sumWarningField');
+    if((valA + valB) > targetPoints) { fA.classList.add('error-input'); fB.classList.add('error-input'); warn.style.display = "block"; return false; } 
+    else { fA.classList.remove('error-input'); fB.classList.remove('error-input'); warn.style.display = "none"; return true; }
 }
-
 function updateRoundsFromInput() {
     let val = parseInt(document.getElementById('maxRoundsInput').value);
     if(!isNaN(val) && val > 0) { customMaxRounds = val; generateDynamicSchedule(); renderTable(); updateScoreSelectOption(); }
 }
-
 function openInfoModal() { document.getElementById('infoModal').style.display = 'flex'; }
+// Fix: closeInfoModal was missing
 function closeInfoModal() { document.getElementById('infoModal').style.display = 'none'; }
 
-/* NEU: Mathematischer Planer für perfekt balancierte Bank-Aufenthalte */
 function generateDynamicSchedule() {
-    updatePlayerNamesFromInputs();
-    generierterSpielplan = [];
-    let maxRounds = (currentMode === "6_zeit") ? 10 : customMaxRounds;
-    
-    // Protokoll für Fairness-Check
-    let bankCounter = {};
-    spieler.forEach(p => bankCounter[p] = 0);
-    
-    // Für Abwechslung der Paarungen
-    let partnerHistorie = {};
-    spieler.forEach(p => { partnerHistorie[p] = {}; spieler.forEach(p2 => partnerHistorie[p][p2] = 0); });
+    updatePlayerNamesFromInputs(); generierterSpielplan = []; let maxRounds = (currentMode === "6_zeit") ? 10 : customMaxRounds;
+    let bankCounter = {}; spieler.forEach(p => bankCounter[p] = 0);
+    let partnerHistorie = {}; spieler.forEach(p => { partnerHistorie[p] = {}; spieler.forEach(p2 => partnerHistorie[p][p2] = 0); });
 
     for (let r = 0; r < maxRounds; r++) {
         if (currentMode === "6_zeit") {
-            // Modus 6 Zeit nutzt feste Teambasen (Runde rotiert durch die 3 Teams)
             let mod = r % 3;
             if (mod === 0) generierterSpielplan.push({ a: [spieler[0], spieler[1]], b: [spieler[2], spieler[3]], pause: [spieler[4], spieler[5]] });
             else if (mod === 1) generierterSpielplan.push({ a: [spieler[2], spieler[3]], b: [spieler[4], spieler[5]], pause: [spieler[0], spieler[1]] });
             else generierterSpielplan.push({ a: [spieler[0], spieler[1]], b: [spieler[4], spieler[5]], pause: [spieler[2], spieler[3]] });
         } else {
-            // Americano & 5er Modi verlangen dynamische Auszeit-Auswahl
             let sortierteSpieler = [...spieler].sort((x, y) => bankCounter[y] - bankCounter[x]); 
-            // Die Spieler, die am seltensten auf der Bank waren, gehen prioritär auf die Bank
-            let pauseSitzer = [];
-            if (currentMode.startsWith("5")) {
-                pauseSitzer = [sortierteSpieler.pop()]; // 1 Person Pause
-            } else {
-                pauseSitzer = [sortierteSpieler.pop(), sortierteSpieler.pop()]; // 2 Personen Pause
-            }
-            
+            let pauseSitzer = currentMode.startsWith("5") ? [sortierteSpieler.pop()] : [sortierteSpieler.pop(), sortierteSpieler.pop()];
             pauseSitzer.forEach(p => bankCounter[p]++);
-            
-            // Verbleibende aktive Spieler für diese Runde
             let aktive = spieler.filter(p => !pauseSitzer.includes(p));
-            
-            // Bestmögliche Teambildung aus den Aktiven basierend auf Historie
             aktive.sort((x, y) => {
                 let scoreX = aktive.reduce((sum, p) => sum + partnerHistorie[x][p], 0);
                 let scoreY = aktive.reduce((sum, p) => sum + partnerHistorie[y][p], 0);
                 return scoreX - scoreY;
             });
-            
-            let tA = [aktive[0], aktive[3] || aktive[2]];
-            let tB = [aktive[1], aktive[2] || aktive[3]];
-            
+            let tA = [aktive[0], activeFourth = aktive[3] || aktive[2]], tB = [aktive[1], activeThird = aktive[2] || aktive[3]];
             partnerHistorie[tA[0]][tA[1]]++; partnerHistorie[tA[1]][tA[0]]++;
             if(tB[1]) { partnerHistorie[tB[0]][tB[1]]++; partnerHistorie[tB[1]][tB[0]]++; }
-
             generierterSpielplan.push({ a: tA, b: tB, pause: pauseSitzer });
         }
     }
 }
-
 function changeTournamentMode() {
-    currentMode = document.getElementById('modeSelect').value;
-    spieler = (currentMode.startsWith("6")) ? [...spieler6] : [...spieler5];
-    
-    if(currentMode === "6_zeit") {
-        document.getElementById('roundsConfigContainer').style.display = "none";
-    } else {
-        document.getElementById('roundsConfigContainer').style.display = "inline";
-    }
-
+    currentMode = document.getElementById('modeSelect').value; spieler = (currentMode.startsWith("6")) ? [...spieler6] : [...spieler5];
+    document.getElementById('roundsConfigContainer').style.display = (currentMode === "6_zeit") ? "none" : "inline";
     if(currentMode.endsWith("americano")) {
-        document.getElementById('timerPanel').style.display = "none";
-        document.getElementById('winSelectContainer').style.display = "none";
-        document.getElementById('pointInputContainer').style.display = "block";
-        document.getElementById('targetPointsContainer').style.display = "inline";
+        document.getElementById('timerPanel').style.display = "none"; document.getElementById('winSelectContainer').style.display = "none";
+        document.getElementById('pointInputContainer').style.display = "block"; document.getElementById('targetPointsContainer').style.display = "inline";
         document.getElementById('scoreColHeader').textContent = "Punkte";
     } else {
-        document.getElementById('timerPanel').style.display = "block";
-        document.getElementById('winSelectContainer').style.display = "block";
-        document.getElementById('pointInputContainer').style.display = "none";
-        document.getElementById('targetPointsContainer').style.display = "none";
+        document.getElementById('timerPanel').style.display = "flex"; document.getElementById('winSelectContainer').style.display = "block";
+        document.getElementById('pointInputContainer').style.display = "none"; document.getElementById('targetPointsContainer').style.display = "none";
         document.getElementById('scoreColHeader').textContent = "Pkt";
-        
-        if(currentMode === "5_zeit") {
-            document.getElementById('bonusDisplay').style.display = "none";
-            document.getElementById('saveBtn').style.display = "none";
-        } else {
-            document.getElementById('bonusDisplay').style.display = "block";
-            document.getElementById('saveBtn').style.display = "block";
-        }
+        document.getElementById('bonusDisplay').style.display = (currentMode === "5_zeit") ? "none" : "block";
+        document.getElementById('saveBtn').style.display = (currentMode === "5_zeit") ? "none" : "block";
     }
     buildInputGrid(); resetAll(true);
 }
-
 function updatePlayerNamesFromInputs() {
     let count = (currentMode.startsWith("6")) ? 6 : 5;
-    for(let i=1; i<=count; i++) { let val = document.getElementById('sp' + i).value.trim(); if(val !== "") { spieler[i-1] = val; } else { spieler[i-1] = "Spieler " + i; } }
+    for(let i=1; i<=count; i++) { let val = document.getElementById('sp' + i).value.trim(); if(val !== "") { spieler[i-1] = val; } }
     if(currentMode.startsWith("6")) spieler6 = [...spieler]; else spieler5 = [...spieler];
 }
-
 function initStats() { updatePlayerNamesFromInputs(); let alteStats = {...spielerStats}; spielerStats = {}; spieler.forEach(name => { spielerStats[name] = alteStats[name] || { sp: 0, s: 0, u: 0, n: 0, pkt: 0 }; }); renderRankTable(); }
-
 function shufflePlayers(){
-    if(timerInterval){alert("Bitte Match-Timer pausieren!");return} if(!confirm("Teams neu auslosen? Statistiken werden zurückgesetzt.")) return; updatePlayerNamesFromInputs();
+    if(timerInterval){alert("Bitte Match-Timer pausieren!");return} if(!confirm("Teams neu auslosen?")) return; updatePlayerNamesFromInputs();
     for (let i = spieler.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); let temp = spieler[i]; spieler[i] = spieler[j]; spieler[j] = temp; }
     for(let i=1; i<=spieler.length; i++) { document.getElementById('sp' + i).value = spieler[i-1]; } spielerStats = {}; initStats(); generateDynamicSchedule(); renderTable();
 }
-
 function playHornSound() {
     try {
-        let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, audioCtx.currentTime); gain.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.4); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.45); gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.55); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.9); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.95); gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 1.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 1.5); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.6); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 1.7);
+        let osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, audioCtx.currentTime); gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 1.5); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.6); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 1.7);
     } catch(e) {}
 }
-
 function formatTime(s){let m=Math.floor(s/60);s=s%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
-function formatTotalTime(totalSecs) { let h = Math.floor(totalSecs / 3600); let m = Math.floor((totalSecs % 3600) / 60); let s = totalSecs % 60; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
+function formatTotalTime(totalSecs) { let h = Math.floor(totalSecs / 3600), m = Math.floor((totalSecs % 3600) / 60), s = totalSecs % 60; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
 function toggleTotalTimer() {
     const btn = document.getElementById('totalStartBtn');
-    if(totalTimerInterval) { clearInterval(totalTimerInterval); totalTimerInterval = null; btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59'; }
-    else { if(audioCtx.state === 'suspended') { audioCtx.resume(); } btn.textContent = 'PAUSE'; btn.style.background = '#e74c3c'; btn.style.color = '#fff'; totalTimerInterval = setInterval(() => { totalSeconds++; document.getElementById('totalDisplay').textContent = formatTotalTime(totalSeconds); }, 1000); }
+    if(totalTimerInterval) { clearInterval(totalTimerInterval); totalTimerInterval = null; btn.textContent = 'START'; }
+    else { if(audioCtx.state === 'suspended') { audioCtx.resume(); } btn.textContent = 'PAUSE'; totalTimerInterval = setInterval(() => { totalSeconds++; document.getElementById('totalDisplay').textContent = formatTotalTime(totalSeconds); }, 1000); }
 }
-function resetTotalTimer() { if(!confirm("Gesamtzeit wirklich zurücksetzen?")) return; if(totalTimerInterval) { clearInterval(totalTimerInterval); totalTimerInterval = null; } totalSeconds = 0; document.getElementById('totalDisplay').textContent = "00:00:00"; const btn = document.getElementById('totalStartBtn'); btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59'; }
-
-function getMaxRunden() {
-    if(currentMode === "6_zeit") return (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
-    return customMaxRounds;
-}
-
+function resetTotalTimer() { if(!confirm("Gesamtzeit zurücksetzen?")) return; if(totalTimerInterval) { clearInterval(totalTimerInterval); totalTimerInterval = null; } totalSeconds = 0; document.getElementById('totalDisplay').textContent = "00:00:00"; document.getElementById('totalStartBtn').textContent = 'START'; }
+function getMaxRunden() { return (currentMode === "6_zeit") ? ((totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9) : customMaxRounds; }
 function updateScoreSelectOption() {
-    const select = document.getElementById('matchWinnerSelect'); const prompt = document.getElementById('scorePrompt');
-    let maxRunden = getMaxRunden();
-    
-    if (aktuelleRunde > maxRunden) { prompt.textContent = "Turnier komplett beendet!"; select.innerHTML = `<option>Keine Runden mehr</option>`; return; }
-    
-    let rName = (currentMode === "6_zeit" && aktuelleRunde === 10) ? "Runde 10 (Bonus)" : "Runde " + aktuelleRunde;
-    prompt.textContent = `Ergebnis für ${rName} eintragen:`;
-    
-    let match = generierterSpielplan[aktuelleRunde - 1];
-    if(!match) return;
-    
-    let nameA = match.a[0] + " & " + match.a[1];
-    let nameB = match.b[1] ? (match.b[0] + " & " + match.b[1]) : match.b[0];
-    
-    if(currentMode.endsWith("americano")) {
-        document.getElementById('nameLabelA').textContent = nameA;
-        document.getElementById('nameLabelB').textContent = nameB;
-    } else {
-        select.innerHTML = `<option value="A">${nameA} gewinnt</option><option value="B">${nameB} gewinnt</option><option value="U">Unentschieden</option>`;
-    }
+    const select = document.getElementById('matchWinnerSelect'), prompt = document.getElementById('scorePrompt'); let maxRunden = getMaxRunden();
+    if (aktuelleRunde > maxRunden) { prompt.textContent = "Turnier beendet!"; select.innerHTML = `<option>Keine Runden mehr</option>`; return; }
+    prompt.textContent = `Ergebnis für Runde ${aktuelleRunde}:`; let match = generierterSpielplan[aktuelleRunde - 1]; if(!match) return;
+    let nameA = match.a[0] + " & " + match.a[1], nameB = match.b[1] ? (match.b[0] + " & " + match.b[1]) : match.b[0];
+    if(currentMode.endsWith("americano")) { document.getElementById('nameLabelA').textContent = nameA; document.getElementById('nameLabelB').textContent = nameB; } 
+    else { select.innerHTML = `<option value="A">${nameA} gewinnt</option><option value="B">${nameB} gewinnt</option><option value="U">Unentschieden</option>`; }
 }
-
 function submitRoundScore() {
-    let maxRunden = getMaxRunden(); if(aktuelleRunde > maxRunden) { alert("Das Turnier ist bereits vorbei."); return; }
-    let match = generierterSpielplan[aktuelleRunde - 1];
-    
+    let maxRunden = getMaxRunden(); if(aktuelleRunde > maxRunden) return; let match = generierterSpielplan[aktuelleRunde - 1];
     if(currentMode.endsWith("americano")) {
-        let valA = parseInt(document.getElementById('ptsA').value);
-        let valB = parseInt(document.getElementById('ptsB').value);
-        let targetPoints = parseInt(document.getElementById('targetPointsInput').value);
-        
-        if(isNaN(valA) || isNaN(valB) || valA < 0 || valB < 0) { alert("Bitte gültige Punkte für beide Teams eingeben!"); return; }
-        if(!validateLivePoints()) { alert("Fehler: Die Summe übersteigt das Punktelimit!"); return; }
-        if(!isNaN(targetPoints) && (valA + valB !== targetPoints)) {
-            alert(`Fehler: Die Summe der Punkte (${valA + valB}) entspricht nicht genau der Gesamtanzahl von ${targetPoints} Punkten!`);
-            return;
-        }
-        
-        if(!confirm(`Ergebnis ${valA} : ${valB} eintragen?`)) return;
-        
+        let valA = parseInt(document.getElementById('ptsA').value), valB = parseInt(document.getElementById('ptsB').value), targetPoints = parseInt(document.getElementById('targetPointsInput').value);
+        if(isNaN(valA) || isNaN(valB) || !validateLivePoints() || (valA + valB !== targetPoints)) { alert("Punkte prüfen (Summe muss exakt stimmen)!"); return; }
         match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].pkt += valA; if(valA > valB) spielerStats[p].s++; else if(valA < valB) spielerStats[p].n++; else spielerStats[p].u++; });
         match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].pkt += valB; if(valB > valA) spielerStats[p].s++; else if(valB < valA) spielerStats[p].n++; else spielerStats[p].u++; });
-        
-        document.getElementById('ptsA').value = ""; document.getElementById('ptsB').value = "";
-        setActiveField("ptsA"); validateLivePoints();
-        if(aktuelleRunde < maxRunden) { aktuelleRunde++; } else { alert("Turnier beendet!"); aktuelleRunde++; }
+        document.getElementById('ptsA').value = ""; document.getElementById('ptsB').value = ""; setActiveField("ptsA");
     } else {
-        const select = document.getElementById('matchWinnerSelect'); let result = select.value; if(!confirm("Ergebnis so sichern?")) return;
-        if(result === "A") { match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); match.b.forEach(p => { spielerStats[p].sp++; match.b.length > 1 ? spielerStats[p].n++ : null; }); }
-        else if (result === "B") { match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
-        else if (result === "U") { match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); }
-        if(aktuelleRunde < maxRunden) { aktuelleRunde++; } else { alert("Turnier beendet!"); aktuelleRunde++; }
+        let res = document.getElementById('matchWinnerSelect').value;
+        if(res === "A") { match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
+        else if (res === "B") { match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
+        else { match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); }
     }
-    
-    renderRankTable(); renderTable(); alert("Ergebnis eingetragen!");
+    aktuelleRunde++; renderRankTable(); renderTable(); // Automatisch die Einstellungen einklappen, sobald das Turnier läuft
+    if(aktuelleRunde === 2) { document.getElementById("setupContent").style.display = "none"; }
 }
-
 function renderRankTable() {
     let sortable = []; for (let p in spielerStats) { sortable.push({ name: p, ...spielerStats[p] }); } 
     sortable.sort((a, b) => b.pkt - a.pkt || b.s - a.s); let html = "";
-    sortable.forEach((row, index) => { let c = (index === 0 && row.pkt > 0) ? "class='gold-row'" : ""; html += `<tr ${c}><td><strong>${index + 1}.</strong></td><td><strong>${row.name}</strong></td><td>${row.sp}</td><td>${row.s}</td><td>${row.u}</td><td>${row.n}</td><td style="font-weight:bold; color:#27ae60;">${row.pkt}</td></tr>`; });
+    sortable.forEach((row, index) => { let c = (index === 0 && row.pkt > 0) ? "class='gold-row'" : ""; html += `<tr ${c}><td><strong>${index + 1}</strong></td><td><strong>${row.name}</strong></td><td>${row.sp}</td><td>${row.s}</td><td>${row.u}</td><td>${row.n}</td><td style="font-weight:bold; color:#27ae60;">${row.pkt}</td></tr>`; });
     document.getElementById('rankTableBody').innerHTML = html;
 }
-
 function renderTable(){
-    let html=""; let maxRunden = getMaxRunden();
-    if(generierterSpielplan.length === 0) generateDynamicSchedule();
-    
+    let html="", maxRunden = getMaxRunden(); if(generierterSpielplan.length === 0) generateDynamicSchedule();
     for(let i=0; i<maxRunden; i++) {
-        let match = generierterSpielplan[i];
-        if(!match) continue;
-        
-        let pauseText = match.pause.join(" & ");
+        let match = generierterSpielplan[i]; if(!match) continue;
         let m = `<span class="badge-team">${match.a[0]} & ${match.a[1]}</span> <span class="vs">VS</span> <span class="badge-team">${match.b[0]} ${match.b[1] ? '& ' + match.b[1] : ''}</span>`;
-        let b = `<span class="badge-bank">${pauseText} (Auszeit)</span>`;
         let c = (i+1===aktuelleRunde)?"class='active-row'":"";
-        
-        let rName = (currentMode === "6_zeit" && i === 9) ? "10 (Bonus)" : (i+1);
-        let ext = (currentMode === "6_zeit" && i === 9) ? ` <small style='color:#2ecc71;'>(Verlängerung)</small>` : "";
-        
-        html+=`<tr ${c}><td><strong>Runde ${rName}</strong>${ext}</td><td>${m}</td><td>${b}</td></tr>`;
+        html+=`<tr ${c}><td><strong>R. ${i+1}</strong></td><td>${m}</td><td><span class="badge-bank">${match.pause.join(" & ")}</span></td></tr>`;
     }
-    
-    if(currentMode === "6_zeit") {
-        document.getElementById('roundTitle').textContent = (aktuelleRunde === 10) ? `Runde 10 / 10 (BONUS)` : `Runde ${aktuelleRunde} / 9`;
-        if(document.getElementById('saveBtn')) document.getElementById('saveBtn').disabled = (aktuelleRunde >= 9);
-    } else {
-        document.getElementById('roundTitle').textContent = `Runde ${aktuelleRunde} / ${maxRunden}`;
-    }
-    
+    document.getElementById('roundTitle').textContent = (currentMode === "6_zeit" && aktuelleRunde === 10) ? `Runde 10 (BONUS)` : `Runde ${aktuelleRunde} / ${maxRunden}`;
     document.getElementById('tableBody').innerHTML=html; updateScoreSelectOption();
 }
-
-function updateDisplay(){ const displayEl = document.getElementById('display'); if(!displayEl) return; displayEl.textContent = formatTime(timeLeft); if(currentMode === "6_zeit") { document.getElementById('bonusDisplay').textContent = `Gesammelte Restzeit für Bonus-Runde: ${formatTime(totalBonusTime)}`; } if(timeLeft > 0 && timeLeft < 60 && timerInterval !== null) { displayEl.classList.add('timer-warn'); } else { displayEl.classList.remove('timer-warn'); } }
+function updateDisplay(){ document.getElementById('display').textContent = formatTime(timeLeft); if(currentMode === "6_zeit") { document.getElementById('bonusDisplay').textContent = `Restzeit Verlängerung: ${formatTime(totalBonusTime)}`; } }
 function toggleTimer(){
     const btn=document.getElementById('startBtn');
-    if(timerInterval){ clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; updateDisplay(); }
+    if(timerInterval){ clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; }
     else {
         if(audioCtx.state === 'suspended') { audioCtx.resume(); } btn.textContent='PAUSE'; btn.style.backgroundColor='#e74c3c';
         timerInterval=setInterval(()=>{
             if(timeLeft > 0){ timeLeft--; updateDisplay(); }else{
-                clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; updateDisplay(); playHornSound();
+                clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; playHornSound();
                 let maxRunden = getMaxRunden();
-                if(aktuelleRunde < maxRunden){ aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay(); }
-                else if(currentMode === "6_zeit" && aktuelleRunde === 9 && totalBonusTime > 0) { alert("Reguläre Runden beendet! Weiter geht's mit der BONUS-RUNDE 10!"); aktuelleRunde = 10; timeLeft = totalBonusTime; renderTable(); updateDisplay(); }
+                if(aktuelleRunde < maxRunden){ aktuelleRunde++; timeLeft=baseTime; renderTable(); }
+                else if(currentMode === "6_zeit" && aktuelleRunde === 9 && totalBonusTime > 0) { aktuelleRunde = 10; timeLeft = totalBonusTime; renderTable(); }
                 else { alert("Turnier beendet!"); }
             }
         },1000);
     }
 }
-function resetCurrentMatch() { if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; document.getElementById('startBtn').style.backgroundColor = '#ff6e40'; } timeLeft = (currentMode === "6_zeit" && aktuelleRunde === 10) ? totalBonusTime : baseTime; updateDisplay(); }
-function saveRestTime(){ if(currentMode !== "6_zeit" || aktuelleRunde >= 9){return} let r=timeLeft; if(r<=0)return; if(confirm(`${formatTime(r)} Restzeit sichern?`)){ if(timerInterval){ clearInterval(timerInterval); timerInterval=null; document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40'; } totalBonusTime+=r; aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay(); } }
-function resetAll(silent = false){ if(!silent && !confirm("Turnier zurücksetzen?")) return; clearInterval(timerInterval); timerInterval=null; aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0; if(document.getElementById('startBtn')) { document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40'; } spielerStats = {}; initStats(); generateDynamicSchedule(); renderTable(); updateDisplay(); }
+function resetCurrentMatch() { if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; } timeLeft = (currentMode === "6_zeit" && aktuelleRunde === 10) ? totalBonusTime : baseTime; updateDisplay(); }
+function saveRestTime(){ if(currentMode !== "6_zeit" || aktuelleRunde >= 9 || timeLeft<=0) return; totalBonusTime+=timeLeft; aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay(); }
+function resetAll(silent = false){ if(!silent && !confirm("Zurücksetzen?")) return; clearInterval(timerInterval); timerInterval=null; aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0; document.getElementById('startBtn').textContent='START'; spielerStats = {}; initStats(); generateDynamicSchedule(); renderTable(); updateDisplay(); document.getElementById("setupContent").style.display = "block"; }
 
 window.onload = function() { buildInputGrid(); buildNumPad(); initStats(); generateDynamicSchedule(); renderTable(); updateDisplay(); };
 </script></body></html>
