@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v9</title>
+<title>Padel Pro iPad v11</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -40,15 +40,15 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:15px;text-a
 table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin:0 auto 20px;border-radius:4px;overflow:hidden}th{background:#1e3d59;color:#fff;padding:12px;font-size:12px;text-transform:uppercase}td{padding:12px;border-bottom:1px solid #e0e0e0;font-size:14px}tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:4px 8px;border-radius:12px;font-weight:bold}
 
 .score-box{background:#fff;padding:20px 15px;border-radius:6px;max-width:800px;margin:0 auto 20px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:4px solid #2ecc71}
-.score-select{padding:10px;font-size:16px;font-weight:bold;border-radius:4px;border:1px solid #ccc;color:#2c3e50;max-width:90%;margin-bottom:10px}
-.score-btn{background:#2ecc71;color:#fff;border:none;padding:10px 20px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer}
+.score-btn{background:#2ecc71;color:#fff;border:none;padding:10px 20px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;margin-top:10px}
+.score-input-field{padding:8px;font-size:16px;width:50px;text-align:center;font-weight:bold;margin:0 5px;border:1px solid #ccc;border-radius:4px;}
 .rank-th{background:#2ecc71}
 .gold-row{background:#fff9c4!important;font-weight:bold}
 </style></head><body>
 
 <div class="banner">
     <h1>Padel Turnier-Manager Pro</h1>
-    <p style="margin:0 0 10px 0;">9-10 Runden Zeitmanagement & Turniersieg</p>
+    <p style="margin:0 0 10px 0;">Premium Zeit- & Punktemanagement</p>
     <div class="total-timer-box">
         <span>⏱️ Gesamtzeit: </span>
         <span class="total-timer-time" id="totalDisplay">00:00:00</span>
@@ -60,8 +60,10 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
 <div class="mode-selector">
     👥 Modus wählen:
     <select id="modeSelect" class="mode-select" onchange="changeTournamentMode()">
-        <option value="6">6 Spieler (3 feste Teams / 9 Runden + Bonus)</option>
-        <option value="5">5 Spieler (Einzelspieler-Wechsel / 10 feste Runden)</option>
+        <option value="6_zeit">6 Spieler (3 feste Teams / Zeit-Modus)</option>
+        <option value="6_americano">6 Spieler (Echtes Americano / Punkt-Modus)</option>
+        <option value="5_zeit">5 Spieler (Wechselnde Partner / Zeit-Modus)</option>
+        <option value="5_americano">5 Spieler (Echtes Americano / Punkt-Modus)</option>
     </select>
 </div>
 
@@ -70,7 +72,7 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
     <div class="setup-grid" id="inputGrid"></div>
 </div>
 
-<div class="panel">
+<div class="panel" id="timerPanel">
     <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:18px;">Runde 1</div>
     <div class="timer" id="display">20:00</div>
     <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;margin-bottom:15px">Gesammelte Restzeit für Runde 10: 00:00</div>
@@ -86,9 +88,20 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
 
 <div class="score-box">
     <strong style="color:#2ecc71; font-size:18px; display:block; margin-bottom:10px;">🏆 Turniersieger ermitteln</strong>
-    <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; margin-bottom:5px;">Ergebnis für aktuelle Runde eintragen:</span>
-    <select id="matchWinnerSelect" class="score-select"></select>
-    <br>
+    <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; margin-bottom:10px;">Ergebnis eintragen:</span>
+    
+    <div id="winSelectContainer">
+        <select id="matchWinnerSelect" style="padding:10px; font-size:16px; font-weight:bold; border-radius:4px; border:1px solid #ccc; color:#2c3e50; max-width:90%;"></select>
+    </div>
+    
+    <div id="pointInputContainer" style="display:none; font-size:16px; font-weight:bold; color:#1e3d59;">
+        <span id="nameLabelA">Team A</span> 
+        <input type="number" id="ptsA" class="score-input-field" min="0" placeholder="0"> 
+        : 
+        <input type="number" id="ptsB" class="score-input-field" min="0" placeholder="0"> 
+        <span id="nameLabelB">Team B</span>
+    </div>
+    
     <button class="score-btn" onclick="submitRoundScore()">Ergebnis sichern & eintragen</button>
 </div>
 
@@ -102,7 +115,7 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
             <th class="rank-th" style="width:50px">S</th>
             <th class="rank-th" style="width:50px">U</th>
             <th class="rank-th" style="width:50px">N</th>
-            <th class="rank-th" style="width:70px; background:#27ae60;">Pkt</th>
+            <th class="rank-th" style="width:80px; background:#27ae60;" id="scoreColHeader">Pkt</th>
         </tr>
     </thead>
     <tbody id="rankTableBody"></tbody>
@@ -112,11 +125,19 @@ table{width:100%;border-collapse:collapse;background:#fff;max-width:800px;margin
 <table id="planTable"><thead><tr><th>Runde</th><th>Match</th><th>Bank</th></tr></thead><tbody id="tableBody"></tbody></table>
 
 <script>
-let currentMode = "6"; 
+let currentMode = "6_zeit"; 
 let spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"];
 let spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
 
-const ablauf6 = [0,1,2,0,1,2,0,1,2,0];
+const ablauf6_zeit = [0,1,2,0,1,2,0,1,2,0];
+const ablauf6_americano = [
+    {a:[0,1], b:[2,3], pause:[4,5]},
+    {a:[4,5], b:[0,2], pause:[1,3]},
+    {a:[1,3], b:[4,0], pause:[2,5]},
+    {a:[2,5], b:[1,4], pause:[0,3]},
+    {a:[0,3], b:[2,1], pause:[4,5]} // Jede Kombination wird einmal bedient (5 Runden)
+];
+
 const ablauf5 = [
     {a:[0,1], b:[2,3], pause:[4]}, {a:[0,2], b:[1,4], pause:[3]}, {a:[0,3], b:[4,2], pause:[1]}, {a:[0,4], b:[3,1], pause:[2]}, {a:[1,2], b:[3,4], pause:[0]},
     {a:[0,1], b:[2,3], pause:[4]}, {a:[0,2], b:[1,4], pause:[3]}, {a:[0,3], b:[4,2], pause:[1]}, {a:[0,4], b:[3,1], pause:[2]}, {a:[1,2], b:[3,4], pause:[0]}
@@ -126,32 +147,58 @@ let spieler = [...spieler6]; let aktuelleRunde=1,baseTime=20*60,timeLeft=baseTim
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function buildInputGrid() {
-    let count = parseInt(currentMode); let html = ""; let defaultNames = currentMode === "6" ? spieler6 : spieler5;
+    let count = (currentMode.startsWith("6")) ? 6 : 5; let html = ""; let defaultNames = (count === 6) ? spieler6 : spieler5;
     for(let i=1; i<=count; i++) { html += `<input type="text" id="sp${i}" value="${defaultNames[i-1]}" oninput="initStats();renderTable()">`; }
     document.getElementById('inputGrid').innerHTML = html;
 }
+
 function changeTournamentMode() {
-    currentMode = document.getElementById('modeSelect').value; spieler = currentMode === "6" ? [...spieler6] : [...spieler5];
-    if(currentMode === "5") { document.getElementById('bonusDisplay').style.display = "none"; document.getElementById('saveBtn').style.display = "none"; }
-    else { document.getElementById('bonusDisplay').style.display = "block"; document.getElementById('saveBtn').style.display = "block"; }
+    currentMode = document.getElementById('modeSelect').value;
+    spieler = (currentMode.startsWith("6")) ? [...spieler6] : [...spieler5];
+    
+    if(currentMode.endsWith("americano")) {
+        document.getElementById('timerPanel').style.display = "none";
+        document.getElementById('winSelectContainer').style.display = "none";
+        document.getElementById('pointInputContainer').style.display = "block";
+        document.getElementById('scoreColHeader').textContent = "Punkte";
+    } else {
+        document.getElementById('timerPanel').style.display = "block";
+        document.getElementById('winSelectContainer').style.display = "block";
+        document.getElementById('pointInputContainer').style.display = "none";
+        document.getElementById('scoreColHeader').textContent = "Pkt";
+        
+        if(currentMode === "5_zeit") {
+            document.getElementById('bonusDisplay').style.display = "none";
+            document.getElementById('saveBtn').style.display = "none";
+        } else {
+            document.getElementById('bonusDisplay').style.display = "block";
+            document.getElementById('saveBtn').style.display = "block";
+        }
+    }
     buildInputGrid(); resetAll(true);
 }
+
 function updatePlayerNamesFromInputs() {
-    let count = parseInt(currentMode); for(let i=1; i<=count; i++) { let val = document.getElementById('sp' + i).value.trim(); if(val !== "") { spieler[i-1] = val; } else { spieler[i-1] = "Spieler " + i; } }
-    if(currentMode === "6") spieler6 = [...spieler]; else spieler5 = [...spieler];
+    let count = (currentMode.startsWith("6")) ? 6 : 5;
+    for(let i=1; i<=count; i++) { let val = document.getElementById('sp' + i).value.trim(); if(val !== "") { spieler[i-1] = val; } else { spieler[i-1] = "Spieler " + i; } }
+    if(currentMode.startsWith("6")) spieler6 = [...spieler]; else spieler5 = [...spieler];
 }
+
 function initStats() { updatePlayerNamesFromInputs(); let alteStats = {...spielerStats}; spielerStats = {}; spieler.forEach(name => { spielerStats[name] = alteStats[name] || { sp: 0, s: 0, u: 0, n: 0, pkt: 0 }; }); renderRankTable(); }
+
 function shufflePlayers(){
     if(timerInterval){alert("Bitte Match-Timer pausieren!");return} if(!confirm("Teams neu auslosen? Statistiken werden zurückgesetzt.")) return; updatePlayerNamesFromInputs();
     for (let i = spieler.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); let temp = spieler[i]; spieler[i] = spieler[j]; spieler[j] = temp; }
     for(let i=1; i<=spieler.length; i++) { document.getElementById('sp' + i).value = spieler[i-1]; } spielerStats = {}; initStats(); renderTable();
 }
+
 function playHornSound() {
     try {
         let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, audioCtx.currentTime); gain.gain.setValueAtTime(0, audioCtx.currentTime);
         gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.4); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.45); gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.55); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 0.9); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.95); gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 1.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 1.5); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.6); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 1.7);
     } catch(e) {}
 }
+
 function formatTime(s){let m=Math.floor(s/60);s=s%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
 function formatTotalTime(totalSecs) { let h = Math.floor(totalSecs / 3600); let m = Math.floor((totalSecs % 3600) / 60); let s = totalSecs % 60; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
 function toggleTotalTimer() {
@@ -160,36 +207,78 @@ function toggleTotalTimer() {
     else { if(audioCtx.state === 'suspended') { audioCtx.resume(); } btn.textContent = 'PAUSE'; btn.style.background = '#e74c3c'; btn.style.color = '#fff'; totalTimerInterval = setInterval(() => { totalSeconds++; document.getElementById('totalDisplay').textContent = formatTotalTime(totalSeconds); }, 1000); }
 }
 function resetTotalTimer() { if(!confirm("Gesamtzeit wirklich zurücksetzen?")) return; if(totalTimerInterval) { clearInterval(totalTimerInterval); totalTimerInterval = null; } totalSeconds = 0; document.getElementById('totalDisplay').textContent = "00:00:00"; const btn = document.getElementById('totalStartBtn'); btn.textContent = 'START'; btn.style.background = '#fff'; btn.style.color = '#1e3d59'; }
+
 function getTeamsForRound(rIndex) {
-    if (currentMode === "6") { const t1=[spieler[0], spieler[1]], t2=[spieler[2], spieler[3]], t3=[spieler[4], spieler[5]]; let r=ablauf6[rIndex]; if(r===0) return { teamA: t1, teamB: t2, nameA: "Team 1", nameB: "Team 2" }; if(r===1) return { teamA: t2, teamB: t3, nameA: "Team 2", nameB: "Team 3" }; return { teamA: t1, teamB: t3, nameA: "Team 1", nameB: "Team 3" }; }
+    if (currentMode === "6_zeit") { const t1=[spieler[0], spieler[1]], t2=[spieler[2], spieler[3]], t3=[spieler[4], spieler[5]]; let r=ablauf6_zeit[rIndex]; if(r===0) return { teamA: t1, teamB: t2, nameA: "Team 1", nameB: "Team 2" }; if(r===1) return { teamA: t2, teamB: t3, nameA: "Team 2", nameB: "Team 3" }; return { teamA: t1, teamB: t3, nameA: "Team 1", nameB: "Team 3" }; }
+    else if (currentMode === "6_americano") { let match = ablauf6_americano[rIndex]; let tA = [spieler[match.a[0]], spieler[match.a[1]]]; let tB = [spieler[match.b[0]], spieler[match.b[1]]]; return { teamA: tA, teamB: tB, nameA: tA[0]+" & "+tA[1], nameB: tB[0]+" & "+tB[1] }; }
     else { let match = ablauf5[rIndex]; let tA = [spieler[match.a[0]], spieler[match.a[1]]]; let tB = [spieler[match.b[0]], spieler[match.b[1]]]; return { teamA: tA, teamB: tB, nameA: tA[0]+" & "+tA[1], nameB: tB[0]+" & "+tB[1] }; }
 }
+
+function getMaxRunden() {
+    if(currentMode === "6_zeit") return (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9;
+    if(currentMode === "6_americano") return 5;
+    return 10;
+}
+
 function updateScoreSelectOption() {
-    const select = document.getElementById('matchWinnerSelect'); const prompt = document.getElementById('scorePrompt'); let maxRunden = currentMode === "6" ? ((totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9) : 10;
-    if (aktuelleRunde > maxRunden) { prompt.textContent = "Turnier komplett beendet!"; select.innerHTML = `<option>Keine aktiven Runden mehr</option>`; return; }
-    let rName = (currentMode === "6" && aktuelleRunde === 10) ? "Runde 10 (Bonus)" : "Runde " + aktuelleRunde; prompt.textContent = `Ergebnis für ${rName} eintragen:`;
-    let teams = getTeamsForRound(aktuelleRunde - 1); let nameA = currentMode === "6" ? `Team 1/2/3 (${teams.nameA})` : teams.nameA; let nameB = currentMode === "6" ? `Team 1/2/3 (${teams.nameB})` : teams.nameB;
-    select.innerHTML = `<option value="A">${nameA} gewinnt</option><option value="B">${nameB} gewinnt</option><option value="U">Unentschieden</option>`;
+    const select = document.getElementById('matchWinnerSelect'); const prompt = document.getElementById('scorePrompt');
+    let maxRunden = getMaxRunden();
+    
+    if (aktuelleRunde > maxRunden) { prompt.textContent = "Turnier komplett beendet!"; select.innerHTML = `<option>Keine Runden mehr</option>`; return; }
+    
+    let rName = (currentMode === "6_zeit" && aktuelleRunde === 10) ? "Runde 10 (Bonus)" : "Runde " + aktuelleRunde;
+    prompt.textContent = `Ergebnis für ${rName} eintragen:`;
+    
+    let teams = getTeamsForRound(aktuelleRunde - 1);
+    
+    if(currentMode.endsWith("americano")) {
+        document.getElementById('nameLabelA').textContent = teams.nameA;
+        document.getElementById('nameLabelB').textContent = teams.nameB;
+    } else {
+        let nameA = `Team 1 (${teams.nameA})`; let nameB = `Team 2 (${teams.nameB})`;
+        select.innerHTML = `<option value="A">${nameA} gewinnt</option><option value="B">${nameB} gewinnt</option><option value="U">Unentschieden</option>`;
+    }
 }
+
 function submitRoundScore() {
-    let maxRunden = currentMode === "6" ? ((totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9) : 10; if(aktuelleRunde > maxRunden) { alert("Das Turnier ist bereits vorbei."); return; }
-    const select = document.getElementById('matchWinnerSelect'); let result = select.value; let teams = getTeamsForRound(aktuelleRunde - 1); if(!confirm("Ergebnis wirklich so eintragen?")) return;
-    if(result === "A") { teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
-    else if (result === "B") { teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
-    else if (result === "U") { teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); }
-    renderRankTable(); alert("Ergebnis eingetragen!");
+    let maxRunden = getMaxRunden(); if(aktuelleRunde > maxRunden) { alert("Das Turnier ist bereits vorbei."); return; }
+    let teams = getTeamsForRound(aktuelleRunde - 1);
+    
+    if(currentMode.endsWith("americano")) {
+        let valA = parseInt(document.getElementById('ptsA').value);
+        let valB = parseInt(document.getElementById('ptsB').value);
+        if(isNaN(valA) || isNaN(valB) || valA < 0 || valB < 0) { alert("Bitte gültige Punkte für beide Teams eingeben!"); return; }
+        if(!confirm(`Ergebnis ${valA} : ${valB} eintragen?`)) return;
+        
+        teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].pkt += valA; if(valA > valB) spielerStats[p].s++; else if(valA < valB) spielerStats[p].n++; else spielerStats[p].u++; });
+        teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].pkt += valB; if(valB > valA) spielerStats[p].s++; else if(valB < valA) spielerStats[p].n++; else spielerStats[p].u++; });
+        
+        document.getElementById('ptsA').value = ""; document.getElementById('ptsB').value = "";
+        if(aktuelleRunde < maxRunden) { aktuelleRunde++; } else { alert("Americano beendet!"); aktuelleRunde++; }
+    } else {
+        const select = document.getElementById('matchWinnerSelect'); let result = select.value; if(!confirm("Ergebnis so sichern?")) return;
+        if(result === "A") { teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
+        else if (result === "B") { teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
+        else if (result === "U") { teams.teamA.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); teams.teamB.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); }
+    }
+    
+    renderRankTable(); renderTable(); alert("Ergebnis eingetragen!");
 }
+
 function renderRankTable() {
-    let sortable = []; for (let p in spielerStats) { sortable.push({ name: p, ...spielerStats[p] }); } sortable.sort((a, b) => b.pkt - a.pkt || b.s - a.s); let html = "";
+    let sortable = []; for (let p in spielerStats) { sortable.push({ name: p, ...spielerStats[p] }); } 
+    sortable.sort((a, b) => b.pkt - a.pkt || b.s - a.s); let html = "";
     sortable.forEach((row, index) => { let c = (index === 0 && row.pkt > 0) ? "class='gold-row'" : ""; html += `<tr ${c}><td><strong>${index + 1}.</strong></td><td><strong>${row.name}</strong></td><td>${row.sp}</td><td>${row.s}</td><td>${row.u}</td><td>${row.n}</td><td style="font-weight:bold; color:#27ae60;">${row.pkt}</td></tr>`; });
     document.getElementById('rankTableBody').innerHTML = html;
 }
+
 function renderTable(){
-    updatePlayerNamesFromInputs(); let html="";
-    if (currentMode === "6") {
-        let rundenAnzahl = (totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9; const t1=spieler[0]+" & "+spieler[1],t2=spieler[2]+" & "+spieler[3],t3=spieler[4]+" & "+spieler[5];
-        for(let i=0;i<rundenAnzahl;i++){
-            let m="",b="",r=ablauf6[i];
+    updatePlayerNamesFromInputs(); let html=""; let maxRunden = getMaxRunden();
+    
+    if (currentMode === "6_zeit") {
+        const t1=spieler[0]+" & "+spieler[1],t2=spieler[2]+" & "+spieler[3],t3=spieler[4]+" & "+spieler[5];
+        for(let i=0;i<maxRunden;i++){
+            let m="",b="",r=ablauf6_zeit[i];
             if(r===0){ m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 2</span>`; b=`<span class="badge-bank">Team 3 (${t3})</span>`; }
             else if(r===1){ m=`<span class="badge-team">Team 2</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`; b=`<span class="badge-bank">Team 1 (${t1})</span>`; }
             else{ m=`<span class="badge-team">Team 1</span> <span class="vs">VS</span> <span class="badge-team">Team 3</span>`; b=`<span class="badge-bank">Team 2 (${t2})</span>`; }
@@ -197,6 +286,12 @@ function renderTable(){
             html+=`<tr ${c}><td><strong>${rName}</strong>${ext}</td><td>${m}</td><td>${b}</td></tr>`;
         }
         document.getElementById('roundTitle').textContent = (aktuelleRunde === 10) ? `Runde 10 / 10 (BONUS-MATCH)` : `Runde ${aktuelleRunde} / 9`; document.getElementById('saveBtn').disabled = (aktuelleRunde >= 9);
+    } else if (currentMode === "6_americano") {
+        for(let i=0; i<5; i++) {
+            let match = ablauf6_americano[i]; let bName = spieler[match.pause[0]] + " & " + spieler[match.pause[1]]; let m = `<span class="badge-team">${spieler[match.a[0]]} & ${spieler[match.a[1]]}</span> <span class="vs">VS</span> <span class="badge-team">${spieler[match.b[0]]} & ${spieler[match.b[1]]}</span>`; let b = `<span class="badge-bank">${bName} (Auszeit)</span>`; let c=(i+1===aktuelleRunde)?"class='active-row'":"";
+            html+=`<tr ${c}><td><strong>Runde ${i+1}</strong></td><td>${m}</td><td>${b}</td></tr>`;
+        }
+        document.getElementById('roundTitle').textContent = `Runde ${aktuelleRunde} / 5`;
     } else {
         for(let i=0; i<10; i++) {
             let match = ablauf5[i]; let pName = spieler[match.pause[0]]; let m = `<span class="badge-team">${spieler[match.a[0]]} & ${spieler[match.a[1]]}</span> <span class="vs">VS</span> <span class="badge-team">${spieler[match.b[0]]} & ${spieler[match.b[1]]}</span>`; let b = `<span class="badge-bank">${pName} (Auszeit)</span>`; let c=(i+1===aktuelleRunde)?"class='active-row'":"";
@@ -206,7 +301,7 @@ function renderTable(){
     }
     document.getElementById('tableBody').innerHTML=html; updateScoreSelectOption();
 }
-function updateDisplay(){ const displayEl = document.getElementById('display'); displayEl.textContent = formatTime(timeLeft); if(currentMode === "6") { document.getElementById('bonusDisplay').textContent = `Gesammelte Restzeit für Runde 10: ${formatTime(totalBonusTime)}`; } if(timeLeft > 0 && timeLeft < 60 && timerInterval !== null) { displayEl.classList.add('timer-warn'); } else { displayEl.classList.remove('timer-warn'); } }
+function updateDisplay(){ const displayEl = document.getElementById('display'); if(!displayEl) return; displayEl.textContent = formatTime(timeLeft); if(currentMode === "6_zeit") { document.getElementById('bonusDisplay').textContent = `Gesammelte Restzeit für Runde 10: ${formatTime(totalBonusTime)}`; } if(timeLeft > 0 && timeLeft < 60 && timerInterval !== null) { displayEl.classList.add('timer-warn'); } else { displayEl.classList.remove('timer-warn'); } }
 function toggleTimer(){
     const btn=document.getElementById('startBtn');
     if(timerInterval){ clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; updateDisplay(); }
@@ -215,17 +310,17 @@ function toggleTimer(){
         timerInterval=setInterval(()=>{
             if(timeLeft > 0){ timeLeft--; updateDisplay(); }else{
                 clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; updateDisplay(); playHornSound();
-                let maxRunden = currentMode === "6" ? 9 : 10;
+                let maxRunden = (currentMode === "6_zeit") ? 9 : 10;
                 if(aktuelleRunde < maxRunden){ aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay(); }
-                else if(currentMode === "6" && aktuelleRunde === 9 && totalBonusTime > 0) { alert("Reguläre Runden beendet! Weiter geht's mit der BONUS-RUNDE 10!"); aktuelleRunde = 10; timeLeft = totalBonusTime; renderTable(); updateDisplay(); }
-                else { alert("Turnier offiziell beendet! Schaut in die Live-Rangliste!"); }
+                else if(currentMode === "6_zeit" && aktuelleRunde === 9 && totalBonusTime > 0) { alert("Reguläre Runden beendet! Weiter geht's mit der BONUS-RUNDE 10!"); aktuelleRunde = 10; timeLeft = totalBonusTime; renderTable(); updateDisplay(); }
+                else { alert("Turnier beendet!"); }
             }
         },1000);
     }
 }
-function resetCurrentMatch() { if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; document.getElementById('startBtn').style.backgroundColor = '#ff6e40'; } timeLeft = (currentMode === "6" && aktuelleRunde === 10) ? totalBonusTime : baseTime; updateDisplay(); }
-function saveRestTime(){ if(currentMode === "5" || aktuelleRunde >= 9){return} let r=timeLeft; if(r<=0)return; if(confirm(`${formatTime(r)} Restzeit für Runde 10 sichern?`)){ if(timerInterval){ clearInterval(timerInterval); timerInterval=null; document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40'; } totalBonusTime+=r; aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay(); } }
-function resetAll(silent = false){ if(!silent && !confirm("Gesamtes Turnier zurücksetzen? Alle Punkte werden gelöscht!")) return; clearInterval(timerInterval); timerInterval=null; aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0; document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40'; spielerStats = {}; initStats(); renderTable(); updateDisplay(); }
+function resetCurrentMatch() { if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; document.getElementById('startBtn').style.backgroundColor = '#ff6e40'; } timeLeft = (currentMode === "6_zeit" && aktuelleRunde === 10) ? totalBonusTime : baseTime; updateDisplay(); }
+function saveRestTime(){ if(currentMode !== "6_zeit" || aktuelleRunde >= 9){return} let r=timeLeft; if(r<=0)return; if(confirm(`${formatTime(r)} Restzeit sichern?`)){ if(timerInterval){ clearInterval(timerInterval); timerInterval=null; document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40'; } totalBonusTime+=r; aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay(); } }
+function resetAll(silent = false){ if(!silent && !confirm("Turnier zurücksetzen?")) return; clearInterval(timerInterval); timerInterval=null; aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0; if(document.getElementById('startBtn')) { document.getElementById('startBtn').textContent='START'; document.getElementById('startBtn').style.backgroundColor='#ff6e40'; } spielerStats = {}; initStats(); renderTable(); updateDisplay(); }
 
 window.onload = function() { buildInputGrid(); initStats(); renderTable(); updateDisplay(); };
 </script></body></html>
