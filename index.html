@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v17</title>
+<title>Padel Pro iPad v18</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,9 +20,13 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .collapsible-btn{background:#9b59b6;color:#fff;border:none;width:100%;max-width:1000px;padding:8px;font-size:14px;font-weight:bold;border-radius:6px;cursor:pointer;margin-bottom:5px;}
 .setup-content{max-width:1000px;margin:0 auto 10px;display:block;}
 
-.mode-selector{background:#fff;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.05);font-weight:bold;color:#1e3d59;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-bottom:5px;}
+.mode-selector{background:#fff;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.05);font-weight:bold;color:#1e3d59;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px;margin-bottom:5px;}
 .mode-select{padding:4px 8px;font-size:13px;font-weight:bold;border-radius:4px;border:1px solid #1e3d59;color:#1e3d59;}
-.target-input{padding:4px;font-size:13px;width:45px;text-align:center;font-weight:bold;border:1px solid #1e3d59;border-radius:4px;}
+.target-input{padding:4px;font-size:13px;width:50px;text-align:center;font-weight:bold;border:1px solid #1e3d59;border-radius:4px;}
+
+/* Zeitrechner-Box für Americano */
+.calc-box{background:#e8f4fd;padding:10px;border-radius:6px;margin-bottom:8px;font-size:13px;color:#1e3d59;display:none;flex-wrap:wrap;justify-content:center;gap:10px;align-items:center;border:1px solid #bce0fd;}
+.calc-result{font-weight:bold;background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #2ecc71;}
 
 .setup-box{background:#fff;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-top:3px solid #9b59b6}
 .setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:5px}
@@ -38,9 +42,8 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .btn-container{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:10px}
 .btn{background:#ff6e40;color:#fff;border:none;padding:10px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;flex:1;min-width:100px}
 .btn-g{background:#2ecc71}
-.btn-g:disabled{background:#557a61;opacity:0.5}
-.btn-m{background:#34495e;border:1px solid #7f8c8d}
 .btn-abort{background:#e74c3c}
+.btn-m{background:#34495e;border:1px solid #7f8c8d}
 .btn-r{background:#7f8c8d;}
 
 .score-box{background:#fff;padding:15px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:3px solid #2ecc71;position:relative;display:flex;flex-direction:column;justify-content:center;}
@@ -52,7 +55,7 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .pad-container{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:420px;margin:8px auto 0;}
 .pad-btn{background:#e0e0e0;color:#2c3e50;border:none;padding:4px 8px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer;min-width:28px;}
 
-/* TAB-SCHALTER FÜR TABELLEN */
+/* TAB-SCHALTER */
 .tab-container{max-width:1000px;margin:10px auto 5px;display:flex;gap:5px;}
 .tab-btn{flex:1;padding:10px;font-size:14px;font-weight:bold;border:none;border-radius:6px;cursor:pointer;background:#bdc3c7;color:#fff;transition:0.2s;}
 .tab-btn.active-tab{background:#1e3d59;color:#fff;}
@@ -74,7 +77,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 </style></head><body>
 
 <div class="banner">
-    <h1>Padel Pro v17</h1>
+    <h1>Padel Pro v18</h1>
     <div class="total-timer-box">
         <span>⏱️ Gesamt: </span><span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
@@ -91,12 +94,21 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
                 <option value="6_zeit">6 Spieler (3 feste Teams / Zeit)</option>
                 <option value="6_americano">6 Spieler (Americano / Punkte)</option>
                 <option value="5_zeit">5 Spieler (Wechselnd / Zeit)</option>
-                <option value="5_americano">5 Spieler (Americano / Punkte)</option>
+                <option value="5_americano" selected>5 Spieler (Americano / Punkte)</option>
             </select>
         </div>
-        <div id="roundsConfigContainer">🔄 Runden: <input type="number" id="maxRoundsInput" class="target-input" value="7" min="1" oninput="updateRoundsFromInput()"></div>
-        <div id="targetPointsContainer" style="display:none;">🎯 Punkte: <input type="number" id="targetPointsInput" class="target-input" value="32" min="1" oninput="validateLivePoints()"></div>
+        <div id="roundsConfigContainer">🔄 Runden: <input type="number" id="maxRoundsInput" class="target-input" value="7" min="1" oninput="updateRoundsFromInput(); calculateAmericanoTime();"></div>
+        <div id="targetPointsContainer">🎯 Punkte: <input type="number" id="targetPointsInput" class="target-input" value="32" min="1" oninput="validateLivePoints(); calculateAmericanoTime();"></div>
     </div>
+
+    <!-- Live Zeitrechner für Americano -->
+    <div class="calc-box" id="americanoCalcBox">
+        <span>⏱️ Abend-Zeit: <input type="number" id="calcTotalTime" class="target-input" value="180" oninput="calculateAmericanoTime()"> Min</span>
+        <span>🔄 Wechselzeit: <input type="number" id="calcSwitchTime" class="target-input" value="30" oninput="calculateAmericanoTime()"> Sek</span>
+        <span>🎾 Sek / Punkt: <input type="number" id="calcSecPerPoint" class="target-input" value="15" style="width:40px;" oninput="calculateAmericanoTime()"> s</span>
+        <div class="calc-result" id="calcResultDisplay">Restzeit: ~ 120 Min verbleibend</div>
+    </div>
+
     <div class="setup-box">
         <div class="setup-grid" id="inputGrid"></div>
     </div>
@@ -104,7 +116,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 
 <!-- Haupt-Dashboard -->
 <div class="main-dashboard">
-    <div class="panel" id="timerPanel">
+    <div class="panel" id="timerPanel" style="display:none;">
         <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:15px;">Runde 1</div>
         <div class="timer" id="display">20:00</div>
         <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;font-size:12px;margin-bottom:5px">Restzeit für Verlängerung: 00:00</div>
@@ -117,12 +129,12 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
         </div>
     </div>
 
-    <div class="score-box">
+    <div class="score-box" style="grid-column: span 2;" id="scoreBoxWide">
         <button class="info-icon-btn" onclick="openInfoModal()">ℹ️</button>
         <strong style="color:#2ecc71; font-size:15px; display:block; margin-bottom:5px;">🏆 Ergebnis eintragen</strong>
         <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; font-size:13px; margin-bottom:5px;">Ergebnis:</span>
-        <div id="winSelectContainer"><select id="matchWinnerSelect" style="padding:6px; font-size:14px; font-weight:bold; border-radius:4px; width:90%;"></select></div>
-        <div id="pointInputContainer" style="display:none; font-size:14px; font-weight:bold; color:#1e3d59;">
+        <div id="winSelectContainer" style="display:none;"><select id="matchWinnerSelect" style="padding:6px; font-size:14px; font-weight:bold; border-radius:4px; width:90%;"></select></div>
+        <div id="pointInputContainer" style="font-size:14px; font-weight:bold; color:#1e3d59;">
             <span id="nameLabelA">A</span> 
             <input type="number" id="ptsA" class="score-input-field active-input-indicator" min="0" onfocus="setActiveField('ptsA')" oninput="validateLivePoints()"> : 
             <input type="number" id="ptsB" class="score-input-field" min="0" onfocus="setActiveField('ptsB')" oninput="validateLivePoints()"> 
@@ -139,11 +151,11 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     <button class="tab-btn" id="planTabBtn" onclick="switchTab('plan')">📅 Spielplan anzeigen</button>
 </div>
 
-<!-- Daten-Bereich (Jetzt umschaltbar) -->
+<!-- Daten-Bereich -->
 <div class="data-layout">
     <div class="section-box active-section" id="rankSection">
         <table>
-            <thead><tr><th style="width:30px">Pl.</th><th>Spieler</th><th style="width:30px">Sp</th><th style="width:25px">S</th><th style="width:25px">U</th><th style="width:25px">N</th><th style="width:45px; background:#2ecc71; color:#fff;" id="scoreColHeader">Pkt</th></tr></thead>
+            <thead><tr><th style="width:30px">Pl.</th><th>Spieler</th><th style="width:30px">Sp</th><th style="width:25px">S</th><th style="width:25px">U</th><th style="width:25px">N</th><th style="width:45px; background:#2ecc71; color:#fff;" id="scoreColHeader">Punkte</th></tr></thead>
             <tbody id="rankTableBody"></tbody>
         </table>
     </div>
@@ -158,33 +170,23 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 <div class="modal-overlay" id="infoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal()">&times;</span><h3>🎯 Punkte-Logik</h3><p><b>Zeit-Modus:</b> Sieg = 3 Pkt, Unentschieden = 1 Pkt, Niederlage = 0 Pkt.<br><br><b>Americano:</b> Jeder im Match erzielte Punkt wird direkt 1:1 dem Konto des Spielers hinzugefügt.</p></div></div>
 
 <script>
-let currentMode = "6_zeit", spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"], spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
-let spieler = [...spieler6], aktuelleRunde=1, baseTime=20*60, timeLeft=baseTime, totalBonusTime=0, timerInterval=null, totalSeconds = 0, totalTimerInterval = null, spielerStats = {};
+let currentMode = "5_americano", spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"], spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
+let spieler = [...spieler5], aktuelleRunde=1, baseTime=20*60, timeLeft=baseTime, totalBonusTime=0, timerInterval=null, totalSeconds = 0, totalTimerInterval = null, spielerStats = {};
 let currentActiveField = "ptsA", customMaxRounds = 7, generierterSpielplan = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function switchTab(tab) {
-    let rankBtn = document.getElementById("rankTabBtn");
-    let planBtn = document.getElementById("planTabBtn");
-    let rankSec = document.getElementById("rankSection");
-    let planSec = document.getElementById("planSection");
-    
+    let rankBtn = document.getElementById("rankTabBtn"); let planBtn = document.getElementById("planTabBtn");
+    let rankSec = document.getElementById("rankSection"); let planSec = document.getElementById("planSection");
     if(tab === 'rank') {
-        rankBtn.classList.add("active-tab", "rank-tab-active");
-        planBtn.classList.remove("active-tab");
-        rankSec.classList.add("active-section");
-        planSec.classList.remove("active-section");
+        rankBtn.classList.add("active-tab", "rank-tab-active"); planBtn.classList.remove("active-tab");
+        rankSec.classList.add("active-section"); planSec.classList.remove("active-section");
     } else {
-        planBtn.classList.add("active-tab");
-        rankBtn.classList.remove("active-tab", "rank-tab-active");
-        planSec.classList.add("active-section");
-        rankSec.classList.remove("active-section");
+        planBtn.classList.add("active-tab"); rankBtn.classList.remove("active-tab", "rank-tab-active");
+        planSec.classList.add("active-section"); rankSec.classList.remove("active-section");
     }
 }
-function toggleSetupView() {
-    let x = document.getElementById("setupContent");
-    x.style.display = (x.style.display === "none") ? "block" : "none";
-}
+function toggleSetupView() { let x = document.getElementById("setupContent"); x.style.display = (x.style.display === "none") ? "block" : "none"; }
 function buildInputGrid() {
     let count = (currentMode.startsWith("6")) ? 6 : 5; let html = ""; let defaultNames = (count === 6) ? spieler6 : spieler5;
     for(let i=1; i<=count; i++) { html += `<input type="text" id="sp${i}" value="${defaultNames[i-1]}" oninput="initStats(); generateDynamicSchedule(); renderTable();">`; }
@@ -195,10 +197,8 @@ function buildNumPad() {
     document.getElementById('numPad').innerHTML = html;
 }
 function setActiveField(fieldId) {
-    currentActiveField = fieldId;
-    document.getElementById('ptsA').classList.remove('active-input-indicator');
-    document.getElementById('ptsB').classList.remove('active-input-indicator');
-    document.getElementById(fieldId).classList.add('active-input-indicator');
+    currentActiveField = fieldId; document.getElementById('ptsA').classList.remove('active-input-indicator');
+    document.getElementById('ptsB').classList.remove('active-input-indicator'); document.getElementById(fieldId).classList.add('active-input-indicator');
 }
 function pressPadNum(num) {
     document.getElementById(currentActiveField).value = num; validateLivePoints();
@@ -214,6 +214,25 @@ function validateLivePoints() {
 function updateRoundsFromInput() {
     let val = parseInt(document.getElementById('maxRoundsInput').value);
     if(!isNaN(val) && val > 0) { customMaxRounds = val; generateDynamicSchedule(); renderTable(); updateScoreSelectOption(); }
+}
+function calculateAmericanoTime() {
+    if(!currentMode.endsWith("americano")) return;
+    let totalAvailMin = parseInt(document.getElementById('calcTotalTime').value) || 180;
+    let switchSec = parseInt(document.getElementById('calcSwitchTime').value) || 30;
+    let secPerPoint = parseInt(document.getElementById('calcSecPerPoint').value) || 15;
+    let rounds = customMaxRounds;
+    let pointsPerRound = parseInt(document.getElementById('targetPointsInput').value) || 32;
+
+    let totalAvailSec = totalAvailMin * 60;
+    let playTimePerRoundSec = pointsPerRound * secPerPoint;
+    let totalTimePerRoundSec = playTimePerRoundSec + switchSec;
+    let totalRequiredSec = rounds * totalTimePerRoundSec;
+    let diffSec = totalAvailSec - totalRequiredSec;
+    let diffMin = Math.round(diffSec / 60);
+
+    let resDiv = document.getElementById('calcResultDisplay');
+    if(diffMin >= 0) { resDiv.style.borderColor = "#2ecc71"; resDiv.style.color = "#27ae60"; resDiv.textContent = `Restzeit: ~ ${diffMin} Min übrig`; } 
+    else { resDiv.style.borderColor = "#e74c3c"; resDiv.style.color = "#c0392b"; resDiv.textContent = `Zeit-Mangel: Typ. ${Math.abs(diffMin)} Min zu lang!`; }
 }
 function openInfoModal() { document.getElementById('infoModal').style.display = 'flex'; }
 function closeInfoModal() { document.getElementById('infoModal').style.display = 'none'; }
@@ -249,18 +268,17 @@ function generateDynamicSchedule() {
 function changeTournamentMode() {
     currentMode = document.getElementById('modeSelect').value; spieler = (currentMode.startsWith("6")) ? [...spieler6] : [...spieler5];
     document.getElementById('roundsConfigContainer').style.display = (currentMode === "6_zeit") ? "none" : "inline";
+    let timerP = document.getElementById('timerPanel'), sBox = document.getElementById('scoreBoxWide'), calcB = document.getElementById('americanoCalcBox');
     if(currentMode.endsWith("americano")) {
-        document.getElementById('timerPanel').style.display = "none"; document.getElementById('winSelectContainer').style.display = "none";
-        document.getElementById('pointInputContainer').style.display = "block"; document.getElementById('targetPointsContainer').style.display = "inline";
-        document.getElementById('scoreColHeader').textContent = "Punkte";
+        timerP.style.display = "none"; sBox.style.gridColumn = "span 2"; calcB.style.display = "flex";
+        document.getElementById('winSelectContainer').style.display = "none"; document.getElementById('pointInputContainer').style.display = "block";
+        document.getElementById('targetPointsContainer').style.display = "inline"; document.getElementById('scoreColHeader').textContent = "Punkte";
     } else {
-        document.getElementById('timerPanel').style.display = "flex"; document.getElementById('winSelectContainer').style.display = "block";
-        document.getElementById('pointInputContainer').style.display = "none"; document.getElementById('targetPointsContainer').style.display = "none";
-        document.getElementById('scoreColHeader').textContent = "Pkt";
-        document.getElementById('bonusDisplay').style.display = (currentMode === "5_zeit") ? "none" : "block";
-        document.getElementById('saveBtn').style.display = (currentMode === "5_zeit") ? "none" : "block";
+        timerP.style.display = "flex"; sBox.style.gridColumn = "auto"; calcB.style.display = "none";
+        document.getElementById('winSelectContainer').style.display = "block"; document.getElementById('pointInputContainer').style.display = "none";
+        document.getElementById('targetPointsContainer').style.display = "none"; document.getElementById('scoreColHeader').textContent = "Pkt";
     }
-    buildInputGrid(); resetAll(true);
+    buildInputGrid(); resetAll(true); calculateAmericanoTime();
 }
 function updatePlayerNamesFromInputs() {
     let count = (currentMode.startsWith("6")) ? 6 : 5;
@@ -272,12 +290,6 @@ function shufflePlayers(){
     if(timerInterval){alert("Bitte Match-Timer pausieren!");return} if(!confirm("Teams neu auslosen?")) return; updatePlayerNamesFromInputs();
     for (let i = spieler.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); let temp = spieler[i]; spieler[i] = spieler[j]; spieler[j] = temp; }
     for(let i=1; i<=spieler.length; i++) { document.getElementById('sp' + i).value = spieler[i-1]; } spielerStats = {}; initStats(); generateDynamicSchedule(); renderTable();
-}
-function playHornSound() {
-    try {
-        let osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, audioCtx.currentTime); gain.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.05); gain.gain.setValueAtTime(0.8, audioCtx.currentTime + 1.5); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.6); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 1.7);
-    } catch(e) {}
 }
 function formatTime(s){let m=Math.floor(s/60);s=s%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
 function formatTotalTime(totalSecs) { let h = Math.floor(totalSecs / 3600), m = Math.floor((totalSecs % 3600) / 60), s = totalSecs % 60; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
@@ -327,29 +339,24 @@ function renderTable(){
         let c = (i+1===aktuelleRunde)?"class='active-row'":"";
         html+=`<tr ${c}><td><strong>R. ${i+1}</strong></td><td>${m}</td><td><span class="badge-bank">${match.pause.join(" & ")}</span></td></tr>`;
     }
-    document.getElementById('roundTitle').textContent = (currentMode === "6_zeit" && aktuelleRunde === 10) ? `Runde 10 (BONUS)` : `Runde ${aktuelleRunde} / ${maxRunden}`;
+    if(document.getElementById('roundTitle')) { document.getElementById('roundTitle').textContent = `Runde ${aktuelleRunde} / ${maxRunden}`; }
     document.getElementById('tableBody').innerHTML=html; updateScoreSelectOption();
 }
-function updateDisplay(){ document.getElementById('display').textContent = formatTime(timeLeft); if(currentMode === "6_zeit") { document.getElementById('bonusDisplay').textContent = `Restzeit Verlängerung: ${formatTime(totalBonusTime)}`; } }
 function toggleTimer(){
     const btn=document.getElementById('startBtn');
     if(timerInterval){ clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; }
     else {
         if(audioCtx.state === 'suspended') { audioCtx.resume(); } btn.textContent='PAUSE'; btn.style.backgroundColor='#e74c3c';
         timerInterval=setInterval(()=>{
-            if(timeLeft > 0){ timeLeft--; updateDisplay(); }else{
-                clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40'; playHornSound();
-                let maxRunden = getMaxRunden();
-                if(aktuelleRunde < maxRunden){ aktuelleRunde++; timeLeft=baseTime; renderTable(); }
-                else if(currentMode === "6_zeit" && aktuelleRunde === 9 && totalBonusTime > 0) { aktuelleRunde = 10; timeLeft = totalBonusTime; renderTable(); }
-                else { alert("Turnier beendet!"); }
+            if(timeLeft > 0){ timeLeft--; document.getElementById('display').textContent = formatTime(timeLeft); }else{
+                clearInterval(timerInterval); timerInterval=null; btn.textContent='START'; btn.style.backgroundColor='#ff6e40';
+                let maxRunden = getMaxRunden(); if(aktuelleRunde < maxRunden){ aktuelleRunde++; timeLeft=baseTime; renderTable(); } else { alert("Turnier beendet!"); }
             }
         },1000);
     }
 }
-function resetCurrentMatch() { if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; } timeLeft = (currentMode === "6_zeit" && aktuelleRunde === 10) ? totalBonusTime : baseTime; updateDisplay(); }
-function saveRestTime(){ if(currentMode !== "6_zeit" || aktuelleRunde >= 9 || timeLeft<=0) return; totalBonusTime+=timeLeft; aktuelleRunde++; timeLeft=baseTime; renderTable(); updateDisplay(); }
-function resetAll(silent = false){ if(!silent && !confirm("Zurücksetzen?")) return; clearInterval(timerInterval); timerInterval=null; aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0; document.getElementById('startBtn').textContent='START'; spielerStats = {}; initStats(); generateDynamicSchedule(); renderTable(); updateDisplay(); document.getElementById("setupContent").style.display = "block"; }
+function resetCurrentMatch() { if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; } timeLeft = baseTime; document.getElementById('display').textContent = formatTime(timeLeft); }
+function resetAll(silent = false){ if(!silent && !confirm("Zurücksetzen?")) return; clearInterval(timerInterval); timerInterval=null; aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0; if(document.getElementById('startBtn')) document.getElementById('startBtn').textContent='START'; spielerStats = {}; initStats(); generateDynamicSchedule(); renderTable(); if(document.getElementById('display')) document.getElementById('display').textContent = formatTime(timeLeft); document.getElementById("setupContent").style.display = "block"; }
 
-window.onload = function() { buildInputGrid(); buildNumPad(); initStats(); generateDynamicSchedule(); renderTable(); updateDisplay(); };
+window.onload = function() { buildInputGrid(); buildNumPad(); initStats(); generateDynamicSchedule(); renderTable(); changeTournamentMode(); };
 </script></body></html>
