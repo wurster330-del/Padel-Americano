@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v20</title>
+<title>Padel Pro iPad v21</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -56,11 +56,14 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .pad-container{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:420px;margin:8px auto 0;}
 .pad-btn{background:#e0e0e0;color:#2c3e50;border:none;padding:4px 8px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer;min-width:28px;}
 
-/* TAB-SCHALTER */
+/* TAB-SCHALTER & Hilfs-Buttons */
 .tab-container{max-width:1000px;margin:10px auto 5px;display:flex;gap:5px;}
 .tab-btn{flex:1;padding:10px;font-size:14px;font-weight:bold;border:none;border-radius:6px;cursor:pointer;background:#bdc3c7;color:#fff;transition:0.2s;}
 .tab-btn.active-tab{background:#1e3d59;color:#fff;}
 .tab-btn.active-tab.rank-tab-active{background:#2ecc71;}
+
+.matrix-toggle-btn{background:#34495e;color:#fff;border:none;width:100%;max-width:1000px;padding:8px;font-size:13px;font-weight:bold;border-radius:6px;cursor:pointer;margin:5px auto;}
+.matrix-content{max-width:1000px;margin:5px auto 10px;background:#fff;border-radius:6px;box-shadow:0 2px 5px rgba(0,0,0,0.05);padding:10px;display:none;border-top:3px solid #34495e;}
 
 .data-layout{max-width:1000px;margin:0 auto;}
 .section-box{background:#fff;border-radius:6px;box-shadow:0 2px 5px rgba(0,0,0,0.05);overflow:hidden;padding-bottom:5px;display:none;}
@@ -72,13 +75,17 @@ td{padding:6px 4px;border-bottom:1px solid #e0e0e0;font-size:13px}
 tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;border-left:4px solid #1e3d59}.badge-team{font-weight:bold;color:#1e3d59}.vs{color:#ff6e40;font-weight:bold}.badge-bank{background:#ffebee;color:#c62828;padding:2px 5px;border-radius:4px;font-size:11px;font-weight:bold}
 .gold-row{background:#fff9c4!important;font-weight:bold}
 
+.matrix-table th{background:#2c3e50;color:#fff;}
+.matrix-table td{font-weight:bold;text-align:center;}
+.matrix-self{background:#eaeded;color:#7f8c8d;}
+
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;display:none;}
 .modal-content{background:#fff;padding:20px;border-radius:8px;max-width:450px;width:90%;text-align:left;position:relative;}
 .modal-close{position:absolute;top:5px;right:10px;font-size:20px;cursor:pointer;}
 </style></head><body>
 
 <div class="banner">
-    <h1>Padel Pro v20</h1>
+    <h1>Padel Pro v21</h1>
     <div class="total-timer-box">
         <span>⏱️ Gesamt: </span><span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
@@ -147,6 +154,15 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </div>
 </div>
 
+<!-- Partner-Matrix Toggle Button -->
+<button class="matrix-toggle-btn" onclick="togglePartnerMatrix()">🤝 Partner-Matrix anzeigen/verbergen (Wer mit wem?)</button>
+<div class="matrix-content" id="matrixContent">
+    <table class="matrix-table">
+        <thead id="matrixHead"></thead>
+        <tbody id="matrixBody"></tbody>
+    </table>
+</div>
+
 <!-- Tab-Schaltflächen -->
 <div class="tab-container">
     <button class="tab-btn active-tab rank-tab-active" id="rankTabBtn" onclick="switchTab('rank')">📊 Rangliste anzeigen</button>
@@ -189,6 +205,8 @@ function switchTab(tab) {
     }
 }
 function toggleSetupView() { let x = document.getElementById("setupContent"); x.style.display = (x.style.display === "none") ? "block" : "none"; }
+function togglePartnerMatrix() { let x = document.getElementById("matrixContent"); x.style.display = (x.style.display === "none") ? "block" : "none"; }
+
 function buildInputGrid() {
     let count = (currentMode.startsWith("6")) ? 6 : 5; let html = ""; let defaultNames = (count === 6) ? spieler6 : spieler5;
     for(let i=1; i<=count; i++) { html += `<input type="text" id="sp${i}" value="${defaultNames[i-1]}" oninput="initStats(); generateDynamicSchedule(); renderTable();">`; }
@@ -258,7 +276,6 @@ function generateDynamicSchedule() {
             });
         }
     } else if(currentMode === "6_americano") {
-        // Mathematisch balancierte Matrix für 6 Spieler bei der jeder genau gleich oft aussetzt
         let basisPaarungen6 = [
             { a: [0, 1], b: [2, 3], pause: [4, 5] },
             { a: [4, 5], b: [0, 2], pause: [1, 3] },
@@ -274,7 +291,6 @@ function generateDynamicSchedule() {
             });
         }
     } else {
-        // Modus 6_zeit (3 feste Teams)
         for (let r = 0; r < maxRounds; r++) {
             let mod = r % 3;
             if (mod === 0) generierterSpielplan.push({ a: [spieler[0], spieler[1]], b: [spieler[2], spieler[3]], pause: [spieler[4], spieler[5]] });
@@ -282,14 +298,56 @@ function generateDynamicSchedule() {
             else generierterSpielplan.push({ a: [spieler[0], spieler[1]], b: [spieler[4], spieler[5]], pause: [spieler[2], spieler[3]] });
         }
     }
+    renderPartnerMatrix();
 }
+
+function renderPartnerMatrix() {
+    let counts = {};
+    spieler.forEach(p => { counts[p] = {}; spieler.forEach(p2 => counts[p][p2] = 0); });
+    
+    // Zähle Partnerschaften aus dem generierten Spielplan
+    let maxRunden = getMaxRunden();
+    for(let i=0; i<maxRunden; i++) {
+        let match = generierterSpielplan[i];
+        if(!match) continue;
+        counts[match.a[0]][match.a[1]]++;
+        counts[match.a[1]][match.a[0]]++;
+        if(match.b[1]) {
+            counts[match.b[0]][match.b[1]]++;
+            counts[match.b[1]][match.b[0]]++;
+        }
+    }
+
+    // Header rendern
+    let headHtml = "<tr><th>Spieler</th>";
+    spieler.forEach(p => { headHtml += `<th>${p}</th>`; });
+    headHtml += "</tr>";
+    document.getElementById('matrixHead').innerHTML = headHtml;
+
+    // Body rendern
+    let bodyHtml = "";
+    spieler.forEach(p1 => {
+        bodyHtml += `<tr><td><strong>${p1}</strong></td>`;
+        spieler.forEach(p2 => {
+            if(p1 === p2) {
+                bodyHtml += `<td class="matrix-self">-</td>`;
+            } else {
+                let val = counts[p1][p2];
+                bodyHtml += `<td>${val}x</td>`;
+            }
+        });
+        bodyHtml += "</tr>";
+    });
+    document.getElementById('matrixBody').innerHTML = bodyHtml;
+}
+
 function changeTournamentMode() {
     currentMode = document.getElementById('modeSelect').value; spieler = (currentMode.startsWith("6")) ? [...spieler6] : [...spieler5];
     document.getElementById('roundsConfigContainer').style.display = (currentMode === "6_zeit") ? "none" : "inline";
     let timerP = document.getElementById('timerPanel'), sBox = document.getElementById('scoreBoxWide'), calcB = document.getElementById('americanoCalcBox');
     
     if(currentMode.startsWith("5")) { customMaxRounds = 5; document.getElementById('maxRoundsInput').value = 5; } 
-    else { customMaxRounds = 5; document.getElementById('maxRoundsInput').value = 5; } // Standardmäßig auf 5 für sauberen Wechsel-Zyklus stellen
+    else { customMaxRounds = 5; document.getElementById('maxRoundsInput').value = 5; }
 
     if(currentMode.endsWith("americano")) {
         timerP.style.display = "none"; sBox.style.gridColumn = "span 2"; calcB.style.display = "flex";
@@ -363,6 +421,7 @@ function renderTable(){
     }
     if(document.getElementById('roundTitle')) { document.getElementById('roundTitle').textContent = `Runde ${aktuelleRunde} / ${maxRunden}`; }
     document.getElementById('tableBody').innerHTML=html; updateScoreSelectOption();
+    renderPartnerMatrix();
 }
 function toggleTimer(){
     const btn=document.getElementById('startBtn');
