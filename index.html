@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v25</title>
+<title>Padel Pro iPad v26</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -23,7 +23,7 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .mode-select{padding:4px 8px;font-size:13px;font-weight:bold;border-radius:4px;border:1px solid #1e3d59;color:#1e3d59;}
 .target-input{padding:4px;font-size:13px;width:50px;text-align:center;font-weight:bold;border:1px solid #1e3d59;border-radius:4px;}
 
-.calc-box{background:#e8f4fd;padding:10px;border-radius:6px;margin-bottom:8px;font-size:13px;color:#1e3d59;display:none;flex-wrap:wrap;justify-content:center;gap:10px;align-items:center;border:1px solid #bce0fd;}
+.calc-box{background:#e8f4fd;padding:10px;border-radius:6px;margin-bottom:8px;font-size:13px;color:#1e3d59;display:none;flex-wrap:wrap;justify-content:center;gap:10px;align-items:center;border:1px solid #bce0fd;position:relative;}
 .calc-result{font-weight:bold;background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #2ecc71;}
 
 .setup-box{background:#fff;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-top:3px solid #9b59b6}
@@ -33,7 +33,7 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .main-dashboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:1000px;margin:0 auto 10px;}
 @media(max-width:768px){.main-dashboard{grid-template-columns:1fr;}}
 
-.panel{background:#2c3e50;color:#fff;padding:15px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,0.15);display:flex;flex-direction:column;justify-content:center;}
+.panel{background:#2c3e50;color:#fff;padding:15px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,0.15);display:flex;flex-direction:column;justify-content:center;position:relative;}
 .timer{font-size:90px;font-weight:900;font-family:monospace;color:#ff6e40;margin:0;line-height:1.1;}
 
 .btn-container{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:10px}
@@ -49,10 +49,10 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .score-input-field.active-input-indicator{background:#e8f4fd;border-color:#1e3d59 !important;}
 
 .info-icon-btn{position:absolute;top:10px;right:10px;background:#1e3d59;color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:13px;font-weight:bold;cursor:pointer;}
+.info-icon-btn-light{background:#34495e;}
 .mix-inline-btn{position:absolute;top:10px;left:10px;background:#34495e;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.15);transition:0.2s;}
 .mix-inline-btn:active{transform:scale(0.96);background:#1e3d59;}
 
-/* Vorschau-Box für nächstes Match */
 .next-match-preview{background:#f8f9fa;border:1px dashed #34495e;border-radius:6px;padding:8px 10px;margin-bottom:12px;font-size:13px;color:#1e3d59;text-align:center;}
 .next-match-preview strong{color:#e67e22;}
 
@@ -92,7 +92,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 </style></head><body>
 
 <div class="banner">
-    <h1>Padel Pro v25</h1>
+    <h1>Padel Pro v26</h1>
     <div class="total-timer-box">
         <span>⏱️ Gesamt: </span><span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
@@ -116,6 +116,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </div>
 
     <div class="calc-box" id="americanoCalcBox">
+        <button class="info-icon-btn info-icon-btn-light" style="top:5px; right:5px; width:22px; height:22px; font-size:11px;" onclick="openCustomModal('americanoInfoModal')">ℹ️</button>
         <span>⏱️ Abend-Zeit: <input type="number" id="calcTotalTime" class="target-input" value="180" oninput="calculateAmericanoTime()"> Min</span>
         <span>🔄 Wechselzeit: <input type="number" id="calcSwitchTime" class="target-input" value="30" oninput="calculateAmericanoTime()"> Sek</span>
         <span>🎾 Sek / Punkt: <input type="number" id="calcSecPerPoint" class="target-input" value="15" style="width:40px;" oninput="calculateAmericanoTime()"> s</span>
@@ -129,6 +130,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 
 <div class="main-dashboard">
     <div class="panel" id="timerPanel" style="display:none;">
+        <button class="info-icon-btn info-icon-btn-light" onclick="openCustomModal('timerInfoModal')">ℹ️</button>
         <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:15px;">Runde 1</div>
         <div class="timer" id="display">20:00</div>
         <div id="bonusDisplay" style="color:#2ecc71;font-weight:bold;font-size:12px;margin-bottom:5px">Restzeit für Verlängerung: 00:00</div>
@@ -147,7 +149,6 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
         
         <strong style="color:#2ecc71; font-size:18px; display:block; margin-top:25px; margin-bottom:5px;">🏆 Ergebnis eintragen</strong>
         
-        <!-- Nächstes Spiel Vorschau -->
         <div class="next-match-preview" id="nextMatchPreview">
             <strong>Nächstes Spiel (Vorschau):</strong> wird geladen...
         </div>
@@ -199,7 +200,12 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </div>
 </div>
 
-<div class="modal-overlay" id="infoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal()">&times;</span><h3>🎯 Punkte-Logik</h3><p><b>Zeit-Modus:</b> Sieg = 3 Pkt, Unentschieden = 1 Pkt, Niederlage = 0 Pkt.<br><br><b>Americano:</b> Jeder im Match erzielte Punkt wird direkt 1:1 dem Konto des Spielers hinzugefügt. Das Runden-Ziel kann flexibel angepasst werden (z. B. auf 16, 20 oder 32 Punkte).</p></div></div>
+<!-- Modals -->
+<div class="modal-overlay" id="infoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal('infoModal')">&times;</span><h3>🎯 Punkte-Logik</h3><p><b>Zeit-Modus:</b> Sieg = 3 Pkt, Unentschieden = 1 Pkt, Niederlage = 0 Pkt.<br><br><b>Americano:</b> Jeder im Match erzielte Punkt wird direkt 1:1 dem Konto des Spielers hinzugefügt. Das Runden-Ziel kann flexibel angepasst werden (z. B. auf 16, 20 oder 32 Punkte).</p></div></div>
+
+<div class="modal-overlay" id="timerInfoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal('timerInfoModal')">&times;</span><h3>⏱️ Zeit-Modus & Restzeit</h3><p><b>Was passiert bei Restzeit?</b><br>Wenn ein Spiel früher beendet ist, kannst du auf <b>„Zeit sichern“</b> klicken.<br><br>• Die Restzeit (z. B. 9 Min) wandert in das Bonus-Konto.<br>• Sobald <b>20 Minuten Bonuszeit</b> gesammelt wurden, schaltet das System automatisch eine <b>10. Zusatz-Runde</b> frei!<br>• Die Match-Uhr springt für die nächste Runde gewohnt auf 20:00 zurück.</p></div></div>
+
+<div class="modal-overlay" id="americanoInfoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal('americanoInfoModal')">&times;</span><h3>🎾 Americano Zeit-Planer</h3><p><b>Was bedeutet die Restzeit?</b><br>Der Rechner zeigt dir, wie viel Zeit von deinem Hallen-Termin noch übrig bleibt.<br><br>• <b>Restzeit z. B. 9 Min:</b> Du hast einen perfekten Puffer für Pausen zwischen den Runden!<br>• <b>Ziel anpassen:</b> Ist noch viel Zeit übrig, kannst du das Punkte-Ziel (z. B. von 24 auf 32 Pkt) erhöhen.<br>• <b>Zeit-Mangel:</b> Wenn es rot wird, verringere die Runden oder wähle z. B. 16/20 Punkte.</p></div></div>
 
 <script>
 let currentMode = "6_americano", spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"], spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
@@ -291,8 +297,21 @@ function calculateAmericanoTime() {
     if(diffMin >= 0) { resDiv.style.borderColor = "#2ecc71"; resDiv.style.color = "#27ae60"; resDiv.textContent = `Restzeit: ~ ${diffMin} Min übrig`; } 
     else { resDiv.style.borderColor = "#e74c3c"; resDiv.style.color = "#c0392b"; resDiv.textContent = `Zeit-Mangel: Typ. ${Math.abs(diffMin)} Min zu lang!`; }
 }
-function openInfoModal() { document.getElementById('infoModal').style.display = 'flex'; }
-function closeInfoModal() { document.getElementById('infoModal').style.display = 'none'; }
+
+function openInfoModal() { openCustomModal('infoModal'); }
+function openCustomModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeInfoModal(id) { document.getElementById(id || 'infoModal').style.display = 'none'; }
+
+function saveRestTime() {
+    if(timeLeft > 0) {
+        totalBonusTime += timeLeft;
+        let bMin = Math.floor(totalBonusTime / 60);
+        document.getElementById('bonusDisplay').textContent = `Restzeit für Verlängerung: ${bMin} Min`;
+        alert(`${Math.floor(timeLeft / 60)} Min. gesichert! Gesamt-Bonus: ${bMin} Min.`);
+        resetCurrentMatch();
+        renderTable();
+    }
+}
 
 function generateDynamicSchedule() {
     updatePlayerNamesFromInputs(); generierterSpielplan = []; 
@@ -437,7 +456,7 @@ function toggleTotalTimer() {
     else { if(audioCtx.state === 'suspended') { audioCtx.resume(); } btn.textContent = 'PAUSE'; totalTimerInterval = setInterval(() => { totalSeconds++; document.getElementById('totalDisplay').textContent = formatTotalTime(totalSeconds); }, 1000); }
 }
 function resetTotalTimer() { if(!confirm("Gesamtzeit zurücksetzen?")) return; if(totalTimerInterval) { clearInterval(totalTimerInterval); totalTimerInterval = null; } totalSeconds = 0; document.getElementById('totalDisplay').textContent = "00:00:00"; document.getElementById('totalStartBtn').textContent = 'START'; }
-function getMaxRunden() { return (currentMode === "6_zeit") ? ((totalBonusTime > 0 || aktuelleRunde === 10) ? 10 : 9) : customMaxRounds; }
+function getMaxRunden() { return (currentMode === "6_zeit") ? ((totalBonusTime >= 20*60 || aktuelleRunde === 10) ? 10 : 9) : customMaxRounds; }
 
 function updateScoreSelectOption() {
     const select = document.getElementById('matchWinnerSelect'), prompt = document.getElementById('scorePrompt'), preview = document.getElementById('nextMatchPreview'); 
@@ -450,7 +469,6 @@ function updateScoreSelectOption() {
         return; 
     }
     
-    // Nächste Runde Vorschau generieren
     if (aktuelleRunde < maxRunden) {
         let nextMatch = generierterSpielplan[aktuelleRunde];
         if (nextMatch) {
@@ -489,7 +507,7 @@ function submitRoundScore() {
         else if (res === "B") { match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
         else { match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].u++; spielerStats[p].pkt += 1; }); }
     }
-    aktuelleRunde++; renderRankTable(); renderTable();
+    aktuelleRunde++; resetCurrentMatch(); renderRankTable(); renderTable();
     if(aktuelleRunde === 2) { document.getElementById("setupContent").style.display = "none"; }
 }
 function renderRankTable() {
@@ -524,7 +542,7 @@ function toggleTimer(){
     }
 }
 function resetCurrentMatch() { if(timerInterval){ clearInterval(timerInterval); timerInterval = null; document.getElementById('startBtn').textContent = 'START'; } timeLeft = baseTime; document.getElementById('display').textContent = formatTime(timeLeft); }
-function resetAll(silent = false){ if(!silent && !confirm("Zurücksetzen?")) return; clearInterval(timerInterval); timerInterval=null; aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0; if(document.getElementById('startBtn')) document.getElementById('startBtn').textContent='START'; spielerStats = {}; initStats(); generateDynamicSchedule(); renderTable(); if(document.getElementById('display')) document.getElementById('display').textContent = formatTime(timeLeft); document.getElementById("setupContent").style.display = "block"; }
+function resetAll(silent = false){ if(!silent && !confirm("Zurücksetzen?")) return; clearInterval(timerInterval); timerInterval=null; aktuelleRunde=1; timeLeft=baseTime; totalBonusTime=0; if(document.getElementById('bonusDisplay')) document.getElementById('bonusDisplay').textContent = "Restzeit für Verlängerung: 00:00"; if(document.getElementById('startBtn')) document.getElementById('startBtn').textContent='START'; spielerStats = {}; initStats(); generateDynamicSchedule(); renderTable(); if(document.getElementById('display')) document.getElementById('display').textContent = formatTime(timeLeft); document.getElementById("setupContent").style.display = "block"; }
 
 window.onload = function() { buildInputGrid(); buildNumPad(); initStats(); generateDynamicSchedule(); renderTable(); changeTournamentMode(); };
 </script></body></html>
