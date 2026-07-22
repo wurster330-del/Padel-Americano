@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v27</title>
+<title>Padel Pro iPad v28</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -92,7 +92,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 </style></head><body>
 
 <div class="banner">
-    <h1>Padel Pro v27</h1>
+    <h1>Padel Pro v28</h1>
     <div class="total-timer-box">
         <span>⏱️ Gesamt: </span><span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
@@ -246,10 +246,29 @@ function toggleSetupView() { let x = document.getElementById("setupContent"); x.
 function togglePartnerMatrix() { let x = document.getElementById("matrixContent"); x.style.display = (x.style.display === "none") ? "block" : "none"; }
 
 function buildInputGrid() {
-    let count = (currentMode.startsWith("6")) ? 6 : 5; let html = ""; let defaultNames = (count === 6) ? spieler6 : spieler5;
-    for(let i=1; i<=count; i++) { html += `<input type="text" id="sp${i}" value="${defaultNames[i-1]}" oninput="initStats(); generateDynamicSchedule(); renderTable();">`; }
+    let count = (currentMode.startsWith("6")) ? 6 : 5; 
+    let html = ""; 
+    let defaultNames = (count === 6) ? spieler6 : spieler5;
+    for(let i=1; i<=count; i++) { 
+        html += `<input type="text" id="sp${i}" value="${defaultNames[i-1] || ''}" placeholder="Spieler ${i}" oninput="onPlayerNameInput();">`; 
+    }
     document.getElementById('inputGrid').innerHTML = html;
 }
+
+function onPlayerNameInput() {
+    let count = (currentMode.startsWith("6")) ? 6 : 5;
+    for(let i=1; i<=count; i++) {
+        let val = document.getElementById('sp' + i).value.trim();
+        spieler[i-1] = val || `Spieler ${i}`;
+    }
+    if(currentMode.startsWith("6")) spieler6 = [...spieler]; 
+    else spieler5 = [...spieler];
+    
+    initStats(); 
+    generateDynamicSchedule(); 
+    renderTable();
+}
+
 function buildNumPad() {
     let html = ""; for(let i=0; i<=32; i++) { html += `<button class="pad-btn" onclick="pressPadNum(${i})">${i}</button>`; }
     document.getElementById('numPad').innerHTML = html;
@@ -452,12 +471,14 @@ function renderPartnerMatrix() {
 }
 
 function changeTournamentMode() {
-    currentMode = document.getElementById('modeSelect').value; spieler = (currentMode.startsWith("6")) ? [...spieler6] : [...spieler5];
+    currentMode = document.getElementById('modeSelect').value; 
+    spieler = (currentMode.startsWith("6")) ? [...spieler6] : [...spieler5];
+    
     document.getElementById('roundsConfigContainer').style.display = (currentMode === "6_zeit") ? "none" : "inline";
     let timerP = document.getElementById('timerPanel'), sBox = document.getElementById('scoreBoxWide'), calcB = document.getElementById('americanoCalcBox');
     
-    if(currentMode.startsWith("5")) { customMaxRounds = 5; document.getElementById('maxRoundsInput').value = 5; } 
-    else { customMaxRounds = 5; document.getElementById('maxRoundsInput').value = 5; }
+    customMaxRounds = 5; 
+    document.getElementById('maxRoundsInput').value = 5;
 
     if(currentMode.endsWith("americano")) {
         timerP.style.display = "none"; sBox.style.gridColumn = "span 2"; calcB.style.display = "flex";
@@ -472,7 +493,13 @@ function changeTournamentMode() {
 }
 function updatePlayerNamesFromInputs() {
     let count = (currentMode.startsWith("6")) ? 6 : 5;
-    for(let i=1; i<=count; i++) { let val = document.getElementById('sp' + i).value.trim(); if(val !== "") { spieler[i-1] = val; } }
+    for(let i=1; i<=count; i++) { 
+        let el = document.getElementById('sp' + i);
+        if(el) {
+            let val = el.value.trim(); 
+            if(val !== "") { spieler[i-1] = val; } 
+        }
+    }
     if(currentMode.startsWith("6")) spieler6 = [...spieler]; else spieler5 = [...spieler];
 }
 function initStats() { updatePlayerNamesFromInputs(); let alteStats = {...spielerStats}; spielerStats = {}; spieler.forEach(name => { spielerStats[name] = alteStats[name] || { sp: 0, s: 0, u: 0, n: 0, pkt: 0 }; }); renderRankTable(); }
