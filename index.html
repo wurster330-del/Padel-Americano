@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v22</title>
+<title>Padel Pro iPad v23</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -43,15 +43,15 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .btn-m{background:#34495e;border:1px solid #7f8c8d}
 .btn-r{background:#7f8c8d;}
 
-.score-box{background:#fff;padding:15px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:3px solid #2ecc71;position:relative;display:flex;flex-direction:column;justify-content:center;}
-.score-btn{background:#2ecc71;color:#fff;border:none;padding:10px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;margin-top:8px}
-.score-input-field{padding:6px;font-size:18px;width:50px;text-align:center;font-weight:bold;margin:0 3px;border:2px solid #ccc;border-radius:4px;}
+.score-box{background:#fff;padding:20px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:4px solid #2ecc71;position:relative;display:flex;flex-direction:column;justify-content:center;}
+.score-btn{background:#2ecc71;color:#fff;border:none;padding:12px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;margin-top:12px}
+.score-input-field{padding:8px;font-size:22px;width:60px;text-align:center;font-weight:bold;margin:0 5px;border:2px solid #ccc;border-radius:6px;}
 .score-input-field.active-input-indicator{background:#e8f4fd;border-color:#1e3d59 !important;}
 
 .info-icon-btn{position:absolute;top:10px;right:10px;background:#1e3d59;color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:12px;font-weight:bold;cursor:pointer;}
-.mix-inline-btn{position:absolute;top:10px;left:10px;background:#34495e;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:bold;cursor:pointer;}
-.pad-container{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:420px;margin:8px auto 0;}
-.pad-btn{background:#e0e0e0;color:#2c3e50;border:none;padding:4px 8px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer;min-width:28px;}
+.mix-inline-btn{position:absolute;top:10px;left:10px;background:#34495e;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:12px;font-weight:bold;cursor:pointer;}
+.pad-container{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;max-width:480px;margin:12px auto 0;}
+.pad-btn{background:#e0e0e0;color:#2c3e50;border:none;padding:6px 10px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;min-width:32px;}
 
 .tab-container{max-width:1000px;margin:10px auto 5px;display:flex;gap:5px;}
 .tab-btn{flex:1;padding:10px;font-size:14px;font-weight:bold;border:none;border-radius:6px;cursor:pointer;background:#bdc3c7;color:#fff;transition:0.2s;}
@@ -81,7 +81,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 </style></head><body>
 
 <div class="banner">
-    <h1>Padel Pro v22</h1>
+    <h1>Padel Pro v23</h1>
     <div class="total-timer-box">
         <span>⏱️ Gesamt: </span><span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
@@ -133,19 +133,19 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     <div class="score-box" style="grid-column: span 2;" id="scoreBoxWide">
         <button class="mix-inline-btn" id="inlineMixBtn" onclick="shufflePlayers()">🔀 Teams Mischen</button>
         <button class="info-icon-btn" onclick="openInfoModal()">ℹ️</button>
-        <strong style="color:#2ecc71; font-size:15px; display:block; margin-top:15px; margin-bottom:5px;">🏆 Ergebnis eintragen</strong>
-        <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; font-size:13px; margin-bottom:5px;">Ergebnis:</span>
+        <strong style="color:#2ecc71; font-size:18px; display:block; margin-top:15px; margin-bottom:5px;">🏆 Ergebnis eintragen</strong>
+        <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; font-size:15px; margin-bottom:8px;">Ergebnis:</span>
         <div id="winSelectContainer" style="display:none;"><select id="matchWinnerSelect" style="padding:6px; font-size:14px; font-weight:bold; border-radius:4px; width:90%;"></select></div>
         
-        <div id="pointInputContainer" style="font-size:14px; font-weight:bold; color:#1e3d59;">
-            <div style="margin-bottom:8px; font-size:12px; color:#7f8c8d;">
+        <div id="pointInputContainer" style="font-size:15px; font-weight:bold; color:#1e3d59;">
+            <div style="margin-bottom:10px; font-size:13px; color:#7f8c8d;">
                 🎯 Runden-Ziel für dieses Spiel: 
                 <input type="number" id="liveTargetPoints" class="target-input" value="32" min="1" style="width:45px;" oninput="validateLivePoints();"> Punkte
             </div>
-            <span id="nameLabelA">A</span> 
+            <span id="nameLabelA" style="font-size:16px;">A</span> 
             <input type="number" id="ptsA" class="score-input-field active-input-indicator" min="0" onfocus="setActiveField('ptsA')" oninput="validateLivePoints()"> : 
             <input type="number" id="ptsB" class="score-input-field" min="0" onfocus="setActiveField('ptsB')" oninput="validateLivePoints()"> 
-            <span id="nameLabelB">B</span>
+            <span id="nameLabelB" style="font-size:16px;">B</span>
             <div class="pad-container" id="numPad"></div>
         </div>
         <button class="score-btn" onclick="submitRoundScore()">Sichern & Nächste Runde</button>
@@ -160,13 +160,15 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </table>
 </div>
 
+<!-- Tab-Schaltflächen mit Verbergen-Funktion -->
 <div class="tab-container">
-    <button class="tab-btn active-tab rank-tab-active" id="rankTabBtn" onclick="switchTab('rank')">📊 Rangliste anzeigen</button>
-    <button class="tab-btn" id="planTabBtn" onclick="switchTab('plan')">📅 Spielplan anzeigen</button>
+    <button class="tab-btn active-tab rank-tab-active" id="rankTabBtn" onclick="toggleSection('rank')">📊 Rangliste anzeigen/verbergen</button>
+    <button class="tab-btn" id="planTabBtn" onclick="toggleSection('plan')">📅 Spielplan anzeigen/verbergen</button>
 </div>
 
+<!-- Daten-Bereich -->
 <div class="data-layout">
-    <div class="section-box active-section" id="rankSection">
+    <div class="section-box" id="rankSection">
         <table>
             <thead><tr><th style="width:30px">Pl.</th><th>Spieler</th><th style="width:30px">Sp</th><th style="width:25px">S</th><th style="width:25px">U</th><th style="width:25px">N</th><th style="width:45px; background:#2ecc71; color:#fff;" id="scoreColHeader">Punkte</th></tr></thead>
             <tbody id="rankTableBody"></tbody>
@@ -186,19 +188,39 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 let currentMode = "6_americano", spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"], spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
 let spieler = [...spieler6], aktuelleRunde=1, baseTime=20*60, timeLeft=baseTime, totalBonusTime=0, timerInterval=null, totalSeconds = 0, totalTimerInterval = null, spielerStats = {};
 let currentActiveField = "ptsA", customMaxRounds = 5, generierterSpielplan = [];
+let activeTab = null; 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-function switchTab(tab) {
-    let rankBtn = document.getElementById("rankTabBtn"); let planBtn = document.getElementById("planTabBtn");
-    let rankSec = document.getElementById("rankSection"); let planSec = document.getElementById("planSection");
-    if(tab === 'rank') {
-        rankBtn.classList.add("active-tab", "rank-tab-active"); planBtn.classList.remove("active-tab");
-        rankSec.classList.add("active-section"); planSec.classList.remove("active-section");
+function toggleSection(tab) {
+    let rankBtn = document.getElementById("rankTabBtn"); 
+    let planBtn = document.getElementById("planTabBtn");
+    let rankSec = document.getElementById("rankSection"); 
+    let planSec = document.getElementById("planSection");
+
+    if (activeTab === tab) {
+        // Tab einklappen
+        activeTab = null;
+        rankBtn.classList.remove("active-tab", "rank-tab-active");
+        planBtn.classList.remove("active-tab");
+        rankSec.classList.remove("active-section");
+        planSec.classList.remove("active-section");
     } else {
-        planBtn.classList.add("active-tab"); rankBtn.classList.remove("active-tab", "rank-tab-active");
-        planSec.classList.add("active-section"); rankSec.classList.remove("active-section");
+        // Tab anzeigen
+        activeTab = tab;
+        if (tab === 'rank') {
+            rankBtn.classList.add("active-tab", "rank-tab-active"); 
+            planBtn.classList.remove("active-tab");
+            rankSec.classList.add("active-section"); 
+            planSec.classList.remove("active-section");
+        } else {
+            planBtn.classList.add("active-tab"); 
+            rankBtn.classList.remove("active-tab", "rank-tab-active");
+            planSec.classList.add("active-section"); 
+            rankSec.classList.remove("active-section");
+        }
     }
 }
+
 function toggleSetupView() { let x = document.getElementById("setupContent"); x.style.display = (x.style.display === "none") ? "block" : "none"; }
 function togglePartnerMatrix() { let x = document.getElementById("matrixContent"); x.style.display = (x.style.display === "none") ? "block" : "none"; }
 
