@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v21</title>
+<title>Padel Pro iPad v22</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,7 +16,6 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .total-btn{background:#fff;color:#1e3d59;border:none;padding:3px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer;}
 .total-reset-link{color:rgba(255,255,255,0.7);font-size:11px;text-decoration:underline;cursor:pointer;margin-left:5px}
 
-/* Einklappbarer Setup-Bereich */
 .collapsible-btn{background:#9b59b6;color:#fff;border:none;width:100%;max-width:1000px;padding:8px;font-size:14px;font-weight:bold;border-radius:6px;cursor:pointer;margin-bottom:5px;}
 .setup-content{max-width:1000px;margin:0 auto 10px;display:block;}
 
@@ -24,7 +23,6 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .mode-select{padding:4px 8px;font-size:13px;font-weight:bold;border-radius:4px;border:1px solid #1e3d59;color:#1e3d59;}
 .target-input{padding:4px;font-size:13px;width:50px;text-align:center;font-weight:bold;border:1px solid #1e3d59;border-radius:4px;}
 
-/* Zeitrechner-Box für Americano */
 .calc-box{background:#e8f4fd;padding:10px;border-radius:6px;margin-bottom:8px;font-size:13px;color:#1e3d59;display:none;flex-wrap:wrap;justify-content:center;gap:10px;align-items:center;border:1px solid #bce0fd;}
 .calc-result{font-weight:bold;background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #2ecc71;}
 
@@ -32,7 +30,6 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:5px}
 .setup-grid input{padding:6px;font-size:13px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;color:#2c3e50}
 
-/* Haupt-Bedienfeld */
 .main-dashboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:1000px;margin:0 auto 10px;}
 @media(max-width:768px){.main-dashboard{grid-template-columns:1fr;}}
 
@@ -56,7 +53,6 @@ body{font-family:sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-a
 .pad-container{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:420px;margin:8px auto 0;}
 .pad-btn{background:#e0e0e0;color:#2c3e50;border:none;padding:4px 8px;font-size:12px;font-weight:bold;border-radius:4px;cursor:pointer;min-width:28px;}
 
-/* TAB-SCHALTER & Hilfs-Buttons */
 .tab-container{max-width:1000px;margin:10px auto 5px;display:flex;gap:5px;}
 .tab-btn{flex:1;padding:10px;font-size:14px;font-weight:bold;border:none;border-radius:6px;cursor:pointer;background:#bdc3c7;color:#fff;transition:0.2s;}
 .tab-btn.active-tab{background:#1e3d59;color:#fff;}
@@ -85,7 +81,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 </style></head><body>
 
 <div class="banner">
-    <h1>Padel Pro v21</h1>
+    <h1>Padel Pro v22</h1>
     <div class="total-timer-box">
         <span>⏱️ Gesamt: </span><span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
@@ -93,7 +89,6 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </div>
 </div>
 
-<!-- Einklappbare Einstellungen -->
 <button class="collapsible-btn" id="collapseBtn" onclick="toggleSetupView()">⚙️ Einstellungen & Spieler anzeigen/verbergen</button>
 <div class="setup-content" id="setupContent">
     <div class="mode-selector">
@@ -106,10 +101,9 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
             </select>
         </div>
         <div id="roundsConfigContainer">🔄 Runden: <input type="number" id="maxRoundsInput" class="target-input" value="5" min="1" oninput="updateRoundsFromInput(); calculateAmericanoTime();"></div>
-        <div id="targetPointsContainer">🎯 Punkte: <input type="number" id="targetPointsInput" class="target-input" value="32" min="1" oninput="validateLivePoints(); calculateAmericanoTime();"></div>
+        <div id="targetPointsContainer">🎯 Standardsziel: <input type="number" id="targetPointsInput" class="target-input" value="32" min="1" oninput="syncLiveTargetWithStandard(); calculateAmericanoTime();"></div>
     </div>
 
-    <!-- Live Zeitrechner für Americano -->
     <div class="calc-box" id="americanoCalcBox">
         <span>⏱️ Abend-Zeit: <input type="number" id="calcTotalTime" class="target-input" value="180" oninput="calculateAmericanoTime()"> Min</span>
         <span>🔄 Wechselzeit: <input type="number" id="calcSwitchTime" class="target-input" value="30" oninput="calculateAmericanoTime()"> Sek</span>
@@ -122,7 +116,6 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </div>
 </div>
 
-<!-- Haupt-Dashboard -->
 <div class="main-dashboard">
     <div class="panel" id="timerPanel" style="display:none;">
         <div id="roundTitle" style="color:#bdc3c7;font-weight:bold;font-size:15px;">Runde 1</div>
@@ -143,7 +136,12 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
         <strong style="color:#2ecc71; font-size:15px; display:block; margin-top:15px; margin-bottom:5px;">🏆 Ergebnis eintragen</strong>
         <span id="scorePrompt" style="font-weight:bold; color:#1e3d59; display:block; font-size:13px; margin-bottom:5px;">Ergebnis:</span>
         <div id="winSelectContainer" style="display:none;"><select id="matchWinnerSelect" style="padding:6px; font-size:14px; font-weight:bold; border-radius:4px; width:90%;"></select></div>
+        
         <div id="pointInputContainer" style="font-size:14px; font-weight:bold; color:#1e3d59;">
+            <div style="margin-bottom:8px; font-size:12px; color:#7f8c8d;">
+                🎯 Runden-Ziel für dieses Spiel: 
+                <input type="number" id="liveTargetPoints" class="target-input" value="32" min="1" style="width:45px;" oninput="validateLivePoints();"> Punkte
+            </div>
             <span id="nameLabelA">A</span> 
             <input type="number" id="ptsA" class="score-input-field active-input-indicator" min="0" onfocus="setActiveField('ptsA')" oninput="validateLivePoints()"> : 
             <input type="number" id="ptsB" class="score-input-field" min="0" onfocus="setActiveField('ptsB')" oninput="validateLivePoints()"> 
@@ -154,7 +152,6 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </div>
 </div>
 
-<!-- Partner-Matrix Toggle Button -->
 <button class="matrix-toggle-btn" onclick="togglePartnerMatrix()">🤝 Partner-Matrix anzeigen/verbergen (Wer mit wem?)</button>
 <div class="matrix-content" id="matrixContent">
     <table class="matrix-table">
@@ -163,13 +160,11 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </table>
 </div>
 
-<!-- Tab-Schaltflächen -->
 <div class="tab-container">
     <button class="tab-btn active-tab rank-tab-active" id="rankTabBtn" onclick="switchTab('rank')">📊 Rangliste anzeigen</button>
     <button class="tab-btn" id="planTabBtn" onclick="switchTab('plan')">📅 Spielplan anzeigen</button>
 </div>
 
-<!-- Daten-Bereich -->
 <div class="data-layout">
     <div class="section-box active-section" id="rankSection">
         <table>
@@ -185,7 +180,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
     </div>
 </div>
 
-<div class="modal-overlay" id="infoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal()">&times;</span><h3>🎯 Punkte-Logik</h3><p><b>Zeit-Modus:</b> Sieg = 3 Pkt, Unentschieden = 1 Pkt, Niederlage = 0 Pkt.<br><br><b>Americano:</b> Jeder im Match erzielte Punkt wird direkt 1:1 dem Konto des Spielers hinzugefügt.</p></div></div>
+<div class="modal-overlay" id="infoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal()">&times;</span><h3>🎯 Punkte-Logik</h3><p><b>Zeit-Modus:</b> Sieg = 3 Pkt, Unentschieden = 1 Pkt, Niederlage = 0 Pkt.<br><br><b>Americano:</b> Jeder im Match erzielte Punkt wird direkt 1:1 dem Konto des Spielers hinzugefügt. Das Runden-Ziel kann flexibel angepasst werden (z. B. auf 16, 20 oder 32 Punkte).</p></div></div>
 
 <script>
 let currentMode = "6_americano", spieler6 = ["Werner","Marco","Tobias","Stefan","Christian","David"], spieler5 = ["Werner","Marco","Tobias","Stefan","Christian"];
@@ -224,9 +219,14 @@ function pressPadNum(num) {
     document.getElementById(currentActiveField).value = num; validateLivePoints();
     if(currentActiveField === "ptsA") { setActiveField("ptsB"); }
 }
+function syncLiveTargetWithStandard() {
+    let std = document.getElementById('targetPointsInput').value;
+    document.getElementById('liveTargetPoints').value = std;
+    validateLivePoints();
+}
 function validateLivePoints() {
     let valA = parseInt(document.getElementById('ptsA').value) || 0, valB = parseInt(document.getElementById('ptsB').value) || 0;
-    let targetPoints = parseInt(document.getElementById('targetPointsInput').value) || 32;
+    let targetPoints = parseInt(document.getElementById('liveTargetPoints').value) || 32;
     let fA = document.getElementById('ptsA'), fB = document.getElementById('ptsB');
     if((valA + valB) > targetPoints) { fA.style.borderColor="#e74c3c"; fB.style.borderColor="#e74c3c"; return false; } 
     else { fA.style.borderColor="#ccc"; fB.style.borderColor="#ccc"; return true; }
@@ -305,7 +305,6 @@ function renderPartnerMatrix() {
     let counts = {};
     spieler.forEach(p => { counts[p] = {}; spieler.forEach(p2 => counts[p][p2] = 0); });
     
-    // Zähle Partnerschaften aus dem generierten Spielplan
     let maxRunden = getMaxRunden();
     for(let i=0; i<maxRunden; i++) {
         let match = generierterSpielplan[i];
@@ -318,13 +317,11 @@ function renderPartnerMatrix() {
         }
     }
 
-    // Header rendern
     let headHtml = "<tr><th>Spieler</th>";
     spieler.forEach(p => { headHtml += `<th>${p}</th>`; });
     headHtml += "</tr>";
     document.getElementById('matrixHead').innerHTML = headHtml;
 
-    // Body rendern
     let bodyHtml = "";
     spieler.forEach(p1 => {
         bodyHtml += `<tr><td><strong>${p1}</strong></td>`;
@@ -391,11 +388,17 @@ function updateScoreSelectOption() {
 function submitRoundScore() {
     let maxRunden = getMaxRunden(); if(aktuelleRunde > maxRunden) return; let match = generierterSpielplan[aktuelleRunde - 1];
     if(currentMode.endsWith("americano")) {
-        let valA = parseInt(document.getElementById('ptsA').value), valB = parseInt(document.getElementById('ptsB').value), targetPoints = parseInt(document.getElementById('targetPointsInput').value);
-        if(isNaN(valA) || isNaN(valB) || !validateLivePoints() || (valA + valB !== targetPoints)) { alert("Punkte prüfen (Summe muss exakt stimmen)!"); return; }
+        let valA = parseInt(document.getElementById('ptsA').value), valB = parseInt(document.getElementById('ptsB').value);
+        let targetPoints = parseInt(document.getElementById('liveTargetPoints').value) || 32;
+        
+        if(isNaN(valA) || isNaN(valB) || !validateLivePoints() || (valA + valB !== targetPoints)) { 
+            alert(`Punkte prüfen (Summe muss exakt dem gewählten Runden-Ziel von ${targetPoints} entsprechen)!`); 
+            return; 
+        }
         match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].pkt += valA; if(valA > valB) spielerStats[p].s++; else if(valA < valB) spielerStats[p].n++; else spielerStats[p].u++; });
         match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].pkt += valB; if(valB > valA) spielerStats[p].s++; else if(valB < valA) spielerStats[p].n++; else spielerStats[p].u++; });
         document.getElementById('ptsA').value = ""; document.getElementById('ptsB').value = ""; setActiveField("ptsA");
+        syncLiveTargetWithStandard();
     } else {
         let res = document.getElementById('matchWinnerSelect').value;
         if(res === "A") { match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].s++; spielerStats[p].pkt += 3; }); match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].n++; }); }
