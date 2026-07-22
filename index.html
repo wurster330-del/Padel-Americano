@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro iPad v26</title>
+<title>Padel Pro iPad v27</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -92,7 +92,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 </style></head><body>
 
 <div class="banner">
-    <h1>Padel Pro v26</h1>
+    <h1>Padel Pro v27</h1>
     <div class="total-timer-box">
         <span>⏱️ Gesamt: </span><span class="total-timer-time" id="totalDisplay">00:00:00</span>
         <button class="total-btn" id="totalStartBtn" onclick="toggleTotalTimer()">START</button>
@@ -159,11 +159,11 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
         <div id="pointInputContainer" style="font-size:15px; font-weight:bold; color:#1e3d59;">
             <div style="margin-bottom:10px; font-size:13px; color:#7f8c8d;">
                 🎯 Runden-Ziel für dieses Spiel: 
-                <input type="number" id="liveTargetPoints" class="target-input" value="32" min="1" style="width:45px;" oninput="validateLivePoints();"> Punkte
+                <input type="number" id="liveTargetPoints" class="target-input" value="32" min="1" style="width:45px;" oninput="validateLivePoints('ptsA');"> Punkte
             </div>
             <span id="nameLabelA" style="font-size:16px;">A</span> 
-            <input type="number" id="ptsA" class="score-input-field active-input-indicator" min="0" onfocus="setActiveField('ptsA')" oninput="validateLivePoints()"> : 
-            <input type="number" id="ptsB" class="score-input-field" min="0" onfocus="setActiveField('ptsB')" oninput="validateLivePoints()"> 
+            <input type="number" id="ptsA" class="score-input-field active-input-indicator" min="0" onfocus="setActiveField('ptsA')" oninput="autoCalculateOpponent('ptsA')"> : 
+            <input type="number" id="ptsB" class="score-input-field" min="0" onfocus="setActiveField('ptsB')" oninput="autoCalculateOpponent('ptsB')"> 
             <span id="nameLabelB" style="font-size:16px;">B</span>
             <div class="pad-container" id="numPad"></div>
         </div>
@@ -203,7 +203,7 @@ tr:nth-child(even){background:#f8f9fa}.active-row{background:#e8f4fd!important;b
 <!-- Modals -->
 <div class="modal-overlay" id="infoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal('infoModal')">&times;</span><h3>🎯 Punkte-Logik</h3><p><b>Zeit-Modus:</b> Sieg = 3 Pkt, Unentschieden = 1 Pkt, Niederlage = 0 Pkt.<br><br><b>Americano:</b> Jeder im Match erzielte Punkt wird direkt 1:1 dem Konto des Spielers hinzugefügt. Das Runden-Ziel kann flexibel angepasst werden (z. B. auf 16, 20 oder 32 Punkte).</p></div></div>
 
-<div class="modal-overlay" id="timerInfoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal('timerInfoModal')">&times;</span><h3>⏱️ Zeit-Modus & Restzeit</h3><p><b>Was passiert bei Restzeit?</b><br>Wenn ein Spiel früher beendet ist, kannst du auf <b>„Zeit sichern“</b> klicken.<br><br>• Die Restzeit (z. B. 9 Min) wandert in das Bonus-Konto.<br>• Sobald <b>20 Minuten Bonuszeit</b> gesammelt wurden, schaltet das System automatisch eine <b>10. Zusatz-Runde</b> frei!<br>• Die Match-Uhr springt für die nächste Runde gewohnt auf 20:00 zurück.</p></div></div>
+<div class="modal-overlay" id="timerInfoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal('timerInfoModal')">&times;</span><h3>⏱️ Zeit-Modus & Restzeit</h3><p><b>Was passiert bei Restzeit?</b><br>Wenn ein Spiel früher beendet ist, kannst du auf <b>„Zeit sichern“</b> klicken.<br><br>• Die Restzeit wandert in das Bonus-Konto.<br>• Sobald <b>20 Minuten Bonuszeit</b> gesammelt wurden, schaltet das System automatisch eine <b>10. Zusatz-Runde</b> frei!<br>• Die Match-Uhr springt für die nächste Runde gewohnt auf 20:00 zurück.</p></div></div>
 
 <div class="modal-overlay" id="americanoInfoModal"><div class="modal-content"><span class="modal-close" onclick="closeInfoModal('americanoInfoModal')">&times;</span><h3>🎾 Americano Zeit-Planer</h3><p><b>Was bedeutet die Restzeit?</b><br>Der Rechner zeigt dir, wie viel Zeit von deinem Hallen-Termin noch übrig bleibt.<br><br>• <b>Restzeit z. B. 9 Min:</b> Du hast einen perfekten Puffer für Pausen zwischen den Runden!<br>• <b>Ziel anpassen:</b> Ist noch viel Zeit übrig, kannst du das Punkte-Ziel (z. B. von 24 auf 32 Pkt) erhöhen.<br>• <b>Zeit-Mangel:</b> Wenn es rot wird, verringere die Runden oder wähle z. B. 16/20 Punkte.</p></div></div>
 
@@ -255,25 +255,58 @@ function buildNumPad() {
     document.getElementById('numPad').innerHTML = html;
 }
 function setActiveField(fieldId) {
-    currentActiveField = fieldId; document.getElementById('ptsA').classList.remove('active-input-indicator');
-    document.getElementById('ptsB').classList.remove('active-input-indicator'); document.getElementById(fieldId).classList.add('active-input-indicator');
+    currentActiveField = fieldId; 
+    document.getElementById('ptsA').classList.remove('active-input-indicator');
+    document.getElementById('ptsB').classList.remove('active-input-indicator'); 
+    document.getElementById(fieldId).classList.add('active-input-indicator');
 }
+
+// Automatische Gegner-Ergänzung
+function autoCalculateOpponent(sourceFieldId) {
+    let targetPoints = parseInt(document.getElementById('liveTargetPoints').value) || 32;
+    let sourceInput = document.getElementById(sourceFieldId);
+    let otherFieldId = (sourceFieldId === "ptsA") ? "ptsB" : "ptsA";
+    let otherInput = document.getElementById(otherFieldId);
+    
+    if (sourceInput.value === "") {
+        otherInput.value = "";
+        validateLivePoints(sourceFieldId);
+        return;
+    }
+    
+    let val = parseInt(sourceInput.value);
+    if (!isNaN(val)) {
+        if (val > targetPoints) {
+            val = targetPoints;
+            sourceInput.value = val;
+        } else if (val < 0) {
+            val = 0;
+            sourceInput.value = val;
+        }
+        otherInput.value = targetPoints - val;
+    }
+    validateLivePoints(sourceFieldId);
+}
+
 function pressPadNum(num) {
-    document.getElementById(currentActiveField).value = num; validateLivePoints();
-    if(currentActiveField === "ptsA") { setActiveField("ptsB"); }
+    document.getElementById(currentActiveField).value = num; 
+    autoCalculateOpponent(currentActiveField);
 }
+
 function syncLiveTargetWithStandard() {
     let std = document.getElementById('targetPointsInput').value;
     document.getElementById('liveTargetPoints').value = std;
-    validateLivePoints();
+    autoCalculateOpponent(currentActiveField);
 }
-function validateLivePoints() {
+
+function validateLivePoints(sourceField) {
     let valA = parseInt(document.getElementById('ptsA').value) || 0, valB = parseInt(document.getElementById('ptsB').value) || 0;
     let targetPoints = parseInt(document.getElementById('liveTargetPoints').value) || 32;
     let fA = document.getElementById('ptsA'), fB = document.getElementById('ptsB');
     if((valA + valB) > targetPoints) { fA.style.borderColor="#e74c3c"; fB.style.borderColor="#e74c3c"; return false; } 
     else { fA.style.borderColor="#ccc"; fB.style.borderColor="#ccc"; return true; }
 }
+
 function updateRoundsFromInput() {
     let val = parseInt(document.getElementById('maxRoundsInput').value);
     if(!isNaN(val) && val > 0) { customMaxRounds = val; generateDynamicSchedule(); renderTable(); updateScoreSelectOption(); }
