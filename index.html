@@ -1,229 +1,488 @@
 <!DOCTYPE html>
-<html lang="de"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Padel Pro Watch Edition v29</title>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Padel Manager - iPad Air Optimiert</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --accent: #00e676;
+      --accent-blue: #29b6f6;
+      --text: #ffffff;
+      --text-muted: #b0bec5;
+    }
+    
+    * { box-sizing: border-box; }
 
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#2c3e50;background:#f4f7f6;padding:10px;text-align:center;margin:0;}
-.banner{background:#1e3d59;color:#fff;padding:8px 12px;border-radius:6px;max-width:1000px;margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center;}
-.banner h1{margin:0;font-size:20px;}
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 10px;
+      margin: 0 auto;
+      max-width: 1100px; /* Perfekt für iPad Pro / iPad Air */
+    }
 
-/* Watch Mode Switch Button */
-.watch-toggle-btn{background:#e67e22;color:#fff;border:none;padding:6px 12px;font-size:12px;font-weight:bold;border-radius:20px;cursor:pointer;margin-bottom:10px;}
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5px;
+    }
 
-/* Standard UI Layout */
-.setup-content{max-width:1000px;margin:0 auto 10px;}
-.mode-selector{background:#fff;padding:10px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.05);font-weight:bold;display:flex;gap:10px;justify-content:center;margin-bottom:5px;}
-.setup-box{background:#fff;padding:10px;border-radius:6px;}
-.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px;}
-.setup-grid input{padding:6px;font-size:13px;border:1px solid #ccc;border-radius:4px;text-align:center;font-weight:bold;}
+    h1 { color: var(--accent); margin: 0; font-size: 20px; }
 
-.main-dashboard{display:grid;grid-template-columns:1fr;gap:10px;max-width:1000px;margin:0 auto 10px;}
-.score-box{background:#fff;padding:15px;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,0.08);border-top:4px solid #2ecc71;}
+    /* Layout-Grid für iPad */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
 
-/* EXTREM OPTIMIERTES WATCH INTERFACE */
-body.watch-mode {background:#000;color:#fff;padding:2px;}
-body.watch-mode .banner, 
-body.watch-mode .setup-content, 
-body.watch-mode .tab-container, 
-body.watch-mode .data-layout,
-body.watch-mode .matrix-toggle-btn {display:none !important;}
+    @media (min-width: 768px) {
+      .app-layout {
+        grid-template-columns: 320px 1fr; /* Links Dashboard/Tabelle, Rechts Spielplan */
+        align-items: start;
+      }
+    }
 
-body.watch-mode .score-box {
-    background:#000;color:#fff;border:none;padding:5px;box-shadow:none;
-}
-.watch-score-display {
-    font-size:42px;font-weight:900;color:#2ecc71;margin:5px 0;font-family:monospace;
-}
-.watch-team-label {
-    font-size:12px;color:#bdc3c7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.watch-btn-grid {
-    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;
-}
-.watch-add-btn {
-    background:#34495e;color:#fff;border:none;padding:15px 5px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;
-}
-.watch-add-btn:active {background:#2ecc71;}
-.watch-submit-btn {
-    background:#2ecc71;color:#fff;border:none;width:100%;padding:12px;font-size:16px;font-weight:bold;border-radius:8px;cursor:pointer;margin-top:5px;
-}
+    .btn-group { display: flex; gap: 6px; margin-bottom: 8px; }
+    button {
+      flex: 1;
+      padding: 8px 5px;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      background-color: #2c2c2c;
+      color: var(--text);
+      cursor: pointer;
+    }
+    button.active { background-color: var(--accent-blue); color: #000; }
+    button.action-btn { background-color: #333; border: 1px solid #444; }
 
-/* Tabs & Tables */
-.tab-container{max-width:1000px;margin:10px auto 5px;display:flex;gap:5px;}
-.tab-btn{flex:1;padding:8px;font-size:13px;font-weight:bold;border:none;border-radius:6px;background:#bdc3c7;color:#fff;}
-.tab-btn.active-tab{background:#1e3d59;}
-.section-box{background:#fff;border-radius:6px;overflow:hidden;display:none;}
-.section-box.active-section{display:block;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:6px;font-size:12px;text-align:center;border-bottom:1px solid #e0e0e0;}
-</style></head><body>
+    .section-title {
+      font-size: 14px;
+      color: #ffca28;
+      border-bottom: 1px solid #333;
+      padding-bottom: 3px;
+      margin-top: 10px;
+      margin-bottom: 8px;
+    }
 
-<button class="watch-toggle-btn" onclick="toggleWatchMode()">⌚ Watch-Ansicht umschalten</button>
+    /* Settings & Select Bar */
+    .settings-card {
+      background-color: var(--card-bg);
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .setting-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .setting-item input {
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background-color: #2c2c2c;
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+    }
 
-<div class="banner">
-    <h1>Padel Pro v29</h1>
-    <div style="font-size:12px;">📍 Spielstätte Mode</div>
-</div>
+    /* Checkboxes */
+    .player-select-container {
+      background-color: var(--card-bg);
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .player-checkboxes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .player-checkboxes label {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
 
-<div class="setup-content" id="setupContent">
-    <div class="mode-selector">
-        👥 Modus:
-        <select id="modeSelect" onchange="changeMode()">
-            <option value="6_americano">6 Spieler (Americano)</option>
-            <option value="5_americano" selected>5 Spieler (Americano)</option>
-        </select>
-    </div>
-    <div class="setup-box">
-        <div class="setup-grid" id="inputGrid"></div>
-    </div>
-</div>
+    /* Leaderboard Table */
+    .table-container {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { color: var(--text-muted); font-size: 11px; padding: 4px 2px; border-bottom: 1px solid #333; }
+    td { padding: 6px 2px; font-size: 13px; border-bottom: 1px solid #2a2a2a; }
+    .rank { font-weight: bold; color: var(--accent); width: 20px; }
 
-<div class="main-dashboard">
-    <div class="score-box">
-        <div id="watchMatchTitle" style="font-size:13px; font-weight:bold; color:#f39c12;">Runde 1</div>
-        
-        <!-- Uhr / Fast-Tap Interface -->
-        <div class="watch-team-label" id="watchLabelA">Team A</div>
-        <div class="watch-score-display"><span id="watchValA">0</span> : <span id="watchValB">0</span></div>
-        <div class="watch-team-label" id="watchLabelB">Team B</div>
+    /* Matches Grid für Spielplan */
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 8px;
+      max-height: 82vh;
+      overflow-y: auto; /* Scrollt nur den rechten Bereich, falls nötig */
+      padding-right: 5px;
+    }
 
-        <div class="watch-btn-grid">
-            <button class="watch-add-btn" onclick="addPoint('A')">+1 Team A</button>
-            <button class="watch-add-btn" onclick="addPoint('B')">+1 Team B</button>
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 8px 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      border-left: 3px solid var(--accent-blue);
+    }
+    .round-header {
+      font-size: 13px;
+      font-weight: bold;
+      color: #ffca28;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .match-up {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin: 4px 0;
+    }
+    .team { font-weight: bold; width: 42%; text-align: center; }
+    .vs { color: #777; font-size: 11px; }
+    .pause {
+      background-color: #2a2a2a;
+      padding: 4px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+    .score-inputs {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      align-items: center;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background-color: #2c2c2c;
+      color: #fff;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎾 Padel Manager</h1>
+    <span style="font-size: 12px; color: var(--text-muted);">180 Min iPad Display View</span>
+  </header>
+
+  <div class="app-layout">
+    
+    <!-- Linke Spalte: Controls & Tabelle -->
+    <div class="sidebar">
+      <div class="btn-group">
+        <button id="btn6" class="active" onclick="setMode(6)">6 Spieler</button>
+        <button id="btn5" onclick="setMode(5)">5 Spieler</button>
+      </div>
+
+      <div class="settings-card">
+        <div class="setting-item">
+          <label>🎯 Zielpunkte:</label>
+          <input type="number" id="target-points-input" value="31" min="1" oninput="onSettingsChange()">
         </div>
+        <div class="setting-item">
+          <label>☕ Bank-Punkte:</label>
+          <input type="number" id="pause-points-input" value="0" min="0" oninput="calculateStats()">
+        </div>
+      </div>
 
-        <button class="watch-submit-btn" onclick="submitWatchScore()">✓ RUNDE SPEICHERN</button>
-    </div>
-</div>
+      <div id="selection-box" class="player-select-container" style="display: none;">
+        <div style="font-size: 11px; color: var(--text-muted);">Auswahl (genau 5):</div>
+        <div class="player-checkboxes" id="checkboxes-container"></div>
+      </div>
 
-<div class="tab-container">
-    <button class="tab-btn active-tab" id="rankBtn" onclick="showTab('rank')">📊 Rangliste</button>
-    <button class="tab-btn" id="planBtn" onclick="showTab('plan')">📅 Spielplan</button>
-</div>
+      <div class="btn-group">
+        <button class="action-btn" onclick="shuffleActivePlayers()">🎲 Partner mischen</button>
+      </div>
 
-<div class="data-layout">
-    <div class="section-box active-section" id="rankSection">
+      <div class="section-title">🏆 Live-Tabelle</div>
+      <div class="table-container">
         <table>
-            <thead><tr><th>Pl.</th><th>Name</th><th>Sp</th><th>Punkte</th></tr></thead>
-            <tbody id="rankBody"></tbody>
+          <thead>
+            <tr>
+              <th class="rank">#</th>
+              <th>Spieler</th>
+              <th style="text-align: center;">Sp.</th>
+              <th style="text-align: right;">Pkt</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body"></tbody>
         </table>
+      </div>
+
+      <button class="action-btn" style="width: 100%; padding: 8px; margin-top: 10px; background-color: var(--accent-blue); color: #000; font-weight: bold; font-size: 12px;" onclick="addExtraRound()">➕ Runde hinzufügen</button>
     </div>
-    <div class="section-box" id="planSection">
-        <table>
-            <thead><tr><th>Runde</th><th>Match</th><th>Pause</th></tr></thead>
-            <tbody id="planBody"></tbody>
-        </table>
+
+    <!-- Rechte Spalte: Spielplan -->
+    <div class="main-content">
+      <div class="section-title" style="margin-top: 0;">📅 Spielplan</div>
+      <div class="plan-grid" id="plan-container"></div>
     </div>
-</div>
 
-<script>
-let spieler = ["Werner","Marco","Tobias","Stefan","Christian"];
-let aktuelleRunde = 1, ptsA = 0, ptsB = 0, spielerStats = {};
-let spielplan = [];
+  </div>
 
-function toggleWatchMode() {
-    document.body.classList.toggle("watch-mode");
-}
+  <script>
+    const allMasterPlayers = ["Werner", "Marco", "Tobias", "Christian", "David", "Stefan"];
+    let activePlayers = [...allMasterPlayers];
+    let mode = 6;
+    let totalRounds = 12;
 
-function buildInputs() {
-    let html = "";
-    spieler.forEach((name, i) => {
-        html += `<input type="text" id="p${i}" value="${name}" oninput="updateNames()">`;
-    });
-    document.getElementById('inputGrid').innerHTML = html;
-}
-
-function updateNames() {
-    spieler.forEach((_, i) => {
-        let val = document.getElementById(`p${i}`).value.trim();
-        if(val) spieler[i] = val;
-    });
-    initStats();
-    generateSchedule();
-    render();
-}
-
-function initStats() {
-    spielerStats = {};
-    spieler.forEach(p => spielerStats[p] = { sp: 0, pkt: 0 });
-}
-
-function generateSchedule() {
-    spielplan = [
-        { a: [spieler[0], spieler[1]], b: [spieler[2], spieler[3]], pause: [spieler[4]] },
-        { a: [spieler[4], spieler[2]], b: [spieler[0], spieler[1]], pause: [spieler[3]] },
-        { a: [spieler[3], spieler[4]], b: [spieler[1], spieler[2]], pause: [spieler[0]] },
-        { a: [spieler[0], spieler[2]], b: [spieler[3], spieler[4]], pause: [spieler[1]] },
-        { a: [spieler[1], spieler[3]], b: [spieler[4], spieler[0]], pause: [spieler[2]] }
+    const basePlan5 = [
+      { p1: [0, 1], p2: [2, 3], pause: [4] },
+      { p1: [1, 2], p2: [3, 4], pause: [0] },
+      { p1: [2, 3], p2: [4, 0], pause: [1] },
+      { p1: [3, 4], p2: [0, 1], pause: [2] },
+      { p1: [4, 0], p2: [1, 2], pause: [3] }
     ];
-}
 
-function addPoint(team) {
-    if(team === 'A') ptsA++;
-    else ptsB++;
-    document.getElementById('watchValA').textContent = ptsA;
-    document.getElementById('watchValB').textContent = ptsB;
-}
+    const basePlan6 = [
+      { p1: [0, 1], p2: [2, 3], pause: [4, 5] },
+      { p1: [2, 4], p2: [3, 5], pause: [0, 1] },
+      { p1: [0, 5], p2: [1, 4], pause: [2, 3] },
+      { p1: [1, 3], p2: [0, 2], pause: [4, 5] },
+      { p1: [0, 4], p2: [1, 5], pause: [2, 3] },
+      { p1: [2, 5], p2: [3, 4], pause: [0, 1] }
+    ];
 
-function submitWatchScore() {
-    if(ptsA === 0 && ptsB === 0) {
-        if(!confirm("Mit 0:0 speichern?")) return;
-    }
-    let match = spielplan[aktuelleRunde - 1];
-    if(!match) return;
+    function setMode(newMode) {
+      mode = newMode;
+      document.getElementById('btn6').classList.toggle('active', mode === 6);
+      document.getElementById('btn5').classList.toggle('active', mode === 5);
+      
+      const selectBox = document.getElementById('selection-box');
 
-    match.a.forEach(p => { spielerStats[p].sp++; spielerStats[p].pkt += ptsA; });
-    match.b.forEach(p => { spielerStats[p].sp++; spielerStats[p].pkt += ptsB; });
+      if (mode === 6) {
+        selectBox.style.display = 'none';
+        activePlayers = [...allMasterPlayers];
+        totalRounds = 12;
+      } else {
+        selectBox.style.display = 'block';
+        activePlayers = allMasterPlayers.slice(0, 5);
+        totalRounds = 15;
+        renderCheckboxes();
+      }
 
-    ptsA = 0; ptsB = 0;
-    document.getElementById('watchValA').textContent = 0;
-    document.getElementById('watchValB').textContent = 0;
-
-    aktuelleRunde++;
-    render();
-}
-
-function render() {
-    let match = spielplan[aktuelleRunde - 1];
-    if(match) {
-        document.getElementById('watchMatchTitle').textContent = `Runde ${aktuelleRunde} von 5`;
-        document.getElementById('watchLabelA').textContent = `${match.a[0]} & ${match.a[1]}`;
-        document.getElementById('watchLabelB').textContent = `${match.b[0]} & ${match.b[1]}`;
-    } else {
-        document.getElementById('watchMatchTitle').textContent = "Turnier Beendet!";
-        document.getElementById('watchLabelA').textContent = "-";
-        document.getElementById('watchLabelB').textContent = "-";
+      renderPlan();
+      calculateStats();
     }
 
-    // Rangliste
-    let sorted = Object.keys(spielerStats).map(k => ({ name: k, ...spielerStats[k] })).sort((a,b) => b.pkt - a.pkt);
-    let rHtml = "";
-    sorted.forEach((r, i) => {
-        rHtml += `<tr><td><b>${i+1}</b></td><td>${r.name}</td><td>${r.sp}</td><td><b>${r.pkt}</b></td></tr>`;
-    });
-    document.getElementById('rankBody').innerHTML = rHtml;
+    function onSettingsChange() {
+      renderPlan();
+      calculateStats();
+    }
 
-    // Spielplan
-    let pHtml = "";
-    spielplan.forEach((m, i) => {
-        let active = (i + 1 === aktuelleRunde) ? "style='background:#e8f4fd;font-weight:bold;'" : "";
-        pHtml += `<tr ${active}><td>R.${i+1}</td><td>${m.a[0]}/${m.a[1]} vs ${m.b[0]}/${m.b[1]}</td><td>${m.pause.join(', ')}</td></tr>`;
-    });
-    document.getElementById('planBody').innerHTML = pHtml;
-}
+    function renderCheckboxes() {
+      const container = document.getElementById('checkboxes-container');
+      container.innerHTML = '';
+      
+      allMasterPlayers.forEach(name => {
+        const isChecked = activePlayers.includes(name);
+        const label = document.createElement('label');
+        label.innerHTML = `
+          <input type="checkbox" value="${name}" ${isChecked ? 'checked' : ''} onchange="onCheckboxChange()">
+          ${name}
+        `;
+        container.appendChild(label);
+      });
+    }
 
-function showTab(tab) {
-    document.getElementById('rankSection').classList.toggle('active-section', tab === 'rank');
-    document.getElementById('planSection').classList.toggle('active-section', tab === 'plan');
-    document.getElementById('rankBtn').classList.toggle('active-tab', tab === 'rank');
-    document.getElementById('planBtn').classList.toggle('active-tab', tab === 'plan');
-}
+    function onCheckboxChange() {
+      const checkboxes = document.querySelectorAll('#checkboxes-container input[type="checkbox"]:checked');
+      const selected = Array.from(checkboxes).map(cb => cb.value);
 
-window.onload = function() {
-    buildInputs();
-    initStats();
-    generateSchedule();
-    render();
-};
-</script></body></html>
+      if (selected.length === 5) {
+        activePlayers = selected;
+        renderPlan();
+        calculateStats();
+      } else if (selected.length > 5) {
+        alert("Bitte genau 5 Spieler auswählen!");
+        renderCheckboxes();
+      }
+    }
+
+    function shuffleActivePlayers() {
+      for (let i = activePlayers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [activePlayers[i], activePlayers[j]] = [activePlayers[j], activePlayers[i]];
+      }
+      renderPlan();
+      calculateStats();
+    }
+
+    function handleScoreInput(roundNum, changedTeam) {
+      const targetPoints = parseInt(document.getElementById('target-points-input').value) || 31;
+      const t1Input = document.getElementById(`r${roundNum}-t1`);
+      const t2Input = document.getElementById(`r${roundNum}-t2`);
+
+      if (changedTeam === 1 && t1Input.value !== "") {
+        let val1 = parseInt(t1Input.value) || 0;
+        if (val1 > targetPoints) val1 = targetPoints;
+        t1Input.value = val1;
+        t2Input.value = targetPoints - val1;
+      } else if (changedTeam === 2 && t2Input.value !== "") {
+        let val2 = parseInt(t2Input.value) || 0;
+        if (val2 > targetPoints) val2 = targetPoints;
+        t2Input.value = val2;
+        t1Input.value = targetPoints - val2;
+      }
+
+      calculateStats();
+    }
+
+    function renderPlan() {
+      const container = document.getElementById('plan-container');
+      container.innerHTML = '';
+      const basePlan = mode === 5 ? basePlan5 : basePlan6;
+      const targetPoints = parseInt(document.getElementById('target-points-input').value) || 31;
+
+      for (let i = 0; i < totalRounds; i++) {
+        const item = basePlan[i % basePlan.length];
+        const roundNum = i + 1;
+
+        const team1 = item.p1.map(idx => activePlayers[idx]).join(' & ');
+        const team2 = item.p2.map(idx => activePlayers[idx]).join(' & ');
+        const pause = item.pause.map(idx => activePlayers[idx]).join(' & ');
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="round-header">
+            <span>Runde ${roundNum}</span>
+            <span style="font-size: 11px; color: var(--text-muted);">${targetPoints} Pkt</span>
+          </div>
+          <div class="match-up">
+            <span class="team">${team1}</span>
+            <span class="vs">VS</span>
+            <span class="team">${team2}</span>
+          </div>
+          <div class="pause">☕ Pause: <strong>${pause}</strong></div>
+          <div class="score-inputs">
+            <input type="number" id="r${roundNum}-t1" placeholder="T1" min="0" max="${targetPoints}" oninput="handleScoreInput(${roundNum}, 1)">
+            <span style="color:#555;">:</span>
+            <input type="number" id="r${roundNum}-t2" placeholder="T2" min="0" max="${targetPoints}" oninput="handleScoreInput(${roundNum}, 2)">
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function addExtraRound() {
+      totalRounds++;
+      renderPlan();
+      calculateStats();
+    }
+
+    function calculateStats() {
+      const pausePoints = parseInt(document.getElementById('pause-points-input').value) || 0;
+      const stats = {};
+      
+      activePlayers.forEach(pName => {
+        stats[pName] = { points: 0, matches: 0 };
+      });
+
+      const basePlan = mode === 5 ? basePlan5 : basePlan6;
+
+      for (let i = 0; i < totalRounds; i++) {
+        const roundNum = i + 1;
+        const item = basePlan[i % basePlan.length];
+        
+        const s1Input = document.getElementById(`r${roundNum}-t1`);
+        const s2Input = document.getElementById(`r${roundNum}-t2`);
+
+        if (s1Input && s2Input && s1Input.value !== "" && s2Input.value !== "") {
+          const s1 = parseInt(s1Input.value) || 0;
+          const s2 = parseInt(s2Input.value) || 0;
+
+          item.p1.forEach(idx => {
+            const name = activePlayers[idx];
+            if(stats[name]) { stats[name].points += s1; stats[name].matches += 1; }
+          });
+
+          item.p2.forEach(idx => {
+            const name = activePlayers[idx];
+            if(stats[name]) { stats[name].points += s2; stats[name].matches += 1; }
+          });
+
+          if (pausePoints > 0) {
+            item.pause.forEach(idx => {
+              const name = activePlayers[idx];
+              if(stats[name]) { stats[name].points += pausePoints; }
+            });
+          }
+        }
+      }
+
+      updateLeaderboard(stats);
+    }
+
+    function updateLeaderboard(stats = null) {
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = '';
+
+      if (!stats) {
+        stats = {};
+        activePlayers.forEach(pName => {
+          stats[pName] = { points: 0, matches: 0 };
+        });
+      }
+
+      const sorted = Object.keys(stats).map(name => ({
+        name: name,
+        points: stats[name].points,
+        matches: stats[name].matches
+      })).sort((a, b) => b.points - a.points);
+
+      sorted.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="rank">${index + 1}</td>
+          <td style="font-weight: bold;">${item.name}</td>
+          <td style="text-align: center; color: var(--text-muted);">${item.matches}</td>
+          <td style="text-align: right; font-weight: bold; color: var(--accent);">${item.points}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // App direkt aufrufen
+    setMode(6);
+  </script>
+</body>
+</html>
