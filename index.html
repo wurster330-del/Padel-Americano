@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Padel Manager - iPad Air Optimiert</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Padel Manager - Big Pause Highlight</title>
   <style>
     :root {
       --bg: #121212;
@@ -22,21 +22,20 @@
       color: var(--text);
       padding: 10px;
       margin: 0 auto;
-      max-width: 1100px; /* Perfekt für iPad Pro / iPad Air */
+      max-width: 1100px;
     }
 
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       border-bottom: 1px solid #333;
-      padding-bottom: 5px;
+      padding-bottom: 4px;
     }
 
     h1 { color: var(--accent); margin: 0; font-size: 20px; }
 
-    /* Layout-Grid für iPad */
     .app-layout {
       display: grid;
       grid-template-columns: 1fr;
@@ -45,7 +44,7 @@
 
     @media (min-width: 768px) {
       .app-layout {
-        grid-template-columns: 320px 1fr; /* Links Dashboard/Tabelle, Rechts Spielplan */
+        grid-template-columns: 310px 1fr;
         align-items: start;
       }
     }
@@ -70,11 +69,11 @@
       color: #ffca28;
       border-bottom: 1px solid #333;
       padding-bottom: 3px;
-      margin-top: 10px;
+      margin-top: 6px;
       margin-bottom: 8px;
     }
 
-    /* Settings & Select Bar */
+    /* Settings Bar */
     .settings-card {
       background-color: var(--card-bg);
       padding: 8px 10px;
@@ -87,20 +86,24 @@
     .setting-item {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 4px;
       font-size: 11px;
       color: var(--text-muted);
     }
-    .setting-item input {
-      padding: 5px;
+    
+    .setting-tile {
+      padding: 6px 8px;
       border-radius: 4px;
       border: 1px solid #444;
       background-color: #2c2c2c;
-      color: #fff;
-      font-size: 13px;
+      color: #00e676;
+      font-size: 14px;
       font-weight: bold;
       text-align: center;
+      cursor: pointer;
+      user-select: none;
     }
+    .setting-tile:active { background-color: #333; }
 
     /* Checkboxes */
     .player-select-container {
@@ -134,13 +137,13 @@
     td { padding: 6px 2px; font-size: 13px; border-bottom: 1px solid #2a2a2a; }
     .rank { font-weight: bold; color: var(--accent); width: 20px; }
 
-    /* Matches Grid für Spielplan */
+    /* Matches Grid */
     .plan-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 8px;
       max-height: 82vh;
-      overflow-y: auto; /* Scrollt nur den rechten Bereich, falls nötig */
+      overflow-y: auto;
       padding-right: 5px;
     }
 
@@ -158,7 +161,21 @@
       margin-bottom: 4px;
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
+
+    .target-badge {
+      background: #111;
+      border: 1px solid #555;
+      color: #00e676;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .target-badge:active { background: #333; }
+
     .match-up {
       display: flex;
       justify-content: space-between;
@@ -168,44 +185,112 @@
     }
     .team { font-weight: bold; width: 42%; text-align: center; }
     .vs { color: #777; font-size: 11px; }
+
+    /* DEUTLICH GRÖSSERE PAUSEN-ANZEIGE */
     .pause {
-      background-color: #2a2a2a;
-      padding: 4px;
-      border-radius: 4px;
-      font-size: 11px;
-      color: var(--text-muted);
+      background-color: #2d2415;
+      border: 1px solid #ff9800;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #ffca28;
       text-align: center;
-      margin-top: 4px;
+      margin: 6px 0;
     }
+    .pause-names {
+      display: block;
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Interaktive Score-Kacheln */
     .score-inputs {
       display: flex;
-      gap: 6px;
+      gap: 10px;
       margin-top: 6px;
       align-items: center;
+      justify-content: center;
     }
-    input[type="number"] {
-      width: 100%;
-      padding: 5px;
-      border-radius: 4px;
-      border: 1px solid #444;
+    .score-tile {
+      flex: 1;
       background-color: #2c2c2c;
-      color: #fff;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px 0;
       text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #00e676;
+      cursor: pointer;
+      user-select: none;
+    }
+    .score-tile:active { background-color: #333; }
+    .score-tile.empty { color: #777; font-size: 12px; font-weight: normal; }
+
+    /* Pop-up Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 15px;
+      width: 90%;
+      max-width: 420px;
+      border: 1px solid #444;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .modal-header {
       font-size: 14px;
       font-weight: bold;
+      color: var(--accent);
+      margin-bottom: 12px;
+      text-align: center;
     }
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .num-btn {
+      padding: 12px 0;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .num-btn:active { background: var(--accent-blue); color: #000; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>🎾 Padel Manager</h1>
-    <span style="font-size: 12px; color: var(--text-muted);">180 Min iPad Display View</span>
+    <span style="font-size: 12px; color: var(--text-muted);">iPad View (Pure Touch)</span>
   </header>
 
   <div class="app-layout">
     
-    <!-- Linke Spalte: Controls & Tabelle -->
+    <!-- Linke Spalte -->
     <div class="sidebar">
       <div class="btn-group">
         <button id="btn6" class="active" onclick="setMode(6)">6 Spieler</button>
@@ -214,12 +299,12 @@
 
       <div class="settings-card">
         <div class="setting-item">
-          <label>🎯 Zielpunkte:</label>
-          <input type="number" id="target-points-input" value="31" min="1" oninput="onSettingsChange()">
+          <label>🎯 Standard Ziel:</label>
+          <div id="global-target-tile" class="setting-tile" onclick="openGlobalTargetPicker()">31 Pkt</div>
         </div>
         <div class="setting-item">
           <label>☕ Bank-Punkte:</label>
-          <input type="number" id="pause-points-input" value="0" min="0" oninput="calculateStats()">
+          <div id="pause-points-tile" class="setting-tile" onclick="openPausePointsPicker()">0 Pkt</div>
         </div>
       </div>
 
@@ -250,7 +335,7 @@
       <button class="action-btn" style="width: 100%; padding: 8px; margin-top: 10px; background-color: var(--accent-blue); color: #000; font-weight: bold; font-size: 12px;" onclick="addExtraRound()">➕ Runde hinzufügen</button>
     </div>
 
-    <!-- Rechte Spalte: Spielplan -->
+    <!-- Rechte Spalte -->
     <div class="main-content">
       <div class="section-title" style="margin-top: 0;">📅 Spielplan</div>
       <div class="plan-grid" id="plan-container"></div>
@@ -258,11 +343,27 @@
 
   </div>
 
+  <!-- Pop-up Overlay -->
+  <div id="picker-modal" class="modal-overlay" onclick="closePicker(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div id="modal-title" class="modal-header">Punkte wählen</div>
+      <div id="number-grid" class="number-grid"></div>
+      <button class="action-btn" style="width: 100%; margin-top: 12px; padding: 10px;" onclick="closePicker()">Abbrechen</button>
+    </div>
+  </div>
+
   <script>
     const allMasterPlayers = ["Werner", "Marco", "Tobias", "Christian", "David", "Stefan"];
     let activePlayers = [...allMasterPlayers];
     let mode = 6;
-    let totalRounds = 12;
+    let totalRounds = 15;
+    let globalTargetPoints = 31;
+    let pausePoints = 0;
+
+    let currentActiveRound = null;
+    let currentActiveTeam = null;
+
+    const matchScores = {};
 
     const basePlan5 = [
       { p1: [0, 1], p2: [2, 3], pause: [4] },
@@ -274,11 +375,20 @@
 
     const basePlan6 = [
       { p1: [0, 1], p2: [2, 3], pause: [4, 5] },
-      { p1: [2, 4], p2: [3, 5], pause: [0, 1] },
+      { p1: [4, 5], p2: [0, 2], pause: [1, 3] },
+      { p1: [1, 3], p2: [4, 2], pause: [0, 5] },
       { p1: [0, 5], p2: [1, 4], pause: [2, 3] },
-      { p1: [1, 3], p2: [0, 2], pause: [4, 5] },
-      { p1: [0, 4], p2: [1, 5], pause: [2, 3] },
-      { p1: [2, 5], p2: [3, 4], pause: [0, 1] }
+      { p1: [2, 3], p2: [0, 4], pause: [1, 5] },
+      { p1: [1, 5], p2: [2, 5], pause: [0, 4] },
+      { p1: [0, 3], p2: [1, 2], pause: [4, 5] },
+      { p1: [4, 2], p2: [3, 5], pause: [0, 1] },
+      { p1: [0, 1], p2: [4, 5], pause: [2, 3] },
+      { p1: [2, 5], p2: [0, 3], pause: [1, 4] },
+      { p1: [1, 4], p2: [2, 3], pause: [0, 5] },
+      { p1: [0, 2], p2: [1, 5], pause: [3, 4] },
+      { p1: [3, 4], p2: [0, 5], pause: [1, 2] },
+      { p1: [1, 2], p2: [3, 4], pause: [0, 5] },
+      { p1: [0, 4], p2: [1, 3], pause: [2, 5] }
     ];
 
     function setMode(newMode) {
@@ -291,7 +401,7 @@
       if (mode === 6) {
         selectBox.style.display = 'none';
         activePlayers = [...allMasterPlayers];
-        totalRounds = 12;
+        totalRounds = 15;
       } else {
         selectBox.style.display = 'block';
         activePlayers = allMasterPlayers.slice(0, 5);
@@ -299,11 +409,6 @@
         renderCheckboxes();
       }
 
-      renderPlan();
-      calculateStats();
-    }
-
-    function onSettingsChange() {
       renderPlan();
       calculateStats();
     }
@@ -346,23 +451,129 @@
       calculateStats();
     }
 
-    function handleScoreInput(roundNum, changedTeam) {
-      const targetPoints = parseInt(document.getElementById('target-points-input').value) || 31;
-      const t1Input = document.getElementById(`r${roundNum}-t1`);
-      const t2Input = document.getElementById(`r${roundNum}-t2`);
+    function getRoundTarget(roundNum) {
+      const scoreObj = matchScores[roundNum];
+      if (scoreObj && scoreObj.customTarget !== undefined) {
+        return scoreObj.customTarget;
+      }
+      return globalTargetPoints;
+    }
 
-      if (changedTeam === 1 && t1Input.value !== "") {
-        let val1 = parseInt(t1Input.value) || 0;
-        if (val1 > targetPoints) val1 = targetPoints;
-        t1Input.value = val1;
-        t2Input.value = targetPoints - val1;
-      } else if (changedTeam === 2 && t2Input.value !== "") {
-        let val2 = parseInt(t2Input.value) || 0;
-        if (val2 > targetPoints) val2 = targetPoints;
-        t2Input.value = val2;
-        t1Input.value = targetPoints - val2;
+    function openGlobalTargetPicker() {
+      document.getElementById('modal-title').innerText = "Standard Zielpunkte wählen";
+      
+      const grid = document.getElementById('number-grid');
+      grid.innerHTML = '';
+
+      for (let i = 15; i <= 40; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'num-btn';
+        btn.innerText = i;
+        btn.onclick = () => {
+          globalTargetPoints = i;
+          document.getElementById('global-target-tile').innerText = `${globalTargetPoints} Pkt`;
+          renderPlan();
+          closePicker();
+          calculateStats();
+        };
+        grid.appendChild(btn);
       }
 
+      document.getElementById('picker-modal').classList.add('open');
+    }
+
+    function openPausePointsPicker() {
+      document.getElementById('modal-title').innerText = "Bank-Punkte wählen";
+      
+      const grid = document.getElementById('number-grid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i <= 20; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'num-btn';
+        btn.innerText = i;
+        btn.onclick = () => {
+          pausePoints = i;
+          document.getElementById('pause-points-tile').innerText = `${pausePoints} Pkt`;
+          closePicker();
+          calculateStats();
+        };
+        grid.appendChild(btn);
+      }
+
+      document.getElementById('picker-modal').classList.add('open');
+    }
+
+    function openScorePicker(roundNum, team) {
+      currentActiveRound = roundNum;
+      currentActiveTeam = team;
+
+      const maxPoints = getRoundTarget(roundNum);
+      document.getElementById('modal-title').innerText = `Runde ${roundNum}: Punkte T${team} wählen`;
+      
+      const grid = document.getElementById('number-grid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i <= maxPoints; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'num-btn';
+        btn.innerText = i;
+        btn.onclick = () => selectScoreValue(i, maxPoints);
+        grid.appendChild(btn);
+      }
+
+      document.getElementById('picker-modal').classList.add('open');
+    }
+
+    function openTargetPicker(roundNum) {
+      currentActiveRound = roundNum;
+
+      document.getElementById('modal-title').innerText = `Runde ${roundNum}: Neue Zielpunkte wählen`;
+      
+      const grid = document.getElementById('number-grid');
+      grid.innerHTML = '';
+
+      for (let i = 15; i <= 40; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'num-btn';
+        btn.innerText = i;
+        btn.onclick = () => selectRoundTargetValue(i);
+        grid.appendChild(btn);
+      }
+
+      document.getElementById('picker-modal').classList.add('open');
+    }
+
+    function closePicker() {
+      document.getElementById('picker-modal').classList.remove('open');
+    }
+
+    function selectScoreValue(val, maxPoints) {
+      if (!matchScores[currentActiveRound]) matchScores[currentActiveRound] = {};
+
+      if (currentActiveTeam === 1) {
+        matchScores[currentActiveRound].t1 = val;
+        matchScores[currentActiveRound].t2 = maxPoints - val;
+      } else {
+        matchScores[currentActiveRound].t2 = val;
+        matchScores[currentActiveRound].t1 = maxPoints - val;
+      }
+
+      renderPlan();
+      closePicker();
+      calculateStats();
+    }
+
+    function selectRoundTargetValue(newTarget) {
+      if (!matchScores[currentActiveRound]) matchScores[currentActiveRound] = {};
+      
+      matchScores[currentActiveRound].customTarget = newTarget;
+
+      delete matchScores[currentActiveRound].t1;
+      delete matchScores[currentActiveRound].t2;
+
+      renderPlan();
+      closePicker();
       calculateStats();
     }
 
@@ -370,7 +581,6 @@
       const container = document.getElementById('plan-container');
       container.innerHTML = '';
       const basePlan = mode === 5 ? basePlan5 : basePlan6;
-      const targetPoints = parseInt(document.getElementById('target-points-input').value) || 31;
 
       for (let i = 0; i < totalRounds; i++) {
         const item = basePlan[i % basePlan.length];
@@ -380,23 +590,37 @@
         const team2 = item.p2.map(idx => activePlayers[idx]).join(' & ');
         const pause = item.pause.map(idx => activePlayers[idx]).join(' & ');
 
+        const scoreObj = matchScores[roundNum] || {};
+        const targetVal = getRoundTarget(roundNum);
+
+        const t1Val = scoreObj.t1 !== undefined ? scoreObj.t1 : 'Pkt T1';
+        const t2Val = scoreObj.t2 !== undefined ? scoreObj.t2 : 'Pkt T2';
+
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <div class="round-header">
             <span>Runde ${roundNum}</span>
-            <span style="font-size: 11px; color: var(--text-muted);">${targetPoints} Pkt</span>
+            <div class="target-badge" onclick="openTargetPicker(${roundNum})">
+              Ziel: ${targetVal} Pkt ✏️
+            </div>
           </div>
           <div class="match-up">
             <span class="team">${team1}</span>
             <span class="vs">VS</span>
             <span class="team">${team2}</span>
           </div>
-          <div class="pause">☕ Pause: <strong>${pause}</strong></div>
+          
+          <!-- HIER IST DIE NEUE GROSSE PAUSEN-BOX -->
+          <div class="pause">
+            ☕ PAUSE
+            <span class="pause-names">${pause}</span>
+          </div>
+
           <div class="score-inputs">
-            <input type="number" id="r${roundNum}-t1" placeholder="T1" min="0" max="${targetPoints}" oninput="handleScoreInput(${roundNum}, 1)">
-            <span style="color:#555;">:</span>
-            <input type="number" id="r${roundNum}-t2" placeholder="T2" min="0" max="${targetPoints}" oninput="handleScoreInput(${roundNum}, 2)">
+            <div class="score-tile ${scoreObj.t1 === undefined ? 'empty' : ''}" onclick="openScorePicker(${roundNum}, 1)">${t1Val}</div>
+            <span style="color:#555; font-weight:bold;">:</span>
+            <div class="score-tile ${scoreObj.t2 === undefined ? 'empty' : ''}" onclick="openScorePicker(${roundNum}, 2)">${t2Val}</div>
           </div>
         `;
         container.appendChild(card);
@@ -410,7 +634,6 @@
     }
 
     function calculateStats() {
-      const pausePoints = parseInt(document.getElementById('pause-points-input').value) || 0;
       const stats = {};
       
       activePlayers.forEach(pName => {
@@ -422,13 +645,11 @@
       for (let i = 0; i < totalRounds; i++) {
         const roundNum = i + 1;
         const item = basePlan[i % basePlan.length];
-        
-        const s1Input = document.getElementById(`r${roundNum}-t1`);
-        const s2Input = document.getElementById(`r${roundNum}-t2`);
+        const scoreObj = matchScores[roundNum];
 
-        if (s1Input && s2Input && s1Input.value !== "" && s2Input.value !== "") {
-          const s1 = parseInt(s1Input.value) || 0;
-          const s2 = parseInt(s2Input.value) || 0;
+        if (scoreObj && scoreObj.t1 !== undefined && scoreObj.t2 !== undefined) {
+          const s1 = scoreObj.t1;
+          const s2 = scoreObj.t2;
 
           item.p1.forEach(idx => {
             const name = activePlayers[idx];
@@ -481,7 +702,6 @@
       });
     }
 
-    // App direkt aufrufen
     setMode(6);
   </script>
 </body>
