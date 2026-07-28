@@ -106,27 +106,7 @@
     }
     .setting-tile:active { background-color: #333; }
 
-    /* Checkboxes & Namenseditor */
-    .player-select-container {
-      background-color: var(--card-bg);
-      padding: 8px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
-    .player-checkboxes {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-top: 4px;
-    }
-    .player-checkboxes label {
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-    }
-
+    /* Namenseditor & Auswahl */
     .edit-names-list {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -136,15 +116,32 @@
     .player-name-chip {
       background-color: #2a2a2a;
       border: 1px solid #444;
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 6px 8px;
+      border-radius: 6px;
       font-size: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: pointer;
     }
-    .player-name-chip:hover { border-color: var(--accent-blue); }
+    .player-name-chip.inactive {
+      opacity: 0.4;
+      border-color: #333;
+    }
+    .player-name-chip .name-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .edit-icon {
+      color: #777;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    .edit-icon:hover { color: var(--accent-blue); }
 
     /* Leaderboard Table */
     .table-container {
@@ -307,7 +304,7 @@
 
   <header>
     <h1>🎾 Padel Manager Pro</h1>
-    <span style="font-size: 12px; color: var(--text-muted);">Fair Play & Balanced Pause</span>
+    <span style="font-size: 12px; color: var(--text-muted);">Flexibel & Transparent</span>
   </header>
 
   <div class="app-layout">
@@ -319,8 +316,8 @@
         <button id="btn5" onclick="setMode(5)">5 Spieler</button>
       </div>
 
-      <!-- Namenseditor -->
-      <div class="section-title">✏️ Spieler bearbeiten</div>
+      <!-- Namenseditor mit Checkbox-Funktion -->
+      <div class="section-title">👥 Spieler (Namen & Auswahl)</div>
       <div class="edit-names-list" id="names-editor-container"></div>
 
       <div class="settings-card">
@@ -332,11 +329,6 @@
           <label>☕ Bank-Punkte:</label>
           <div id="pause-points-tile" class="setting-tile" onclick="openPausePointsPicker()">0 Pkt</div>
         </div>
-      </div>
-
-      <div id="selection-box" class="player-select-container" style="display: none;">
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Aktive 5 auswählen:</div>
-        <div class="player-checkboxes" id="checkboxes-container"></div>
       </div>
 
       <div class="btn-group">
@@ -393,7 +385,6 @@
 
     const matchScores = {};
 
-    // Perfekt ausbalancierte Pausen-Spielpläne (Keine Doppelpausen & gleichmäßige Abstände)
     const basePlan5 = [
       { p1: [0, 1], p2: [2, 3], pause: [4] },
       { p1: [1, 2], p2: [3, 4], pause: [0] },
@@ -425,12 +416,47 @@
       container.innerHTML = '';
       
       allMasterPlayers.forEach((name, index) => {
+        const isSelected = activePlayers.includes(name);
         const chip = document.createElement('div');
-        chip.className = 'player-name-chip';
-        chip.innerHTML = `<span>${name}</span><span style="color:#777; font-size:10px;">✏️</span>`;
-        chip.onclick = () => renamePlayer(index);
+        chip.className = `player-name-chip ${mode === 5 && !isSelected ? 'inactive' : ''}`;
+        
+        let checkboxHTML = '';
+        if (mode === 5) {
+          checkboxHTML = `<input type="checkbox" ${isSelected ? 'checked' : ''} onchange="togglePlayerSelection('${name}')">`;
+        }
+
+        chip.innerHTML = `
+          <div class="name-label">
+            ${checkboxHTML}
+            <span>${name}</span>
+          </div>
+          <span class="edit-icon" onclick="renamePlayer(${index})">✏️</span>
+        `;
         container.appendChild(chip);
       });
+    }
+
+    function togglePlayerSelection(name) {
+      if (activePlayers.includes(name)) {
+        if (activePlayers.length <= 5) {
+          // Spieler entfernen
+          activePlayers = activePlayers.filter(p => p !== name);
+        }
+      } else {
+        if (activePlayers.length < 5) {
+          activePlayers.push(name);
+        } else {
+          alert("Es können im 5er-Modus nur genau 5 Spieler aktiv sein!");
+        }
+      }
+
+      if (activePlayers.length === 5) {
+        renderNamesEditor();
+        renderPlan();
+        calculateStats();
+      } else {
+        renderNamesEditor();
+      }
     }
 
     function renamePlayer(index) {
@@ -448,7 +474,6 @@
         }
 
         renderNamesEditor();
-        if (mode === 5) renderCheckboxes();
         renderPlan();
         calculateStats();
       }
@@ -458,55 +483,24 @@
       mode = newMode;
       document.getElementById('btn6').classList.toggle('active', mode === 6);
       document.getElementById('btn5').classList.toggle('active', mode === 5);
-      
-      const selectBox = document.getElementById('selection-box');
 
       if (mode === 6) {
-        selectBox.style.display = 'none';
         activePlayers = [...allMasterPlayers];
-        totalRounds = 15;
       } else {
-        selectBox.style.display = 'block';
         activePlayers = allMasterPlayers.slice(0, 5);
-        totalRounds = 15;
-        renderCheckboxes();
       }
+      totalRounds = 15;
 
       renderNamesEditor();
       renderPlan();
       calculateStats();
     }
 
-    function renderCheckboxes() {
-      const container = document.getElementById('checkboxes-container');
-      container.innerHTML = '';
-      
-      allMasterPlayers.forEach(name => {
-        const isChecked = activePlayers.includes(name);
-        const label = document.createElement('label');
-        label.innerHTML = `
-          <input type="checkbox" value="${name}" ${isChecked ? 'checked' : ''} onchange="onCheckboxChange()">
-          ${name}
-        `;
-        container.appendChild(label);
-      });
-    }
-
-    function onCheckboxChange() {
-      const checkboxes = document.querySelectorAll('#checkboxes-container input[type="checkbox"]:checked');
-      const selected = Array.from(checkboxes).map(cb => cb.value);
-
-      if (selected.length === 5) {
-        activePlayers = selected;
-        renderPlan();
-        calculateStats();
-      } else if (selected.length > 5) {
-        alert("Bitte genau 5 Spieler auswählen!");
-        renderCheckboxes();
-      }
-    }
-
     function shuffleActivePlayers() {
+      if (mode === 5 && activePlayers.length !== 5) {
+        alert("Bitte wähle zuerst genau 5 Spieler aus!");
+        return;
+      }
       for (let i = activePlayers.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [activePlayers[i], activePlayers[j]] = [activePlayers[j], activePlayers[i]];
@@ -569,6 +563,10 @@
     }
 
     function openScorePicker(roundNum, team) {
+      if (mode === 5 && activePlayers.length !== 5) {
+        alert("Bitte genau 5 Spieler auswählen!");
+        return;
+      }
       currentActiveRound = roundNum;
       currentActiveTeam = team;
 
@@ -644,6 +642,12 @@
     function renderPlan() {
       const container = document.getElementById('plan-container');
       container.innerHTML = '';
+
+      if (mode === 5 && activePlayers.length !== 5) {
+        container.innerHTML = `<div style="padding: 20px; color: #ff5252; font-weight: bold; text-align: center;">Bitte wähle in der linken Leiste genau 5 Spieler aus, um den Spielplan zu sehen.</div>`;
+        return;
+      }
+
       const basePlan = mode === 5 ? basePlan5 : basePlan6;
 
       for (let i = 0; i < totalRounds; i++) {
@@ -702,6 +706,11 @@
       activePlayers.forEach(pName => {
         stats[pName] = { points: 0, matches: 0, wins: 0, losses: 0 };
       });
+
+      if (mode === 5 && activePlayers.length !== 5) {
+        updateLeaderboard(null);
+        return;
+      }
 
       const basePlan = mode === 5 ? basePlan5 : basePlan6;
 
