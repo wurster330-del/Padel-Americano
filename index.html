@@ -134,6 +134,7 @@
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
+      cursor: pointer;
     }
     .edit-icon {
       color: #777;
@@ -205,7 +206,7 @@
     .team { font-weight: bold; width: 42%; text-align: center; }
     .vs { color: #777; font-size: 11px; }
 
-    /* GROSSE PAUSEN-ANZEIGE */
+    /* PAUSEN-ANZEIGE */
     .pause {
       background-color: #2d2415;
       border: 1px solid #ff9800;
@@ -225,7 +226,7 @@
       letter-spacing: 0.5px;
     }
 
-    /* Interaktive Score-Kacheln */
+    /* Score-Kacheln */
     .score-inputs {
       display: flex;
       gap: 10px;
@@ -299,7 +300,6 @@
     }
     .num-btn:active { background: var(--accent-blue); color: #000; }
 
-    /* Text-Eingabefeld im Modal für Tastatur-Kompatibilität */
     .text-input-field {
       width: 100%;
       padding: 12px;
@@ -332,7 +332,6 @@
         <button id="btn5" onclick="setMode(5)">5 Spieler</button>
       </div>
 
-      <!-- Namenseditor mit Checkbox-Funktion -->
       <div class="section-title">👥 Spieler (Namen & Auswahl)</div>
       <div class="edit-names-list" id="names-editor-container"></div>
 
@@ -394,7 +393,9 @@
 
   <script>
     let allMasterPlayers = ["Werner", "Marco", "Tobias", "Christian", "David", "Stefan"];
+    let selected5Players = ["Werner", "Marco", "Tobias", "Christian", "David"]; // Merkt sich immer die 5 aktiven
     let activePlayers = [...allMasterPlayers];
+    
     let mode = 6;
     let totalRounds = 15;
     let globalTargetPoints = 31;
@@ -437,7 +438,7 @@
       container.innerHTML = '';
       
       allMasterPlayers.forEach((name, index) => {
-        const isSelected = activePlayers.includes(name);
+        const isSelected = selected5Players.includes(name);
         const chip = document.createElement('div');
         chip.className = `player-name-chip ${mode === 5 && !isSelected ? 'inactive' : ''}`;
         
@@ -447,7 +448,7 @@
         }
 
         chip.innerHTML = `
-          <div class="name-label">
+          <div class="name-label" onclick="${mode === 5 ? `togglePlayerSelection('${name}')` : ''}">
             ${checkboxHTML}
             <span>${name}</span>
           </div>
@@ -458,28 +459,26 @@
     }
 
     function togglePlayerSelection(name) {
-      if (activePlayers.includes(name)) {
-        if (activePlayers.length <= 5) {
-          activePlayers = activePlayers.filter(p => p !== name);
+      if (mode !== 5) return;
+
+      if (selected5Players.includes(name)) {
+        if (selected5Players.length > 1) {
+          selected5Players = selected5Players.filter(p => p !== name);
         }
       } else {
-        if (activePlayers.length < 5) {
-          activePlayers.push(name);
+        if (selected5Players.length < 5) {
+          selected5Players.push(name);
         } else {
-          alert("Es können im 5er-Modus nur genau 5 Spieler aktiv sein!");
+          alert("Es sind bereits 5 Spieler ausgewählt. Bitte wähle erst einen ab!");
         }
       }
 
-      if (activePlayers.length === 5) {
-        renderNamesEditor();
-        renderPlan();
-        calculateStats();
-      } else {
-        renderNamesEditor();
-      }
+      activePlayers = [...selected5Players];
+      renderNamesEditor();
+      renderPlan();
+      calculateStats();
     }
 
-    /* NEUER NAMENSEDITOR-DIALOG FÜR ZUVERLÄSSIGE TASTATUR */
     function openRenameModal(index) {
       editingPlayerIndex = index;
       const currentName = allMasterPlayers[index];
@@ -516,9 +515,15 @@
           const oldName = allMasterPlayers[editingPlayerIndex];
           allMasterPlayers[editingPlayerIndex] = newName;
 
-          const activeIdx = activePlayers.indexOf(oldName);
-          if (activeIdx !== -1) {
-            activePlayers[activeIdx] = newName;
+          const selIdx = selected5Players.indexOf(oldName);
+          if (selIdx !== -1) {
+            selected5Players[selIdx] = newName;
+          }
+
+          if (mode === 6) {
+            activePlayers = [...allMasterPlayers];
+          } else {
+            activePlayers = [...selected5Players];
           }
 
           renderNamesEditor();
@@ -537,7 +542,7 @@
       if (mode === 6) {
         activePlayers = [...allMasterPlayers];
       } else {
-        activePlayers = allMasterPlayers.slice(0, 5);
+        activePlayers = [...selected5Players];
       }
       totalRounds = 15;
 
@@ -548,7 +553,7 @@
 
     function shuffleActivePlayers() {
       if (mode === 5 && activePlayers.length !== 5) {
-        alert("Bitte wähle zuerst genau 5 Spieler aus!");
+        alert("Bitte wähle genau 5 Spieler aus!");
         return;
       }
       for (let i = activePlayers.length - 1; i > 0; i--) {
@@ -706,7 +711,7 @@
       container.innerHTML = '';
 
       if (mode === 5 && activePlayers.length !== 5) {
-        container.innerHTML = `<div style="padding: 20px; color: #ff5252; font-weight: bold; text-align: center;">Bitte wähle in der linken Leiste genau 5 Spieler aus, um den Spielplan zu sehen.</div>`;
+        container.innerHTML = `<div style="padding: 20px; color: #ff5252; font-weight: bold; text-align: center;">Bitte genau 5 Spieler über die Häkchen auswählen! (Aktuell gewählt: ${activePlayers.length})</div>`;
         return;
       }
 
