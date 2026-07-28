@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Padelgoetter Manager Pro</title>
+  <title>Padel Manager Pro</title>
   <style>
     :root {
       --bg: #121212;
@@ -298,6 +298,22 @@
       text-align: center;
     }
     .num-btn:active { background: var(--accent-blue); color: #000; }
+
+    /* Text-Eingabefeld im Modal für Tastatur-Kompatibilität */
+    .text-input-field {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background: #2c2c2c;
+      color: #fff;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .text-input-field:focus {
+      border-color: var(--accent-blue);
+    }
   </style>
 </head>
 <body>
@@ -367,8 +383,12 @@
   <div id="picker-modal" class="modal-overlay" onclick="closePicker(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <div id="modal-title" class="modal-header">Punkte wählen</div>
-      <div id="number-grid" class="number-grid"></div>
-      <button class="action-btn" style="width: 100%; margin-top: 12px; padding: 10px;" onclick="closePicker()">Abbrechen</button>
+      <div id="modal-body-container">
+        <div id="number-grid" class="number-grid"></div>
+      </div>
+      <div id="modal-footer" style="display: flex; gap: 8px; margin-top: 12px;">
+        <button class="action-btn" style="padding: 10px;" onclick="closePicker()">Abbrechen</button>
+      </div>
     </div>
   </div>
 
@@ -382,6 +402,7 @@
 
     let currentActiveRound = null;
     let currentActiveTeam = null;
+    let editingPlayerIndex = null;
 
     const matchScores = {};
 
@@ -430,7 +451,7 @@
             ${checkboxHTML}
             <span>${name}</span>
           </div>
-          <span class="edit-icon" onclick="renamePlayer(${index})">✏️</span>
+          <span class="edit-icon" onclick="openRenameModal(${index})">✏️</span>
         `;
         container.appendChild(chip);
       });
@@ -439,7 +460,6 @@
     function togglePlayerSelection(name) {
       if (activePlayers.includes(name)) {
         if (activePlayers.length <= 5) {
-          // Spieler entfernen
           activePlayers = activePlayers.filter(p => p !== name);
         }
       } else {
@@ -459,24 +479,54 @@
       }
     }
 
-    function renamePlayer(index) {
+    /* NEUER NAMENSEDITOR-DIALOG FÜR ZUVERLÄSSIGE TASTATUR */
+    function openRenameModal(index) {
+      editingPlayerIndex = index;
       const currentName = allMasterPlayers[index];
-      const newName = prompt(`Name für Spieler ${index + 1} ändern:`, currentName);
+
+      document.getElementById('modal-title').innerText = `Name von Spieler ${index + 1} ändern`;
+      const bodyContainer = document.getElementById('modal-body-container');
       
-      if (newName && newName.trim() !== "") {
-        const cleanName = newName.trim();
-        const oldName = allMasterPlayers[index];
-        allMasterPlayers[index] = cleanName;
+      bodyContainer.innerHTML = `
+        <input type="text" id="player-name-input" class="text-input-field" value="${currentName}" autofocus placeholder="Neuer Name...">
+      `;
 
-        const activeIdx = activePlayers.indexOf(oldName);
-        if (activeIdx !== -1) {
-          activePlayers[activeIdx] = cleanName;
+      const footer = document.getElementById('modal-footer');
+      footer.innerHTML = `
+        <button class="action-btn" style="padding: 10px;" onclick="closePicker()">Abbrechen</button>
+        <button class="action-btn" style="padding: 10px; background-color: var(--accent); color: #000;" onclick="savePlayerName()">Speichern</button>
+      `;
+
+      document.getElementById('picker-modal').classList.add('open');
+
+      setTimeout(() => {
+        const inputField = document.getElementById('player-name-input');
+        if (inputField) {
+          inputField.focus();
+          inputField.select();
         }
+      }, 100);
+    }
 
-        renderNamesEditor();
-        renderPlan();
-        calculateStats();
+    function savePlayerName() {
+      const inputField = document.getElementById('player-name-input');
+      if (inputField) {
+        const newName = inputField.value.trim();
+        if (newName !== "") {
+          const oldName = allMasterPlayers[editingPlayerIndex];
+          allMasterPlayers[editingPlayerIndex] = newName;
+
+          const activeIdx = activePlayers.indexOf(oldName);
+          if (activeIdx !== -1) {
+            activePlayers[activeIdx] = newName;
+          }
+
+          renderNamesEditor();
+          renderPlan();
+          calculateStats();
+        }
       }
+      closePicker();
     }
 
     function setMode(newMode) {
@@ -519,6 +569,7 @@
 
     function openGlobalTargetPicker() {
       document.getElementById('modal-title').innerText = "Standard Zielpunkte wählen";
+      resetModalBody();
       
       const grid = document.getElementById('number-grid');
       grid.innerHTML = '';
@@ -542,6 +593,7 @@
 
     function openPausePointsPicker() {
       document.getElementById('modal-title').innerText = "Bank-Punkte wählen";
+      resetModalBody();
       
       const grid = document.getElementById('number-grid');
       grid.innerHTML = '';
@@ -572,6 +624,7 @@
 
       const maxPoints = getRoundTarget(roundNum);
       document.getElementById('modal-title').innerText = `Runde ${roundNum}: Punkte T${team} wählen`;
+      resetModalBody();
       
       const grid = document.getElementById('number-grid');
       grid.innerHTML = '';
@@ -591,6 +644,7 @@
       currentActiveRound = roundNum;
 
       document.getElementById('modal-title').innerText = `Runde ${roundNum}: Neue Zielpunkte wählen`;
+      resetModalBody();
       
       const grid = document.getElementById('number-grid');
       grid.innerHTML = '';
@@ -604,6 +658,14 @@
       }
 
       document.getElementById('picker-modal').classList.add('open');
+    }
+
+    function resetModalBody() {
+      const bodyContainer = document.getElementById('modal-body-container');
+      bodyContainer.innerHTML = '<div id="number-grid" class="number-grid"></div>';
+      
+      const footer = document.getElementById('modal-footer');
+      footer.innerHTML = '<button class="action-btn" style="width: 100%; padding: 10px;" onclick="closePicker()">Abbrechen</button>';
     }
 
     function closePicker() {
