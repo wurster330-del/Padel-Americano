@@ -33,6 +33,75 @@
       overflow: hidden;
     }
 
+    /* --- EXPLOSIVES INTRO OVERLAY --- */
+    #intro-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: rgba(13, 13, 14, 0.95);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 1;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+      pointer-events: auto;
+    }
+
+    #intro-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .intro-title {
+      font-size: 80px;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #ffd60a 0%, #ff9500 50%, #ff2d55 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 40px rgba(255, 214, 10, 0.6);
+      transform: scale(0.1);
+      opacity: 0;
+      filter: blur(20px);
+    }
+
+    /* Animation bei Start */
+    .intro-title.animate {
+      animation: explodeText 2.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes explodeText {
+      0% {
+        transform: scale(0.1) rotate(-5deg);
+        opacity: 0;
+        filter: blur(20px);
+      }
+      50% {
+        transform: scale(1.15) rotate(2deg);
+        opacity: 1;
+        filter: blur(0px);
+        text-shadow: 0 0 60px rgba(255, 214, 10, 0.9), 0 0 100px rgba(255, 45, 85, 0.8);
+      }
+      70% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.05);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .intro-title { font-size: 45px; }
+    }
+
+    /* --- REGULÄRES LAYOUT --- */
     header {
       display: flex;
       justify-content: space-between;
@@ -210,8 +279,8 @@
     }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th { color: var(--text-muted); font-size: 10px; padding: 4px; border-bottom: 1px solid var(--card-border); text-transform: uppercase; }
-    td { padding: 6px 4px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-    .rank { font-weight: 700; color: var(--accent-amber); width: 20px; }
+    td { padding: 6px 4px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .rank { font-weight: 700; color: var(--accent-amber); width: 18px; }
     .stat-win { color: var(--accent); font-weight: 700; }
     .stat-loss { color: var(--accent-red); font-weight: 700; }
 
@@ -248,7 +317,7 @@
 
     /* FOCUS / ENLARGED STATE FOR CARDS */
     .card.focused-card {
-      grid-column: 1 / -1; /* Nimmt volle Breite ein */
+      grid-column: 1 / -1;
       background: linear-gradient(145deg, #1f232a, #16181d);
       border: 2px solid var(--accent-blue);
       box-shadow: 0 12px 32px rgba(10, 132, 255, 0.25);
@@ -426,6 +495,11 @@
 </head>
 <body>
 
+  <!-- INTRO OVERLAY -->
+  <div id="intro-overlay" onclick="hideIntroNow()">
+    <div id="intro-title" class="intro-title">⚡ Padel Götter ⚡</div>
+  </div>
+
   <header>
     <h1>🎾 Padel Manager Pro <span style="font-size: 12px; background: rgba(48,209,88,0.15); color: var(--accent); padding: 2px 8px; border-radius: 6px;">Focus Mode</span></h1>
     <span style="font-size: 13px; color: var(--text-muted);">Ergebnisse & Live-Tabelle</span>
@@ -476,6 +550,7 @@
               <th style="text-align: center;">S</th>
               <th style="text-align: center;">N</th>
               <th style="text-align: center;">P</th>
+              <th style="text-align: center; color: var(--accent-amber);" title="Erhaltene Punkte für Bank-Pausen">BP</th>
               <th style="text-align: right;">Pkt</th>
             </tr>
           </thead>
@@ -484,6 +559,7 @@
       </div>
 
       <button class="action-btn" style="padding: 10px; margin-top: 2px; background-color: var(--accent-blue); color: #fff; font-weight: 700;" onclick="addExtraRound()">➕ Runde hinzufügen</button>
+      <button class="action-btn" style="padding: 8px; font-size: 11px; opacity: 0.7;" onclick="playIntroAnimation()">💥 Intro erneut abspielen</button>
     </div>
 
     <!-- Rechte Spalte -->
@@ -520,12 +596,14 @@
     let globalTargetPoints = 31;
     let pausePoints = 0;
 
-    let focusedRound = null; // Aktuell vergrößerte Runde
-    let isFocusModeActive = false; // Modus aktiv?
+    let focusedRound = null;
+    let isFocusModeActive = false;
 
     let currentActiveRound = null;
     let currentActiveTeam = null;
     let editingPlayerIndex = null;
+
+    let introTimeout = null;
 
     const matchScores = {};
 
@@ -554,6 +632,30 @@
       { p1: [0, 3], p2: [2, 5], pause: [1, 4] },
       { p1: [1, 4], p2: [0, 5], pause: [2, 3] }
     ];
+
+    /* --- INTRO FUNKTIONEN --- */
+    function playIntroAnimation() {
+      const overlay = document.getElementById('intro-overlay');
+      const title = document.getElementById('intro-title');
+      
+      if (introTimeout) clearTimeout(introTimeout);
+
+      overlay.classList.remove('hidden');
+      title.classList.remove('animate');
+
+      void title.offsetWidth;
+
+      title.classList.add('animate');
+
+      introTimeout = setTimeout(() => {
+        hideIntroNow();
+      }, 2500);
+    }
+
+    function hideIntroNow() {
+      const overlay = document.getElementById('intro-overlay');
+      overlay.classList.add('hidden');
+    }
 
     function renderNamesEditor() {
       const container = document.getElementById('names-editor-container');
@@ -748,7 +850,6 @@
       updateFocusUI();
       renderPlan();
 
-      // Automatisches sanftes Scrollen zur vergrößerten Karte
       setTimeout(() => {
         const cardElem = document.getElementById(`round-card-${roundNum}`);
         if (cardElem) {
@@ -792,7 +893,6 @@
         return;
       }
 
-      // Auto-Start des Fokus-Modus beim Tippen auf eine Zahl
       if (!isFocusModeActive) {
         startFocusOnRound(roundNum);
       } else {
@@ -866,7 +966,6 @@
       closePicker();
       calculateStats();
 
-      // AUTO-WEITERLEITUNG ZUR NÄCHSTEN RUNDE
       if (isFocusModeActive) {
         if (currentActiveRound < totalRounds) {
           startFocusOnRound(currentActiveRound + 1);
@@ -948,7 +1047,6 @@
           </div>
         `;
 
-        // Bei Klick auf die Karte Fokus aktivieren
         card.onclick = (e) => {
           if (!e.target.closest('.score-tile') && !e.target.closest('.target-badge')) {
             startFocusOnRound(roundNum);
@@ -969,7 +1067,7 @@
       const stats = {};
       
       activePlayers.forEach(pName => {
-        stats[pName] = { points: 0, matches: 0, wins: 0, losses: 0, pauses: 0 };
+        stats[pName] = { points: 0, bankPoints: 0, matches: 0, wins: 0, losses: 0, pauses: 0 };
       });
 
       if (mode === 5 && activePlayers.length !== 5) {
@@ -1016,6 +1114,7 @@
             if(stats[name]) { 
               stats[name].pauses += 1;
               if (pausePoints > 0) {
+                stats[name].bankPoints += pausePoints; 
                 stats[name].points += pausePoints; 
               }
             }
@@ -1033,13 +1132,14 @@
       if (!stats) {
         stats = {};
         activePlayers.forEach(pName => {
-          stats[pName] = { points: 0, matches: 0, wins: 0, losses: 0, pauses: 0 };
+          stats[pName] = { points: 0, bankPoints: 0, matches: 0, wins: 0, losses: 0, pauses: 0 };
         });
       }
 
       const sorted = Object.keys(stats).map(name => ({
         name: name,
         points: stats[name].points,
+        bankPoints: stats[name].bankPoints,
         matches: stats[name].matches,
         wins: stats[name].wins,
         losses: stats[name].losses,
@@ -1054,7 +1154,8 @@
           <td style="text-align: center; color: var(--text-muted);">${item.matches}</td>
           <td style="text-align: center;" class="stat-win">${item.wins}</td>
           <td style="text-align: center;" class="stat-loss">${item.losses}</td>
-          <td style="text-align: center; color: var(--accent-amber); font-weight: 600;">${item.pauses}</td>
+          <td style="text-align: center; color: var(--text-muted);">${item.pauses}</td>
+          <td style="text-align: center; color: var(--accent-amber); font-weight: 700;">+${item.bankPoints}</td>
           <td style="text-align: right; font-weight: 800; color: var(--accent);">${item.points}</td>
         `;
         tbody.appendChild(tr);
@@ -1062,6 +1163,10 @@
     }
 
     setMode(6);
+
+    window.onload = () => {
+      playIntroAnimation();
+    };
   </script>
 </body>
 </html>
