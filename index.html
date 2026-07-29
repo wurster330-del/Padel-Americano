@@ -475,6 +475,7 @@
               <th style="text-align: center;">Sp.</th>
               <th style="text-align: center;">S</th>
               <th style="text-align: center;">N</th>
+              <th style="text-align: center;">P</th>
               <th style="text-align: right;">Pkt</th>
             </tr>
           </thead>
@@ -968,7 +969,7 @@
       const stats = {};
       
       activePlayers.forEach(pName => {
-        stats[pName] = { points: 0, matches: 0, wins: 0, losses: 0 };
+        stats[pName] = { points: 0, matches: 0, wins: 0, losses: 0, pauses: 0 };
       });
 
       if (mode === 5 && activePlayers.length !== 5) {
@@ -987,6 +988,7 @@
           const s1 = scoreObj.t1;
           const s2 = scoreObj.t2;
 
+          // Team 1
           item.p1.forEach(idx => {
             const name = activePlayers[idx];
             if(stats[name]) { 
@@ -997,22 +999,27 @@
             }
           });
 
+          // Team 2
           item.p2.forEach(idx => {
             const name = activePlayers[idx];
             if(stats[name]) { 
               stats[name].points += s2; 
               stats[name].matches += 1; 
-              if (s2 > s1) stats[name].losses += 1;
+              if (s2 > s1) stats[name].wins += 1;
               else if (s2 < s1) stats[name].losses += 1;
             }
           });
 
-          if (pausePoints > 0) {
-            item.pause.forEach(idx => {
-              const name = activePlayers[idx];
-              if(stats[name]) { stats[name].points += pausePoints; }
-            });
-          }
+          // Pausierende Spieler erfassen
+          item.pause.forEach(idx => {
+            const name = activePlayers[idx];
+            if(stats[name]) { 
+              stats[name].pauses += 1;
+              if (pausePoints > 0) {
+                stats[name].points += pausePoints; 
+              }
+            }
+          });
         }
       }
 
@@ -1026,7 +1033,7 @@
       if (!stats) {
         stats = {};
         activePlayers.forEach(pName => {
-          stats[pName] = { points: 0, matches: 0, wins: 0, losses: 0 };
+          stats[pName] = { points: 0, matches: 0, wins: 0, losses: 0, pauses: 0 };
         });
       }
 
@@ -1035,7 +1042,8 @@
         points: stats[name].points,
         matches: stats[name].matches,
         wins: stats[name].wins,
-        losses: stats[name].losses
+        losses: stats[name].losses,
+        pauses: stats[name].pauses
       })).sort((a, b) => b.points - a.points || b.wins - a.wins);
 
       sorted.forEach((item, index) => {
@@ -1046,6 +1054,7 @@
           <td style="text-align: center; color: var(--text-muted);">${item.matches}</td>
           <td style="text-align: center;" class="stat-win">${item.wins}</td>
           <td style="text-align: center;" class="stat-loss">${item.losses}</td>
+          <td style="text-align: center; color: var(--accent-amber); font-weight: 600;">${item.pauses}</td>
           <td style="text-align: right; font-weight: 800; color: var(--accent);">${item.points}</td>
         `;
         tbody.appendChild(tr);
