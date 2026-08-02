@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Padel Manager Pro - Focus & WhatsApp Edition</title>
+  <title>Padel Manager Pro - Full Table WhatsApp Edition</title>
   <style>
     :root {
       --bg: #0d0d0e;
@@ -1152,13 +1152,13 @@
       });
     }
 
-    /* --- WHATSAPP SHARING FUNKTION --- */
+    /* --- WHATSAPP SHARING FUNKTION (NUR VOLLSTÄNDIGE TABELLE) --- */
     function shareToWhatsApp() {
       const basePlan = mode === 5 ? basePlan5 : basePlan6;
       const stats = {};
       
       activePlayers.forEach(pName => {
-        stats[pName] = { points: 0, wins: 0, losses: 0, matches: 0 };
+        stats[pName] = { points: 0, bankPoints: 0, matches: 0, wins: 0, losses: 0, pauses: 0 };
       });
 
       for (let i = 0; i < totalRounds; i++) {
@@ -1189,20 +1189,37 @@
               else if (s2 < s1) stats[name].losses += 1;
             }
           });
+
+          item.pause.forEach(idx => {
+            const name = activePlayers[idx];
+            if (stats[name]) {
+              stats[name].pauses += 1;
+              if (pausePoints > 0) {
+                stats[name].bankPoints += pausePoints;
+                stats[name].points += pausePoints;
+              }
+            }
+          });
         }
       }
 
       const sorted = Object.keys(stats).map(name => ({
         name: name,
         points: stats[name].points,
+        bankPoints: stats[name].bankPoints,
+        matches: stats[name].matches,
         wins: stats[name].wins,
-        losses: stats[name].losses
+        losses: stats[name].losses,
+        pauses: stats[name].pauses
       })).sort((a, b) => b.points - a.points || b.wins - a.wins);
 
       let text = "🎾 *PADEL LIVE-TABELLE* 🎾\n\n";
+      text += "Pos | Spieler | Sp | S | N | P | BP | *Pkt*\n";
+      text += "--------------------------------------\n";
+
       sorted.forEach((item, index) => {
-        const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
-        text += `${medal} *${item.name}*: ${item.points} Pkt (${item.wins}S / ${item.losses}N)\n`;
+        const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}. `;
+        text += `${medal} *${item.name}*: ${item.matches}Sp | ${item.wins}S | ${item.losses}N | ${item.pauses}P | +${item.bankPoints}BP | *${item.points} Pkt*\n`;
       });
 
       const url = "https://wa.me/?text=" + encodeURIComponent(text);
