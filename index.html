@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Padel Manager Pro - iPad Air Focus Edition</title>
+  <title>Padel Manager Pro - Focus & WhatsApp Edition</title>
   <style>
     :root {
       --bg: #0d0d0e;
@@ -14,6 +14,7 @@
       --accent-red: #ff453a;
       --accent-amber: #ffd60a;
       --accent-purple: #bf5af2;
+      --whatsapp-green: #25D366;
       --text: #ffffff;
       --text-muted: #8e8e93;
     }
@@ -33,7 +34,7 @@
       overflow: hidden;
     }
 
-    /* --- EXPLOSIVES INTRO OVERLAY --- */
+    /* --- INTRO OVERLAY --- */
     #intro-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -70,7 +71,6 @@
       filter: blur(20px);
     }
 
-    /* Animation bei Start */
     .intro-title.animate {
       animation: explodeText 2.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
@@ -101,7 +101,7 @@
       .intro-title { font-size: 45px; }
     }
 
-    /* --- REGULÄRES LAYOUT --- */
+    /* --- LAYOUT --- */
     header {
       display: flex;
       justify-content: space-between;
@@ -136,7 +136,6 @@
       .ipad-layout { grid-template-columns: 1fr; }
     }
 
-    /* Linke Spalte (Fixed Sticky Sidebar) */
     .sidebar {
       display: flex;
       flex-direction: column;
@@ -168,7 +167,6 @@
     }
     button:active { transform: scale(0.98); }
 
-    /* Focus Mode Toggle Banner */
     .focus-mode-bar {
       background: linear-gradient(135deg, rgba(10, 132, 255, 0.15), rgba(191, 90, 242, 0.15));
       border: 1px solid rgba(10, 132, 255, 0.3);
@@ -210,7 +208,6 @@
       margin-top: 2px;
     }
 
-    /* Settings Bar */
     .settings-card {
       background-color: var(--card-bg);
       padding: 8px 10px;
@@ -240,7 +237,6 @@
       cursor: pointer;
     }
 
-    /* Namenseditor & Auswahl */
     .edit-names-list {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -270,7 +266,6 @@
     }
     .edit-icon { color: var(--text-muted); font-size: 11px; cursor: pointer; padding: 2px; }
 
-    /* Leaderboard Table */
     .table-container {
       background-color: var(--card-bg);
       border-radius: 12px;
@@ -284,7 +279,6 @@
     .stat-win { color: var(--accent); font-weight: 700; }
     .stat-loss { color: var(--accent-red); font-weight: 700; }
 
-    /* Rechte Spalte (Scrollbarer Plan) */
     .main-content {
       display: flex;
       flex-direction: column;
@@ -301,7 +295,6 @@
       scroll-behavior: smooth;
     }
 
-    /* CARD STYLING */
     .card {
       background-color: var(--card-bg);
       border-radius: 14px;
@@ -315,7 +308,6 @@
       position: relative;
     }
 
-    /* FOCUS / ENLARGED STATE FOR CARDS */
     .card.focused-card {
       grid-column: 1 / -1;
       background: linear-gradient(145deg, #1f232a, #16181d);
@@ -427,7 +419,6 @@
     }
     .score-tile.empty { color: var(--text-muted); font-size: 13px; font-weight: 500; }
 
-    /* Modal Overlay */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -509,7 +500,6 @@
     
     <!-- Linke Spalte -->
     <div class="sidebar">
-      <!-- Auto-Focus Bar -->
       <div id="focus-bar" class="focus-mode-bar">
         <div class="focus-status">
           <span class="title" id="focus-title-text">⚡ Auto-Fokus Aus</span>
@@ -558,7 +548,12 @@
         </table>
       </div>
 
-      <button class="action-btn" style="padding: 10px; margin-top: 2px; background-color: var(--accent-blue); color: #fff; font-weight: 700;" onclick="addExtraRound()">➕ Runde hinzufügen</button>
+      <!-- BUTTON: WHATSAPP SHARING -->
+      <button class="action-btn" style="padding: 10px; margin-top: 4px; background-color: var(--whatsapp-green); color: #fff; font-weight: 700; border: none;" onclick="shareToWhatsApp()">
+        📲 Tabelle via WhatsApp teilen
+      </button>
+
+      <button class="action-btn" style="padding: 10px; background-color: var(--accent-blue); color: #fff; font-weight: 700;" onclick="addExtraRound()">➕ Runde hinzufügen</button>
       <button class="action-btn" style="padding: 8px; font-size: 11px; opacity: 0.7;" onclick="playIntroAnimation()">💥 Intro erneut abspielen</button>
     </div>
 
@@ -633,7 +628,6 @@
       { p1: [1, 4], p2: [0, 5], pause: [2, 3] }
     ];
 
-    /* --- INTRO FUNKTIONEN --- */
     function playIntroAnimation() {
       const overlay = document.getElementById('intro-overlay');
       const title = document.getElementById('intro-title');
@@ -843,7 +837,6 @@
       document.getElementById('picker-modal').classList.add('open');
     }
 
-    /* FOCUS MODE LOGIC */
     function startFocusOnRound(roundNum) {
       focusedRound = roundNum;
       isFocusModeActive = true;
@@ -1086,7 +1079,6 @@
           const s1 = scoreObj.t1;
           const s2 = scoreObj.t2;
 
-          // Team 1
           item.p1.forEach(idx => {
             const name = activePlayers[idx];
             if(stats[name]) { 
@@ -1097,7 +1089,6 @@
             }
           });
 
-          // Team 2
           item.p2.forEach(idx => {
             const name = activePlayers[idx];
             if(stats[name]) { 
@@ -1108,7 +1099,6 @@
             }
           });
 
-          // Pausierende Spieler erfassen
           item.pause.forEach(idx => {
             const name = activePlayers[idx];
             if(stats[name]) { 
@@ -1160,6 +1150,63 @@
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    /* --- WHATSAPP SHARING FUNKTION --- */
+    function shareToWhatsApp() {
+      const basePlan = mode === 5 ? basePlan5 : basePlan6;
+      const stats = {};
+      
+      activePlayers.forEach(pName => {
+        stats[pName] = { points: 0, wins: 0, losses: 0, matches: 0 };
+      });
+
+      for (let i = 0; i < totalRounds; i++) {
+        const roundNum = i + 1;
+        const item = basePlan[i % basePlan.length];
+        const scoreObj = matchScores[roundNum];
+
+        if (scoreObj && scoreObj.t1 !== undefined && scoreObj.t2 !== undefined) {
+          const s1 = scoreObj.t1;
+          const s2 = scoreObj.t2;
+
+          item.p1.forEach(idx => {
+            const name = activePlayers[idx];
+            if (stats[name]) {
+              stats[name].points += s1;
+              stats[name].matches += 1;
+              if (s1 > s2) stats[name].wins += 1;
+              else if (s1 < s2) stats[name].losses += 1;
+            }
+          });
+
+          item.p2.forEach(idx => {
+            const name = activePlayers[idx];
+            if (stats[name]) {
+              stats[name].points += s2;
+              stats[name].matches += 1;
+              if (s2 > s1) stats[name].wins += 1;
+              else if (s2 < s1) stats[name].losses += 1;
+            }
+          });
+        }
+      }
+
+      const sorted = Object.keys(stats).map(name => ({
+        name: name,
+        points: stats[name].points,
+        wins: stats[name].wins,
+        losses: stats[name].losses
+      })).sort((a, b) => b.points - a.points || b.wins - a.wins);
+
+      let text = "🎾 *PADEL LIVE-TABELLE* 🎾\n\n";
+      sorted.forEach((item, index) => {
+        const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
+        text += `${medal} *${item.name}*: ${item.points} Pkt (${item.wins}S / ${item.losses}N)\n`;
+      });
+
+      const url = "https://wa.me/?text=" + encodeURIComponent(text);
+      window.open(url, '_blank');
     }
 
     setMode(6);
