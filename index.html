@@ -131,7 +131,7 @@
             margin-bottom: 6px;
         }
 
-        input[type="text"], input[type="number"], select {
+        input[type="text"] {
             width: 100%;
             padding: 14px;
             background-color: var(--bg-color);
@@ -259,15 +259,27 @@
 
         .score-inputs {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
-        .score-input {
-            width: 60px !important;
+        /* Dropdown styling */
+        .score-select {
+            width: 75px;
+            padding: 10px 6px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            font-weight: bold;
             text-align: center;
-            font-size: 1.2rem !important;
-            padding: 8px !important;
+            cursor: pointer;
+            outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            text-align-last: center;
         }
 
         /* Leaderboard */
@@ -302,14 +314,14 @@
 <div class="container">
     <header>
         <h1>🎾 Padel Manager</h1>
-        <p class="subtitle">Turniersteuerung für iPad Air</p>
+        <p class="subtitle">Turniersteuerung für iPad Air (1 Court)</p>
     </header>
 
     <!-- SETUP SCREEN -->
     <div id="setupScreen" class="card">
         <h2>1. Spieldauer & Modus wählen</h2>
         <div class="btn-group" id="durationGroup">
-            <button class="btn-option active" onclick="selectDuration(120)">120 Min (Zeit)</button>
+            <button class="btn-option active" onclick="selectDuration(120)">120 Min (5 Runden à 20 Min)</button>
             <button class="btn-option" onclick="selectDuration(180)">180 Min (Americano)</button>
         </div>
 
@@ -361,7 +373,7 @@
         <div id="timerSection" class="card hidden">
             <div style="text-align: center;">
                 <span id="currentRoundLabel" style="color: var(--text-muted); font-size: 1.1rem;">Runde 1</span>
-                <div id="timerDisplay" class="timer-display">25:00</div>
+                <div id="timerDisplay" class="timer-display">20:00</div>
                 <div class="timer-controls">
                     <button id="startBtn" class="timer-btn btn-start" onclick="toggleTimer()">Start</button>
                     <button class="timer-btn btn-reset" onclick="resetTimer()">Reset</button>
@@ -373,9 +385,9 @@
         <!-- MATCH SCHEDULE -->
         <div class="card">
             <div class="card-header-flex">
-                <h2>Spielplan & Rotationen</h2>
+                <h2>Spielplan & Rotationen (Platz 1)</h2>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="btnAddRound" class="btn-secondary btn-add-round hidden" onclick="addAmericanoRound()">➕ Runde hinzufügen</button>
+                    <button id="btnAddRound" class="btn-secondary btn-add-round" onclick="addExtraRound()">➕ Runde hinzufügen</button>
                     <button class="btn-secondary btn-shuffle" onclick="shufflePartners()">🔀 Partner neu mischen</button>
                 </div>
             </div>
@@ -416,7 +428,7 @@
         benchPointsMode: 'none',
         playersCount: 4,
         players: [],
-        roundTimeMinutes: 25,
+        roundTimeMinutes: 20,
         rounds: []
     };
 
@@ -451,6 +463,7 @@
             titleLabel.innerText = "2. Spielernamen eingeben";
             config.benchPointsMode = 'none';
             config.playersCount = 4;
+            config.roundTimeMinutes = 20;
         } else {
             targetSection.classList.remove('hidden');
             benchSection.classList.remove('hidden');
@@ -516,7 +529,6 @@
             document.getElementById('thWins').classList.remove('hidden');
             document.getElementById('thDiff').classList.remove('hidden');
             document.getElementById('thBench').classList.add('hidden');
-            document.getElementById('btnAddRound').classList.add('hidden');
             document.getElementById('thPointsLabel').innerText = "Games";
             initTimer();
         } else {
@@ -524,12 +536,11 @@
             document.getElementById('thWins').classList.add('hidden');
             document.getElementById('thDiff').classList.add('hidden');
             document.getElementById('thBench').classList.remove('hidden');
-            document.getElementById('btnAddRound').classList.remove('hidden');
             document.getElementById('thPointsLabel').innerText = "Punkte";
         }
 
         document.getElementById('dashboardTitle').innerText = 
-            `${config.duration} Min (${config.duration === 120 ? 'Zeitmodus' : 'Americano'})${config.duration === 180 ? ' – Zielpunkte: ' + config.targetPoints : ''}`;
+            `${config.duration} Min (${config.duration === 120 ? '5 Runden à 20 Min' : 'Americano'})${config.duration === 180 ? ' – Zielpunkte: ' + config.targetPoints : ''}`;
 
         renderMatches();
         updateLeaderboard();
@@ -553,41 +564,46 @@
         if (config.playersCount === 4) {
             return [
                 { t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [], side: 'Platz 1' },
-                { t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [], side: 'Platz 2' },
+                { t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [], side: 'Platz 1' },
                 { t1: [p[0], p[3]], t2: [p[1], p[2]], bench: [], side: 'Platz 1' }
             ];
         } else if (config.playersCount === 5) {
+            // Optimierte Verteilung: Jeder spielt 4 Runden am Stück, gefolgt von 1 Runde Pause
             return [
-                { t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [p[4]], side: 'Platz 1' },
-                { t1: [p[4], p[0]], t2: [p[1], p[2]], bench: [p[3]], side: 'Platz 2' },
-                { t1: [p[3], p[4]], t2: [p[0], p[2]], bench: [p[1]], side: 'Platz 1' },
-                { t1: [p[2], p[3]], t2: [p[4], p[1]], bench: [p[0]], side: 'Platz 2' },
-                { t1: [p[1], p[4]], t2: [p[2], p[0]], bench: [p[3]], side: 'Platz 1' }
+                { t1: [p[0], p[3]], t2: [p[1], p[2]], bench: [p[4]], side: 'Platz 1' },
+                { t1: [p[1], p[4]], t2: [p[2], p[3]], bench: [p[0]], side: 'Platz 1' },
+                { t1: [p[2], p[0]], t2: [p[3], p[4]], bench: [p[1]], side: 'Platz 1' },
+                { t1: [p[3], p[1]], t2: [p[4], p[0]], bench: [p[2]], side: 'Platz 1' },
+                { t1: [p[4], p[2]], t2: [p[0], p[1]], bench: [p[3]], side: 'Platz 1' }
             ];
         } else if (config.playersCount === 6) {
+            // Optimierte Verteilung: Exakt 2 Spiele in Folge, danach 1 Runde Pause für jeden
             return [
                 { t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [p[4], p[5]], side: 'Platz 1' },
-                { t1: [p[4], p[5]], t2: [p[0], p[2]], bench: [p[1], p[3]], side: 'Platz 2' },
-                { t1: [p[1], p[3]], t2: [p[4], p[0]], bench: [p[2], p[5]], side: 'Platz 1' },
-                { t1: [p[2], p[5]], t2: [p[1], p[4]], bench: [p[0], p[3]], side: 'Platz 2' },
-                { t1: [p[0], p[3]], t2: [p[2], p[4]], bench: [p[1], p[5]], side: 'Platz 1' },
-                { t1: [p[1], p[5]], t2: [p[3], p[0]], bench: [p[2], p[4]], side: 'Platz 2' }
+                { t1: [p[0], p[4]], t2: [p[1], p[5]], bench: [p[2], p[3]], side: 'Platz 1' },
+                { t1: [p[2], p[4]], t2: [p[3], p[5]], bench: [p[0], p[1]], side: 'Platz 1' },
+                { t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [p[4], p[5]], side: 'Platz 1' },
+                { t1: [p[0], p[5]], t2: [p[1], p[4]], bench: [p[2], p[3]], side: 'Platz 1' },
+                { t1: [p[2], p[5]], t2: [p[3], p[4]], bench: [p[0], p[1]], side: 'Platz 1' }
             ];
         }
         return [];
     }
 
-    function addAmericanoRound() {
+    function addExtraRound() {
         const baseRounds = getBalancedBaseRounds();
         const nextRoundIndex = config.rounds.length;
         const templateMatch = baseRounds[nextRoundIndex % baseRounds.length];
-        
-        const side = (nextRoundIndex % 2 === 0) ? 'Platz 1' : 'Platz 2';
-        const newMatch = { ...templateMatch, r: nextRoundIndex + 1, side };
+
+        const newMatch = { ...templateMatch, r: nextRoundIndex + 1, side: 'Platz 1' };
 
         config.rounds.push(newMatch);
         renderMatches();
         updateLeaderboard();
+
+        if (config.duration === 120) {
+            document.getElementById('currentRoundLabel').innerText = `Runde ${timerState.currentRound + 1} von ${config.rounds.length}`;
+        }
     }
 
     function generateSchedule() {
@@ -595,12 +611,13 @@
         config.rounds = [];
 
         if (config.duration === 120) {
-            config.roundTimeMinutes = 25;
+            config.roundTimeMinutes = 20;
             config.rounds = [
                 { r: 1, t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [], side: 'Platz 1' },
-                { r: 2, t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [], side: 'Platz 2' },
+                { r: 2, t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [], side: 'Platz 1' },
                 { r: 3, t1: [p[0], p[3]], t2: [p[1], p[2]], bench: [], side: 'Platz 1' },
-                { r: 4, t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [], side: 'Platz 2' }
+                { r: 4, t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [], side: 'Platz 1' },
+                { r: 5, t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [], side: 'Platz 1' }
             ];
         } else {
             const baseRounds = getBalancedBaseRounds();
@@ -615,7 +632,7 @@
             config.rounds = fullList.map((m, idx) => ({
                 ...m,
                 r: idx + 1,
-                side: (idx % 2 === 0) ? 'Platz 1' : 'Platz 2'
+                side: 'Platz 1'
             }));
         }
     }
@@ -628,6 +645,15 @@
             const isAmericano = config.duration === 180;
             const score1 = scores[idx]?.s1 ?? '';
             const score2 = scores[idx]?.s2 ?? '';
+            const maxPoints = isAmericano ? config.targetPoints : 15;
+
+            let options1 = '<option value="">-</option>';
+            let options2 = '<option value="">-</option>';
+
+            for (let i = 0; i <= maxPoints; i++) {
+                options1 += `<option value="${i}" ${score1 !== '' && parseInt(score1) === i ? 'selected' : ''}>${i}</option>`;
+                options2 += `<option value="${i}" ${score2 !== '' && parseInt(score2) === i ? 'selected' : ''}>${i}</option>`;
+            }
 
             container.innerHTML += `
                 <div class="match-card">
@@ -638,9 +664,13 @@
                     <div class="match-teams">
                         <div class="team">${m.t1[0]} & ${m.t1[1]}</div>
                         <div class="score-inputs">
-                            <input type="number" id="sc_${idx}_1" class="score-input" value="${score1}" placeholder="0" oninput="handleScoreInput(${idx}, 1, this.value)">
+                            <select id="sc_${idx}_1" class="score-select" onchange="handleScoreInput(${idx}, 1, this.value)">
+                                ${options1}
+                            </select>
                             <span>:</span>
-                            <input type="number" id="sc_${idx}_2" class="score-input" value="${score2}" placeholder="0" oninput="handleScoreInput(${idx}, 2, this.value)">
+                            <select id="sc_${idx}_2" class="score-select" onchange="handleScoreInput(${idx}, 2, this.value)">
+                                ${options2}
+                            </select>
                         </div>
                         <div class="team team-right">${m.t2[0]} & ${m.t2[1]}</div>
                     </div>
@@ -652,13 +682,11 @@
 
     function handleScoreInput(matchIdx, team, val) {
         if (!scores[matchIdx]) scores[matchIdx] = { s1: '', s2: '' };
-        
-        let numVal = parseInt(val);
-        if (isNaN(numVal)) numVal = '';
+
+        let numVal = val === '' ? '' : parseInt(val);
 
         if (team === 1) {
             scores[matchIdx].s1 = numVal;
-            // Automatische Differenzberechnung nur im Americano Modus (feste Zielpunkte)
             if (numVal !== '' && config.duration === 180 && config.targetPoints && numVal <= config.targetPoints) {
                 scores[matchIdx].s2 = config.targetPoints - numVal;
                 document.getElementById(`sc_${matchIdx}_2`).value = scores[matchIdx].s2;
