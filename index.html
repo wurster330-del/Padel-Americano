@@ -5,18 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Padel Manager</title>
+    <title>Padel Manager Pro</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-color: #10b981;
-            --accent-hover: #059669;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
+            --bg-color: #0B0F19;
+            --card-bg: rgba(22, 31, 48, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-color: #CCFF00; /* Padel Ball Neon Gelb/Grün */
+            --accent-hover: #b3e600;
+            --accent-glow: rgba(204, 255, 0, 0.25);
+            --text-color: #F3F4F6;
+            --text-muted: #9CA3AF;
+            --border-color: #1F293D;
+            --danger-color: #EF4444;
+            --warning-color: #F59E0B;
+            --secondary-bg: #1A2333;
         }
 
         * {
@@ -29,9 +32,13 @@
 
         body {
             background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(204, 255, 0, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
             color: var(--text-color);
             min-height: 100vh;
-            padding: 20px;
+            padding: 24px;
             display: flex;
             justify-content: center;
         }
@@ -43,42 +50,56 @@
 
         header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             padding-bottom: 16px;
-            border-bottom: 1px solid var(--border-color);
         }
 
         h1 {
-            font-size: 2rem;
-            color: var(--accent-color);
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
             margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        h1 span {
+            color: var(--accent-color);
         }
 
         p.subtitle {
             color: var(--text-muted);
-            font-size: 1rem;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
         .card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px;
             padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--card-border);
         }
 
         h2 {
-            font-size: 1.3rem;
+            font-size: 1.15rem;
+            font-weight: 700;
             margin-bottom: 16px;
-            color: var(--text-color);
+            color: #FFFFFF;
+            letter-spacing: -0.2px;
         }
 
         .card-header-flex {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -93,16 +114,15 @@
             gap: 16px;
         }
 
-        /* Responsive Dashboard Grid (Side-by-Side for iPad / Tablet) */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 20px;
+            gap: 24px;
         }
 
-        @media (min-width: 768px) {
+        @media (min-width: 850px) {
             .dashboard-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1.2fr 0.8fr;
                 align-items: start;
             }
         }
@@ -110,103 +130,128 @@
         .btn-group {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
         }
 
         .btn-option {
             flex: 1;
-            min-width: 80px;
-            padding: 14px;
-            background-color: var(--bg-color);
-            border: 2px solid var(--border-color);
-            color: var(--text-color);
-            border-radius: 12px;
-            font-size: 1rem;
+            min-width: 90px;
+            padding: 14px 16px;
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            border-radius: 14px;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: center;
+        }
+
+        .btn-option:hover {
+            color: #FFF;
+            border-color: rgba(255,255,255,0.2);
         }
 
         .btn-option.active {
             border-color: var(--accent-color);
-            background-color: rgba(16, 185, 129, 0.15);
+            background-color: var(--accent-glow);
             color: var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-glow);
         }
 
         .input-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         label {
             display: block;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: var(--text-muted);
             margin-bottom: 6px;
         }
 
         input[type="text"] {
             width: 100%;
-            padding: 14px;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-color);
+            padding: 14px 16px;
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: #FFFFFF;
             font-size: 1rem;
+            font-weight: 500;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
         }
 
         .btn-primary {
             width: 100%;
             padding: 18px;
             background-color: var(--accent-color);
-            color: #000;
+            color: #0B0F19;
             border: none;
-            border-radius: 12px;
-            font-size: 1.2rem;
-            font-weight: bold;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 800;
             cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 10px;
+            transition: all 0.2s;
+            margin-top: 12px;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
         }
 
         .btn-primary:active {
-            background-color: var(--accent-hover);
+            transform: translateY(0);
         }
 
         .btn-secondary {
-            padding: 10px 16px;
-            background-color: var(--border-color);
+            padding: 10px 18px;
+            background-color: var(--secondary-bg);
             color: var(--text-color);
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95rem;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
         }
 
         .btn-secondary:hover {
-            background-color: #475569;
+            background-color: #243047;
+            color: #FFF;
         }
 
         .btn-secondary:disabled {
-            opacity: 0.4;
+            opacity: 0.3;
             cursor: not-allowed;
         }
 
         .btn-shuffle {
-            background-color: #3b82f6;
-            color: #ffffff;
+            background-color: #2563EB;
+            color: #FFFFFF;
+            border: none;
         }
 
         .btn-shuffle:hover {
-            background-color: #2563eb;
+            background-color: #1D4ED8;
         }
 
         .btn-add-round {
             background-color: var(--accent-color);
-            color: #000;
+            color: #0B0F19;
+            border: none;
         }
 
         .btn-add-round:hover {
@@ -215,139 +260,190 @@
 
         /* Timer UI */
         .round-display-large {
-            font-size: 2.5rem;
+            font-size: 1rem;
             font-weight: 800;
             color: var(--accent-color);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 4px;
+            letter-spacing: 2px;
+            margin-bottom: 2px;
         }
 
         .timer-display {
-            font-size: 4.5rem;
-            font-weight: bold;
+            font-size: 5.5rem;
+            font-weight: 900;
             text-align: center;
-            color: var(--text-color);
-            font-mono: monospace;
-            margin: 10px 0 20px 0;
-            letter-spacing: 2px;
+            color: #FFFFFF;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            letter-spacing: -2px;
+            cursor: pointer;
+            display: inline-block;
+            padding: 0 20px;
+            border-radius: 16px;
+            transition: background-color 0.2s;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .timer-display:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .timer-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .timer-quick-adjust {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-adjust {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-adjust:hover {
+            color: #FFF;
+            border-color: rgba(255,255,255,0.2);
         }
 
         .timer-controls {
             display: flex;
             justify-content: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         .timer-btn {
             padding: 14px 28px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 800;
+            border-radius: 12px;
             border: none;
             cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .btn-start { background-color: var(--accent-color); color: #000; }
+        .btn-start { background-color: var(--accent-color); color: #0B0F19; box-shadow: 0 0 15px var(--accent-glow); }
         .btn-pause { background-color: var(--warning-color); color: #000; }
-        .btn-reset { background-color: var(--danger-color); color: #fff; }
+        .btn-reset { background-color: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); }
 
         /* Round Navigation Bar */
         .round-nav-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: var(--bg-color);
-            padding: 12px 16px;
-            border-radius: 12px;
+            background-color: var(--secondary-bg);
+            padding: 10px 14px;
+            border-radius: 14px;
             margin-bottom: 16px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--card-border);
         }
 
         .round-nav-title {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: 800;
-            color: var(--accent-color);
+            color: #FFFFFF;
         }
 
         /* Match Schedule Table */
         .match-card {
-            background-color: var(--bg-color);
-            border-radius: 12px;
+            background-color: var(--secondary-bg);
+            border-radius: 16px;
             padding: 20px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--card-border);
         }
 
         .match-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
-            font-size: 0.95rem;
+            margin-bottom: 18px;
+            font-size: 0.85rem;
+            font-weight: 600;
             color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .match-round-title {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 800;
-            color: #ffffff;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-court {
+            background-color: var(--accent-glow);
+            color: var(--accent-color);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
         }
 
         .match-teams {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 1.2rem;
-            font-weight: 600;
+            font-size: 1.15rem;
+            font-weight: 700;
         }
 
         .team { flex: 1; }
         .team-right { text-align: right; }
 
-        /* GROSSE PAUSENANZEIGE */
         .bench-info-box {
             margin-top: 18px;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
-            border: 2px dashed var(--warning-color);
-            border-radius: 14px;
-            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.15));
+            border: 1px dashed var(--warning-color);
+            border-radius: 12px;
+            padding: 14px 18px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
         }
 
         .bench-title {
-            font-size: 0.95rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: #fde68a;
-            font-weight: 700;
-            margin-bottom: 6px;
+            color: var(--warning-color);
+            font-weight: 800;
+            margin-bottom: 4px;
         }
 
         .bench-names {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: 0.5px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #FFFFFF;
         }
 
         .score-inputs {
             display: flex;
             gap: 8px;
             align-items: center;
+            margin: 0 12px;
         }
 
-        /* Dropdown styling */
         .score-select {
-            width: 75px;
-            padding: 12px 6px;
-            background-color: var(--card-bg);
+            width: 70px;
+            height: 50px;
+            background-color: var(--bg-color);
             border: 2px solid var(--accent-color);
-            border-radius: 10px;
-            color: var(--text-color);
+            border-radius: 12px;
+            color: #FFFFFF;
             font-size: 1.3rem;
-            font-weight: bold;
+            font-weight: 800;
             text-align: center;
             cursor: pointer;
             outline: none;
@@ -355,28 +451,50 @@
             -moz-appearance: none;
             appearance: none;
             text-align-last: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* Leaderboard */
+        /* Leaderboard Table Styling */
         .leaderboard-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .leaderboard-table th, .leaderboard-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            border-collapse: separate;
+            border-spacing: 0 6px;
+            margin-top: 6px;
         }
 
         .leaderboard-table th {
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             color: var(--text-muted);
-            font-weight: 600;
+            font-weight: 700;
+            border: none;
+        }
+
+        .leaderboard-table td {
+            padding: 14px 12px;
+            background-color: var(--secondary-bg);
+            border-top: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+            font-size: 0.95rem;
+        }
+
+        .leaderboard-table tr td:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+            border-left: 1px solid var(--card-border);
+        }
+
+        .leaderboard-table tr td:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+            border-right: 1px solid var(--card-border);
         }
 
         .rank {
-            font-weight: bold;
+            font-weight: 800;
             color: var(--accent-color);
             width: 35px;
         }
@@ -388,11 +506,10 @@
 
 <div class="container">
     <header>
-        <h1>🎾 Padel Manager</h1>
-        <p class="subtitle">Turniersteuerung für iPad Air (1 Court)</p>
+        <h1>🎾 PADEL <span>MANAGER</span></h1>
+        <p class="subtitle">Turniersteuerung für iPad (1 Court)</p>
     </header>
 
-    <!-- SETUP SCREEN -->
     <div id="setupScreen" class="card">
         <h2>1. Spieldauer & Modus wählen</h2>
         <div class="btn-group" id="durationGroup">
@@ -417,6 +534,7 @@
                 <button class="btn-option active" onclick="selectBenchPoints('none')">0 Punkte</button>
                 <button class="btn-option" onclick="selectBenchPoints('avg')">Rundendurchschnitt</button>
                 <button class="btn-option" onclick="selectBenchPoints('half')">Hälfte der Zielpunkte</button>
+                <button class="btn-option" onclick="selectBenchPoints('overall_avg')">Gesamtdurchschnitt aller Runden</button>
             </div>
         </div>
 
@@ -431,24 +549,31 @@
 
         <h2><span id="playerSetupTitle">2. Spielernamen eingeben</span></h2>
         <div id="playerInputs" class="grid-2">
-            <!-- Dynamic Player Inputs -->
         </div>
 
         <button class="btn-primary" onclick="startTournament()">Turnier Starten</button>
     </div>
 
-    <!-- MAIN DASHBOARD -->
     <div id="dashboardScreen" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h2 id="dashboardTitle" style="margin: 0;">Turnier Übersicht</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 id="dashboardTitle" style="margin: 0; font-size: 1.3rem;">Turnier Übersicht</h2>
             <button class="btn-secondary" onclick="resetSetup()">Neues Turnier</button>
         </div>
 
-        <!-- 120 MIN TIMER SECTION -->
         <div id="timerSection" class="card hidden">
             <div style="text-align: center;">
                 <div id="currentRoundLabel" class="round-display-large">Runde 1 von 5</div>
-                <div id="timerDisplay" class="timer-display">20:00</div>
+                
+                <div id="timerDisplay" class="timer-display" onclick="editTimerDirectly()" title="Tippen zum manuellen Ändern">20:00</div>
+                <div class="timer-hint">✏️ Tippen zum manuellen Eingeben der Zeit</div>
+                
+                <div class="timer-quick-adjust">
+                    <button class="btn-adjust" onclick="adjustTimerMinutes(-5)">-5 Min</button>
+                    <button class="btn-adjust" onclick="adjustTimerMinutes(-1)">-1 Min</button>
+                    <button class="btn-adjust" onclick="adjustTimerMinutes(1)">+1 Min</button>
+                    <button class="btn-adjust" onclick="adjustTimerMinutes(5)">+5 Min</button>
+                </div>
+
                 <div class="timer-controls">
                     <button id="startBtn" class="timer-btn btn-start" onclick="toggleTimer()">Start</button>
                     <button class="timer-btn btn-reset" onclick="resetTimer()">Reset</button>
@@ -457,19 +582,16 @@
             </div>
         </div>
 
-        <!-- SIDE-BY-SIDE DASHBOARD GRID -->
         <div class="dashboard-grid">
-            <!-- MATCH SCHEDULE (EINZELNE RUNDE) -->
             <div class="card">
                 <div class="card-header-flex">
-                    <h2>Aktuelle Spielrunde (Platz 1)</h2>
+                    <h2>Aktuelle Spielrunde</h2>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button id="btnAddRound" class="btn-secondary btn-add-round" onclick="addExtraRound()">➕ Runde</button>
                         <button class="btn-secondary btn-shuffle" onclick="shufflePartners()">🔀 Mischen</button>
                     </div>
                 </div>
 
-                <!-- ROUND SWITCH NAVIGATION -->
                 <div class="round-nav-bar">
                     <button id="btnPrevRound" class="btn-secondary" onclick="changeViewRound(-1)">◀ Vorherige</button>
                     <span id="roundNavTitle" class="round-nav-title">Runde 1 von 5</span>
@@ -477,11 +599,9 @@
                 </div>
 
                 <div id="matchList">
-                    <!-- Single Match card injected here -->
                 </div>
             </div>
 
-            <!-- LEADERBOARD (LIVE TABELLE) -->
             <div id="leaderboardSection" class="card">
                 <h2>Live-Tabelle (Einzelwertung)</h2>
                 <table class="leaderboard-table">
@@ -497,7 +617,6 @@
                         </tr>
                     </thead>
                     <tbody id="leaderboardBody">
-                        <!-- Leaderboard injected here -->
                     </tbody>
                 </table>
             </div>
@@ -570,7 +689,12 @@
 
     function selectBenchPoints(mode) {
         config.benchPointsMode = mode;
-        const labels = { 'none': '0 Punkte', 'avg': 'Rundendurchschnitt', 'half': 'Hälfte der Zielpunkte' };
+        const labels = { 
+            'none': '0 Punkte', 
+            'avg': 'Rundendurchschnitt', 
+            'half': 'Hälfte der Zielpunkte',
+            'overall_avg': 'Gesamtdurchschnitt'
+        };
         document.querySelectorAll('#benchPointsGroup .btn-option').forEach(btn => {
             btn.classList.toggle('active', btn.innerText.includes(labels[mode]));
         });
@@ -761,7 +885,7 @@
         container.innerHTML = `
             <div class="match-card">
                 <div class="match-header">
-                    <span class="match-round-title">Runde ${m.r} <span style="color: var(--accent-color); font-size: 1rem; font-weight: normal;">• ${m.side}</span></span>
+                    <span class="match-round-title">Runde ${m.r} <span class="badge-court">${m.side}</span></span>
                     ${isAmericano ? `<span>Americano (Ziel: ${config.targetPoints} Pkt.)</span>` : `<span>Zeitspiel (${config.roundTimeMinutes} Min)</span>`}
                 </div>
                 <div class="match-teams">
@@ -807,6 +931,23 @@
         }
 
         updateLeaderboard();
+    }
+
+    function editTimerDirectly() {
+        const currentMins = Math.floor(timerState.secondsLeft / 60);
+        const input = prompt("Restzeit in Minuten eingeben:", currentMins);
+        if (input !== null) {
+            const mins = parseInt(input);
+            if (!isNaN(mins) && mins >= 0) {
+                timerState.secondsLeft = mins * 60;
+                updateTimerDisplay();
+            }
+        }
+    }
+
+    function adjustTimerMinutes(minutes) {
+        timerState.secondsLeft = Math.max(0, timerState.secondsLeft + (minutes * 60));
+        updateTimerDisplay();
     }
 
     function initTimer() {
@@ -873,9 +1014,26 @@
 
         const isTimeMode = config.duration === 120;
 
+        let totalCompletedPlayedPoints = 0;
+        let totalCompletedPlayerMatches = 0;
+
         config.rounds.forEach((m, idx) => {
             const sc = scores[idx];
-            if (sc && (sc.s1 !== '' || sc.s2 !== '')) {
+            if (sc && (sc.s1 !== '' || sc.s2 !== '') && sc.s1 !== null && sc.s2 !== null) {
+                const s1 = parseInt(sc.s1) || 0;
+                const s2 = parseInt(sc.s2) || 0;
+                totalCompletedPlayedPoints += (s1 + s2) * 2;
+                totalCompletedPlayerMatches += 4;
+            }
+        });
+
+        const overallAveragePlayerScore = totalCompletedPlayerMatches > 0 
+            ? Math.round(totalCompletedPlayedPoints / totalCompletedPlayerMatches) 
+            : Math.round((config.targetPoints || 21) / 2);
+
+        config.rounds.forEach((m, idx) => {
+            const sc = scores[idx];
+            if (sc && (sc.s1 !== '' || sc.s2 !== '') && sc.s1 !== null && sc.s2 !== null) {
                 const s1 = parseInt(sc.s1) || 0;
                 const s2 = parseInt(sc.s2) || 0;
 
@@ -899,6 +1057,8 @@
                         calculatedBenchPoints = Math.round((s1 + s2) / 4);
                     } else if (config.benchPointsMode === 'half') {
                         calculatedBenchPoints = Math.round(config.targetPoints / 2);
+                    } else if (config.benchPointsMode === 'overall_avg') {
+                        calculatedBenchPoints = overallAveragePlayerScore;
                     }
                 }
 
@@ -937,7 +1097,7 @@
                     <td><strong>${item.name}</strong></td>
                     <td>${item.played}</td>
                     ${isTimeMode ? `<td>${item.wins}</td>` : ''}
-                    <td style="color: var(--accent-color); font-weight: bold;">${item.totalPoints}</td>
+                    <td style="color: var(--accent-color); font-weight: 800;">${item.totalPoints}</td>
                     ${!isTimeMode ? `<td>${item.benchPoints}</td>` : ''}
                     ${isTimeMode ? `<td>${diffFormatted}</td>` : ''}
                 </tr>
