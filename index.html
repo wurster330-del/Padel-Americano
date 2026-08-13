@@ -16,6 +16,7 @@
             --text-muted: #94a3b8;
             --border-color: #334155;
             --danger-color: #ef4444;
+            --warning-color: #f59e0b;
         }
 
         * {
@@ -37,7 +38,7 @@
 
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1100px;
         }
 
         header {
@@ -90,6 +91,20 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
+        }
+
+        /* Responsive Dashboard Grid (Side-by-Side for iPad / Tablet) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+                align-items: start;
+            }
         }
 
         .btn-group {
@@ -175,6 +190,11 @@
             background-color: #475569;
         }
 
+        .btn-secondary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
         .btn-shuffle {
             background-color: #3b82f6;
             color: #ffffff;
@@ -229,14 +249,32 @@
         }
 
         .btn-start { background-color: var(--accent-color); color: #000; }
-        .btn-pause { background-color: #f59e0b; color: #000; }
+        .btn-pause { background-color: var(--warning-color); color: #000; }
         .btn-reset { background-color: var(--danger-color); color: #fff; }
+
+        /* Round Navigation Bar */
+        .round-nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-color);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .round-nav-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent-color);
+        }
 
         /* Match Schedule Table */
         .match-card {
             background-color: var(--bg-color);
             border-radius: 12px;
-            padding: 16px;
+            padding: 20px;
             margin-bottom: 12px;
             border: 1px solid var(--border-color);
         }
@@ -245,7 +283,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             font-size: 0.95rem;
             color: var(--text-muted);
         }
@@ -260,18 +298,38 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 600;
         }
 
         .team { flex: 1; }
         .team-right { text-align: right; }
 
-        .bench-info {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #f59e0b;
-            font-weight: 500;
+        /* GROSSE PAUSENANZEIGE */
+        .bench-info-box {
+            margin-top: 18px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
+            border: 2px dashed var(--warning-color);
+            border-radius: 14px;
+            padding: 16px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
+        }
+
+        .bench-title {
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #fde68a;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .bench-names {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 0.5px;
         }
 
         .score-inputs {
@@ -283,12 +341,12 @@
         /* Dropdown styling */
         .score-select {
             width: 75px;
-            padding: 10px 6px;
+            padding: 12px 6px;
             background-color: var(--card-bg);
             border: 2px solid var(--accent-color);
             border-radius: 10px;
             color: var(--text-color);
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: bold;
             text-align: center;
             cursor: pointer;
@@ -320,7 +378,7 @@
         .rank {
             font-weight: bold;
             color: var(--accent-color);
-            width: 40px;
+            width: 35px;
         }
 
         .hidden { display: none !important; }
@@ -399,39 +457,50 @@
             </div>
         </div>
 
-        <!-- MATCH SCHEDULE -->
-        <div class="card">
-            <div class="card-header-flex">
-                <h2>Spielplan & Rotationen (Platz 1)</h2>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="btnAddRound" class="btn-secondary btn-add-round" onclick="addExtraRound()">➕ Runde hinzufügen</button>
-                    <button class="btn-secondary btn-shuffle" onclick="shufflePartners()">🔀 Partner neu mischen</button>
+        <!-- SIDE-BY-SIDE DASHBOARD GRID -->
+        <div class="dashboard-grid">
+            <!-- MATCH SCHEDULE (EINZELNE RUNDE) -->
+            <div class="card">
+                <div class="card-header-flex">
+                    <h2>Aktuelle Spielrunde (Platz 1)</h2>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button id="btnAddRound" class="btn-secondary btn-add-round" onclick="addExtraRound()">➕ Runde</button>
+                        <button class="btn-secondary btn-shuffle" onclick="shufflePartners()">🔀 Mischen</button>
+                    </div>
+                </div>
+
+                <!-- ROUND SWITCH NAVIGATION -->
+                <div class="round-nav-bar">
+                    <button id="btnPrevRound" class="btn-secondary" onclick="changeViewRound(-1)">◀ Vorherige</button>
+                    <span id="roundNavTitle" class="round-nav-title">Runde 1 von 5</span>
+                    <button id="btnNextRound" class="btn-secondary" onclick="changeViewRound(1)">Nächste ▶</button>
+                </div>
+
+                <div id="matchList">
+                    <!-- Single Match card injected here -->
                 </div>
             </div>
-            <div id="matchList">
-                <!-- Matches injected here -->
-            </div>
-        </div>
 
-        <!-- LEADERBOARD -->
-        <div id="leaderboardSection" class="card">
-            <h2>Live-Tabelle (Einzelwertung)</h2>
-            <table class="leaderboard-table">
-                <thead>
-                    <tr>
-                        <th class="rank">#</th>
-                        <th>Spieler</th>
-                        <th>Gespielt</th>
-                        <th id="thWins" class="hidden">Siege</th>
-                        <th id="thPointsLabel">Games</th>
-                        <th id="thBench">Bankpunkte</th>
-                        <th id="thDiff" class="hidden">Diff.</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboardBody">
-                    <!-- Leaderboard injected here -->
-                </tbody>
-            </table>
+            <!-- LEADERBOARD (LIVE TABELLE) -->
+            <div id="leaderboardSection" class="card">
+                <h2>Live-Tabelle (Einzelwertung)</h2>
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th class="rank">#</th>
+                            <th>Spieler</th>
+                            <th>Gesp.</th>
+                            <th id="thWins" class="hidden">Siege</th>
+                            <th id="thPointsLabel">Games</th>
+                            <th id="thBench">Bankp.</th>
+                            <th id="thDiff" class="hidden">Diff.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <!-- Leaderboard injected here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -456,6 +525,7 @@
         currentRound: 0
     };
 
+    let currentViewRound = 0;
     let scores = {};
 
     window.onload = function() {
@@ -536,6 +606,7 @@
         }
 
         scores = {};
+        currentViewRound = 0;
         generateSchedule();
 
         document.getElementById('setupScreen').classList.add('hidden');
@@ -613,6 +684,7 @@
         const newMatch = { ...templateMatch, r: nextRoundIndex + 1, side: 'Platz 1' };
 
         config.rounds.push(newMatch);
+        currentViewRound = config.rounds.length - 1;
         renderMatches();
         updateLeaderboard();
 
@@ -652,47 +724,67 @@
         }
     }
 
+    function changeViewRound(delta) {
+        let newRound = currentViewRound + delta;
+        if (newRound >= 0 && newRound < config.rounds.length) {
+            currentViewRound = newRound;
+            renderMatches();
+        }
+    }
+
     function renderMatches() {
         const container = document.getElementById('matchList');
         container.innerHTML = '';
 
-        config.rounds.forEach((m, idx) => {
-            const isAmericano = config.duration === 180;
-            const score1 = scores[idx]?.s1 ?? '';
-            const score2 = scores[idx]?.s2 ?? '';
-            const maxPoints = isAmericano ? config.targetPoints : 15;
+        if (currentViewRound < 0) currentViewRound = 0;
+        if (currentViewRound >= config.rounds.length) currentViewRound = config.rounds.length - 1;
 
-            let options1 = '<option value="">-</option>';
-            let options2 = '<option value="">-</option>';
+        document.getElementById('roundNavTitle').innerText = `Runde ${currentViewRound + 1} von ${config.rounds.length}`;
+        document.getElementById('btnPrevRound').disabled = (currentViewRound === 0);
+        document.getElementById('btnNextRound').disabled = (currentViewRound === config.rounds.length - 1);
 
-            for (let i = 0; i <= maxPoints; i++) {
-                options1 += `<option value="${i}" ${score1 !== '' && parseInt(score1) === i ? 'selected' : ''}>${i}</option>`;
-                options2 += `<option value="${i}" ${score2 !== '' && parseInt(score2) === i ? 'selected' : ''}>${i}</option>`;
-            }
+        const m = config.rounds[currentViewRound];
+        const idx = currentViewRound;
+        const isAmericano = config.duration === 180;
+        const score1 = scores[idx]?.s1 ?? '';
+        const score2 = scores[idx]?.s2 ?? '';
+        const maxPoints = isAmericano ? config.targetPoints : 15;
 
-            container.innerHTML += `
-                <div class="match-card">
-                    <div class="match-header">
-                        <span class="match-round-title">Runde ${m.r} <span style="color: var(--accent-color); font-size: 1rem; font-weight: normal;">• ${m.side}</span></span>
-                        ${isAmericano ? `<span>Americano (Ziel: ${config.targetPoints} Pkt.)</span>` : `<span>Zeitspiel (${config.roundTimeMinutes} Min)</span>`}
-                    </div>
-                    <div class="match-teams">
-                        <div class="team">${m.t1[0]} & ${m.t1[1]}</div>
-                        <div class="score-inputs">
-                            <select id="sc_${idx}_1" class="score-select" onchange="handleScoreInput(${idx}, 1, this.value)">
-                                ${options1}
-                            </select>
-                            <span>:</span>
-                            <select id="sc_${idx}_2" class="score-select" onchange="handleScoreInput(${idx}, 2, this.value)">
-                                ${options2}
-                            </select>
-                        </div>
-                        <div class="team team-right">${m.t2[0]} & ${m.t2[1]}</div>
-                    </div>
-                    ${m.bench.length > 0 ? `<div class="bench-info">☕ Pause: ${m.bench.join(', ')}</div>` : ''}
+        let options1 = '<option value="">-</option>';
+        let options2 = '<option value="">-</option>';
+
+        for (let i = 0; i <= maxPoints; i++) {
+            options1 += `<option value="${i}" ${score1 !== '' && parseInt(score1) === i ? 'selected' : ''}>${i}</option>`;
+            options2 += `<option value="${i}" ${score2 !== '' && parseInt(score2) === i ? 'selected' : ''}>${i}</option>`;
+        }
+
+        container.innerHTML = `
+            <div class="match-card">
+                <div class="match-header">
+                    <span class="match-round-title">Runde ${m.r} <span style="color: var(--accent-color); font-size: 1rem; font-weight: normal;">• ${m.side}</span></span>
+                    ${isAmericano ? `<span>Americano (Ziel: ${config.targetPoints} Pkt.)</span>` : `<span>Zeitspiel (${config.roundTimeMinutes} Min)</span>`}
                 </div>
-            `;
-        });
+                <div class="match-teams">
+                    <div class="team">${m.t1[0]} & ${m.t1[1]}</div>
+                    <div class="score-inputs">
+                        <select id="sc_${idx}_1" class="score-select" onchange="handleScoreInput(${idx}, 1, this.value)">
+                            ${options1}
+                        </select>
+                        <span style="font-size: 1.5rem; font-weight: bold; color: var(--accent-color);">:</span>
+                        <select id="sc_${idx}_2" class="score-select" onchange="handleScoreInput(${idx}, 2, this.value)">
+                            ${options2}
+                        </select>
+                    </div>
+                    <div class="team team-right">${m.t2[0]} & ${m.t2[1]}</div>
+                </div>
+                ${m.bench.length > 0 ? `
+                    <div class="bench-info-box">
+                        <div class="bench-title">☕ PAUSE IN DIESER RUNDE</div>
+                        <div class="bench-names">${m.bench.join(' & ')}</div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     function handleScoreInput(matchIdx, team, val) {
@@ -725,9 +817,11 @@
     function loadTimerRound(roundIdx) {
         if (roundIdx >= config.rounds.length) roundIdx = 0;
         timerState.currentRound = roundIdx;
+        currentViewRound = roundIdx;
         timerState.secondsLeft = config.roundTimeMinutes * 60;
         document.getElementById('currentRoundLabel').innerText = `Runde ${roundIdx + 1} von ${config.rounds.length}`;
         updateTimerDisplay();
+        renderMatches();
     }
 
     function toggleTimer() {
