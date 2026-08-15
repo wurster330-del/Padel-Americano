@@ -268,6 +268,14 @@
             margin-bottom: 2px;
         }
 
+        .clock-display {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
         .timer-display {
             font-size: 5.5rem;
             font-weight: 900;
@@ -564,6 +572,9 @@
             <div style="text-align: center;">
                 <div id="currentRoundLabel" class="round-display-large">Runde 1 von 5</div>
                 
+                <!-- Aktuelle Live-Uhrzeit -->
+                <div id="clockDisplay" class="clock-display">🕒 --:-- Uhr</div>
+
                 <div id="timerDisplay" class="timer-display" onclick="editTimerDirectly()" title="Tippen zum manuellen Ändern">20:00</div>
                 <div class="timer-hint">✏️ Tippen zum manuellen Eingeben der Zeit</div>
                 
@@ -649,7 +660,19 @@
 
     window.onload = function() {
         selectDuration(120);
+        updateClock();
+        setInterval(updateClock, 1000);
     };
+
+    function updateClock() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const clockEl = document.getElementById('clockDisplay');
+        if (clockEl) {
+            clockEl.innerText = `🕒 ${hours}:${minutes} Uhr`;
+        }
+    }
 
     function selectDuration(dur) {
         config.duration = dur;
