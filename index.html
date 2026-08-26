@@ -2,1239 +2,1707 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Padel Manager Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kassensystem - Getrennte Kategorien</title>
+    <!-- SheetJS für den automatischen Excel-Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root {
-            --bg-color: #0B0F19;
-            --card-bg: rgba(22, 31, 48, 0.75);
-            --card-border: rgba(255, 255, 255, 0.12);
-            --accent-color: #CCFF00;
-            --accent-hover: #b3e600;
-            --accent-glow: rgba(204, 255, 0, 0.3);
-            --text-color: #F3F4F6;
-            --text-muted: #9CA3AF;
-            --border-color: #1F293D;
-            --danger-color: #EF4444;
-            --warning-color: #F59E0B;
-            --secondary-bg: #161F30;
-        }
-
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            font-family: Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(204, 255, 0, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
-            background-attachment: fixed;
-            color: var(--text-color);
-            min-height: 100vh;
-            padding: 24px;
-            display: flex;
-            justify-content: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 15px;
         }
 
         .container {
-            width: 100%;
-            max-width: 1100px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 28px;
-            padding-bottom: 16px;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: #FFFFFF;
-            letter-spacing: -0.5px;
-            margin-bottom: 6px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        h1 span { color: var(--accent-color); }
-        p.subtitle { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; }
-
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--card-border);
-        }
-
-        h2 {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #FFFFFF;
-            letter-spacing: -0.2px;
-        }
-
-        .section-header-inline {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .section-header-inline h2 { margin-bottom: 0; }
-
-        .btn-info-inline {
-            background: rgba(204, 255, 0, 0.12);
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-info-inline:hover {
-            background: var(--accent-color);
-            color: #0B0F19;
-            box-shadow: 0 0 12px var(--accent-glow);
-        }
-
-        .card-header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .card-header-flex h2 { margin-bottom: 0; }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
-        }
-
-        @media (min-width: 850px) {
-            .dashboard-grid {
-                grid-template-columns: 1.2fr 0.8fr;
-                align-items: start;
-            }
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-
-        .btn-option {
+        .kasse-panel {
             flex: 1;
-            min-width: 90px;
-            padding: 14px 16px;
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-muted);
-            border-radius: 14px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: center;
-        }
-
-        .btn-option:hover { color: #FFF; border-color: rgba(255,255,255,0.3); }
-        .btn-option.active {
-            border-color: var(--accent-color);
-            background-color: var(--accent-glow);
-            color: var(--accent-color);
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        .input-group { margin-bottom: 14px; }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 14px 16px;
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            color: #FFFFFF;
-            font-size: 1rem;
-            font-weight: 500;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus { border-color: var(--accent-color); }
-
-        .btn-primary {
-            width: 100%;
-            padding: 18px;
-            background-color: var(--accent-color);
-            color: #0B0F19;
-            border: none;
-            border-radius: 14px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 12px;
-            box-shadow: 0 4px 20px var(--accent-glow);
-        }
-
-        .btn-primary:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
-        .btn-primary:active { transform: translateY(0); }
-
-        .btn-secondary {
-            padding: 10px 18px;
-            background-color: var(--secondary-bg);
-            color: var(--text-color);
-            border: 1px solid var(--card-border);
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-secondary:hover { background-color: #243047; color: #FFF; }
-        .btn-secondary:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        .btn-shuffle { background-color: #2563EB; color: #FFFFFF; border: none; }
-        .btn-shuffle:hover { background-color: #1D4ED8; }
-
-        .btn-add-round { background-color: var(--accent-color); color: #0B0F19; border: none; }
-        .btn-add-round:hover { background-color: var(--accent-hover); }
-
-        .round-display-large {
-            font-size: 1rem;
-            font-weight: 800;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 2px;
-        }
-
-        .clock-display {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
-        }
-
-        .timer-display {
-            font-size: 5.5rem;
-            font-weight: 900;
-            text-align: center;
-            color: #FFFFFF;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            letter-spacing: -2px;
-            cursor: pointer;
-            display: inline-block;
-            padding: 0 20px;
-            border-radius: 16px;
-            transition: background-color 0.2s;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-        }
-
-        .timer-display:hover { background-color: rgba(255, 255, 255, 0.05); }
-
-        .timer-hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; }
-
-        .timer-quick-adjust {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .btn-adjust {
-            padding: 6px 14px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-muted);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-adjust:hover { color: #FFF; border-color: rgba(255,255,255,0.2); }
-
-        .timer-controls { display: flex; justify-content: center; gap: 12px; }
-
-        .timer-btn {
-            padding: 14px 28px;
-            font-size: 1rem;
-            font-weight: 800;
-            border-radius: 12px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-start { background-color: var(--accent-color); color: #0B0F19; box-shadow: 0 0 15px var(--accent-glow); }
-        .btn-pause { background-color: var(--warning-color); color: #000; }
-        .btn-reset { background-color: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); }
-
-        .round-nav-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--secondary-bg);
-            padding: 10px 14px;
-            border-radius: 14px;
-            margin-bottom: 16px;
-            border: 1px solid var(--card-border);
-        }
-
-        .round-nav-title { font-size: 1.1rem; font-weight: 800; color: #FFFFFF; }
-
-        .match-card {
-            background-color: var(--secondary-bg);
-            border-radius: 16px;
+            background: #ffffff;
             padding: 20px;
-            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .match-round-title {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .badge-court {
-            background-color: var(--accent-glow);
-            color: var(--accent-color);
-            padding: 3px 8px;
+        .bestand-bar {
+            background-color: #e2e3e5;
+            border: 1px solid #d6d8db;
+            padding: 12px;
             border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .match-teams {
+        .bestand-info {
+            font-size: 15px;
+            color: #383d41;
+        }
+
+        .btn-bestand-edit {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-bestand-edit:hover {
+            background: #5a6268;
+        }
+
+        .add-product-form {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .add-product-form input[type="text"],
+        .add-product-form input[type="number"],
+        .add-product-form select {
+            padding: 8px;
+            font-size: 13px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .color-picker-wrapper {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 1.15rem;
-            font-weight: 700;
+            font-size: 13px;
+            font-weight: bold;
         }
 
-        .team { flex: 1; }
-        .team-right { text-align: right; }
+        .add-product-form input[type="color"] {
+            border: none;
+            width: 50px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: transparent;
+        }
 
-        .bench-info-box {
-            margin-top: 18px;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.15));
-            border: 1px dashed var(--warning-color);
-            border-radius: 12px;
-            padding: 14px 18px;
+        .btn-add {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-add:hover {
+            background-color: #138496;
+        }
+
+        .produkte-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .btn-toggle-delete {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-toggle-delete.active {
+            background-color: #dc3545;
+        }
+
+        .kategorie-titel {
+            font-size: 16px;
+            font-weight: bold;
+            color: #495057;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .produkt-wrapper {
+            position: relative;
+        }
+
+        .btn-produkt {
+            width: 100%;
+            height: 85px;
+            padding: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+            line-height: 1.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-produkt::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 70%);
+            z-index: 1;
+        }
+
+        .btn-produkt-content {
+            position: relative;
+            z-index: 2;
             text-align: center;
         }
 
-        .bench-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--warning-color);
-            font-weight: 800;
-            margin-bottom: 4px;
+        .btn-produkt:hover {
+            opacity: 0.9;
         }
 
-        .bench-names { font-size: 1.4rem; font-weight: 800; color: #FFFFFF; }
+        .btn-produkt:active {
+            transform: scale(0.98);
+        }
 
-        .score-inputs {
+        .btn-delete-item, .btn-edit-item {
+            position: absolute;
+            top: -6px;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 3;
+        }
+
+        .btn-delete-item {
+            right: -6px;
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-edit-item {
+            left: -6px;
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .delete-mode .btn-delete-item,
+        .delete-mode .btn-edit-item {
+            display: flex;
+        }
+
+        .zahlungs-bereich {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .zahlungs-zeile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .zahlungs-zeile input {
+            padding: 10px;
+            font-size: 18px;
+            width: 110px;
+            font-weight: bold;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+
+        .schnell-geld {
             display: flex;
             gap: 8px;
-            align-items: center;
-            margin: 0 12px;
+            flex-wrap: wrap;
         }
 
-        .score-select {
-            width: 70px;
-            height: 50px;
-            background-color: var(--bg-color);
-            border: 2px solid var(--accent-color);
-            border-radius: 12px;
-            color: #FFFFFF;
-            font-size: 1.3rem;
-            font-weight: 800;
-            text-align: center;
+        .btn-schein {
+            background: #495057;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            outline: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            text-align-last: center;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            font-size: 16px;
+            font-weight: bold;
+            min-width: 55px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            transition: background 0.15s, transform 0.1s;
         }
 
-        .leaderboard-header-clickable {
+        .btn-schein:hover {
+            background: #343a40;
+        }
+
+        .btn-schein:active {
+            transform: scale(0.95);
+        }
+
+        .rueckgeld-anzeige {
+            font-size: 18px;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .storno-gruppe {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            flex-direction: column;
+        }
+
+        .storno-zeile-1 {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-drucken {
+            background-color: #28a745;
+            color: white;
+            margin-top: 10px;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        .btn-drucken:hover {
+            background-color: #218838;
+        }
+
+        .btn-undo {
+            background-color: #fd7e14;
+            color: white;
+        }
+
+        .btn-undo:hover {
+            background-color: #e0690b;
+        }
+
+        .btn-storno {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-storno:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-bon-storno {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-bon-storno:hover {
+            background-color: #c82333;
+        }
+
+        .btn-helfer-klein {
+            background-color: #17a2b8;
+            color: white;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .btn-helfer-klein:hover {
+            background-color: #138496;
+        }
+
+        .btn-inhaber {
+            background-color: #343a40;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .btn-inhaber:hover {
+            background-color: #23272b;
+        }
+
+        .bon-container {
+            width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        #bon-bereich {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #000;
+        }
+
+        .bon-header, .bon-footer {
+            text-align: center;
+        }
+
+        .editable-header {
+            outline: none;
+            padding: 2px 4px;
+            border: 1px dashed transparent;
+            border-radius: 3px;
+            transition: border 0.2s, background-color 0.2s;
+        }
+
+        .editable-header:hover {
+            border-color: #007bff;
+            background-color: #f0f7ff;
+            cursor: pointer;
+        }
+
+        .editable-header:focus {
+            border-color: #28a745;
+            background-color: #ffffff;
+            cursor: text;
+        }
+
+        .trennlinie {
+            border-bottom: 1px dashed #000;
+            margin: 10px 0;
+        }
+
+        .bon-zeile {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            margin: 4px 0;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .bon-zeile.item-row {
             cursor: pointer;
             user-select: none;
         }
 
-        .leaderboard-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 6px;
-            margin-top: 6px;
+        .bon-zeile.item-row:hover {
+            background-color: #ffe6e6;
+            color: #dc3545;
+            text-decoration: line-through;
         }
 
-        .leaderboard-table th {
-            padding: 8px 12px;
-            text-align: left;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            font-weight: 700;
-            border: none;
+        .bon-summe {
+            font-size: 16px;
+            font-weight: bold;
         }
 
-        .leaderboard-table td {
-            padding: 14px 12px;
-            background-color: var(--secondary-bg);
-            border-top: 1px solid var(--card-border);
-            border-bottom: 1px solid var(--card-border);
-            font-size: 0.95rem;
+        .eigenbedarf-banner {
+            display: none;
+            background-color: #17a2b8;
+            color: white;
+            text-align: center;
+            padding: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
         }
 
-        .leaderboard-table tr td:first-child {
-            border-top-left-radius: 10px;
-            border-bottom-left-radius: 10px;
-            border-left: 1px solid var(--card-border);
+        .eigenbedarf-banner.active {
+            display: block;
         }
 
-        .leaderboard-table tr td:last-child {
-            border-top-right-radius: 10px;
-            border-bottom-right-radius: 10px;
-            border-right: 1px solid var(--card-border);
-        }
-
-        .rank { font-weight: 800; color: var(--accent-color); width: 35px; }
-
-        /* Modal Overlay & Styling */
+        /* MODAL & INHABER-BEREICH IM QUERFORMAT */
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             padding: 20px;
         }
 
+        .modal-overlay.active {
+            display: flex;
+        }
+
         .modal-card {
-            background: var(--secondary-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 28px;
-            max-width: 520px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
             width: 100%;
-            box-shadow: 0 25px 40px rgba(0,0,0,0.8);
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Inhaber-Modal spezifische Querformat-Optimierung */
+        .modal-card.inhaber-wide {
+            max-width: 1000px;
+            width: 90vw;
+        }
+
+        .inhaber-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
         }
 
         .modal-card h3 {
-            color: #FFFFFF;
-            margin-bottom: 18px;
-            font-size: 1.3rem;
-            font-weight: 800;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .modal-card label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+
+        .modal-card input[type="text"],
+        .modal-card input[type="number"],
+        .modal-card select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .modal-actions {
             display: flex;
-            align-items: center;
             gap: 10px;
+            margin-top: 15px;
+            justify-content: flex-end;
+            grid-column: span 2;
         }
 
-        .modal-card ul {
-            list-style: none;
-            margin-bottom: 24px;
+        .modal-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
-        .modal-card li {
-            font-size: 0.92rem;
-            line-height: 1.5;
-            color: var(--text-color);
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--card-border);
+        .btn-modal-save {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-modal-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .inhaber-section {
+            border: 1px solid #e9ecef;
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            justify-content: space-between;
         }
 
-        .modal-card li:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
+        .inhaber-section h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #343a40;
         }
 
-        .badge-mode {
-            display: inline-block;
-            color: var(--accent-color);
-            font-weight: 700;
-            font-size: 0.9rem;
+        .helfer-auswahl-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .hidden { display: none !important; }
+        .btn-helfer-select {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-helfer-select:hover {
+            background-color: #138496;
+        }
+
+        .helfer-liste-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+        .btn-del-helfer {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 6px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        /* QUERFORMAT-MEDIENANPASSUNG (Landscape Mode) */
+        @media (orientation: landscape) and (max-height: 700px) {
+            body {
+                padding: 10px;
+            }
+            
+            .btn-produkt {
+                height: 70px;
+                font-size: 14px;
+            }
+
+            .modal-card {
+                max-height: 95vh;
+                padding: 15px;
+            }
+
+            .inhaber-grid {
+                gap: 10px;
+            }
+
+            .inhaber-section {
+                padding: 8px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+
+            .no-print, .modal-overlay {
+                display: none !important;
+            }
+
+            .container {
+                display: block;
+                margin: 0;
+            }
+
+            .bon-container {
+                box-shadow: none;
+                padding: 0;
+                width: 100%;
+            }
+
+            #bon-bereich {
+                width: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            .editable-header {
+                border: none !important;
+                background: transparent !important;
+            }
+
+            .bon-zeile.item-row:hover {
+                background-color: transparent;
+                color: black;
+                text-decoration: none;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>🎾 PADEL <span>MANAGER</span></h1>
-        <p class="subtitle">Turniersteuerung für iPad (1 Court)</p>
-    </header>
+    <div class="kasse-panel no-print">
 
-    <div id="setupScreen" class="card">
-        <h2>1. Spieldauer & Modus wählen</h2>
-        <div class="btn-group" id="durationGroup">
-            <button class="btn-option active" onclick="selectDuration(120)">120 Min (5 Runden à 20 Min)</button>
-            <button class="btn-option" onclick="selectDuration(180)">180 Min (Americano)</button>
+        <div class="bestand-bar">
+            <div class="bestand-info">
+                <strong>Soll-Kassenbestand:</strong> <span id="kassenbestand-anzeige">0,00</span> €
+                <br><small style="color:#6c757d;">(Wechselgeld: <span id="anfangsbestand-anzeige">0,00</span> €)</small>
+            </div>
+            <button class="btn-bestand-edit" onclick="anfangsbestandAendern()" title="Wechselgeld-Anfangsbestand festlegen">Anfangsbestand ändern</button>
         </div>
 
-        <div id="targetPointsSection" class="hidden">
-            <h2>2. Zielpunkte pro Match</h2>
-            <div class="btn-group" id="targetPointsGroup">
-                <button class="btn-option" onclick="selectTargetPoints(16)">16 Pkt.</button>
-                <button class="btn-option active" onclick="selectTargetPoints(21)">21 Pkt.</button>
-                <button class="btn-option" onclick="selectTargetPoints(24)">24 Pkt.</button>
-                <button class="btn-option" onclick="selectTargetPoints(31)">31 Pkt.</button>
-                <button class="btn-option" onclick="selectTargetPoints(32)">32 Pkt.</button>
+        <div class="produkte-header">
+            <h2>Produkte</h2>
+            <button class="btn-toggle-delete" id="toggle-delete-btn" onclick="toggleLöschModus()">Produkte verwalten</button>
+        </div>
+
+        <!-- Getrennte Abschnitte für Getränke und Verzehr -->
+        <div class="kategorie-titel">🍺 Getränke</div>
+        <div class="grid" id="grid-getraenke"></div>
+
+        <div class="kategorie-titel">🍔 Verzehr</div>
+        <div class="grid" id="grid-verzehr"></div>
+
+        <div class="zahlungs-bereich">
+            <div class="zahlungs-zeile">
+                <label for="gegeben-geld"><strong>Gegeben:</strong></label>
+                <input type="number" id="gegeben-geld" step="0.01" placeholder="0,00" oninput="berechneRueckgeld()"> €
+                
+                <div class="schnell-geld">
+                    <button class="btn-schein" onclick="setGegeben(5)">5 €</button>
+                    <button class="btn-schein" onclick="setGegeben(10)">10 €</button>
+                    <button class="btn-schein" onclick="setGegeben(20)">20 €</button>
+                    <button class="btn-schein" onclick="setGegeben(50)">50 €</button>
+                </div>
+            </div>
+            <div class="rueckgeld-anzeige">
+                Rückgeld: <span id="rueckgeld-text">0,00</span> €
             </div>
         </div>
 
-        <div id="benchPointsSection" class="hidden">
-            <div class="section-header-inline">
-                <h2>3. Bankpunkte (für pausierende Spieler)</h2>
-                <button type="button" class="btn-info-inline" onclick="toggleInfoModal(true)">ℹ️ Berechnungslogik</button>
+        <div class="storno-gruppe">
+            <div class="storno-zeile-1">
+                <button class="btn-action btn-undo" onclick="entferneLetztenArtikel()" title="Zuletzt geklickten Artikel aus Warenkorb entfernen"> ↩ Letzten Artikel entfernen</button>
+                <button class="btn-action btn-storno" onclick="storno()" title="Warenkorb leeren"> Warenkorb leeren</button>
             </div>
-            <div class="btn-group" id="benchPointsGroup">
-                <button class="btn-option active" onclick="selectBenchPoints('none')">0 Punkte</button>
-                <button class="btn-option" onclick="selectBenchPoints('avg')">Rundendurchschnitt</button>
-                <button class="btn-option" onclick="selectBenchPoints('half')">Hälfte der Zielpunkte</button>
-                <button class="btn-option" onclick="selectBenchPoints('overall_avg')">Gesamtdurchschnitt aller Runden</button>
+            <div>
+                <button class="btn-helfer-klein" onclick="aktiviereHelferEigenbedarfMitPasswort()" title="Kostenlose Helfer-Ausgabe aktivieren">🎁 Helfer-Ausgabe (100% Rabatt)</button>
             </div>
         </div>
+        
+        <button class="btn-action btn-drucken" onclick="bonDrucken()">Bon Drucken & Abrechnen</button>
 
-        <div id="playersCountSection" class="hidden">
-            <h2>4. Spieleranzahl wählen</h2>
-            <div class="btn-group" id="playersCountGroup">
-                <button class="btn-option" onclick="selectPlayers(4)">4 Spieler</button>
-                <button class="btn-option" onclick="selectPlayers(5)">5 Spieler</button>
-                <button class="btn-option active" onclick="selectPlayers(6)">6 Spieler</button>
-            </div>
-        </div>
-
-        <h2><span id="playerSetupTitle">2. Spielernamen eingeben</span></h2>
-        <div id="playerInputs" class="grid-2">
-        </div>
-
-        <button class="btn-primary" onclick="startTournament()">Turnier Starten</button>
+        <button class="btn-action btn-inhaber" onclick="oefneInhaberBereich()">🔒 Inhaber-Bereich</button>
     </div>
 
-    <div id="dashboardScreen" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="dashboardTitle" style="margin: 0; font-size: 1.3rem;">Turnier Übersicht</h2>
-            <button class="btn-secondary" onclick="resetSetup()">Neues Turnier</button>
-        </div>
-
-        <div id="timerSection" class="card hidden">
-            <div style="text-align: center;">
-                <div id="currentRoundLabel" class="round-display-large">Runde 1 von 5</div>
-                
-                <div id="clockDisplay" class="clock-display">🕒 --:-- Uhr</div>
-
-                <div id="timerDisplay" class="timer-display" onclick="editTimerDirectly()" title="Tippen zum manuellen Ändern">20:00</div>
-                <div class="timer-hint">✏️ Tippen zum manuellen Eingeben der Zeit</div>
-                
-                <div class="timer-quick-adjust">
-                    <button class="btn-adjust" onclick="adjustTimerMinutes(-5)">-5 Min</button>
-                    <button class="btn-adjust" onclick="adjustTimerMinutes(-1)">-1 Min</button>
-                    <button class="btn-adjust" onclick="adjustTimerMinutes(1)">+1 Min</button>
-                    <button class="btn-adjust" onclick="adjustTimerMinutes(5)">+5 Min</button>
-                </div>
-
-                <div class="timer-controls">
-                    <button id="startBtn" class="timer-btn btn-start" onclick="toggleTimer()">Start</button>
-                    <button class="timer-btn btn-reset" onclick="resetTimer()">Reset</button>
-                    <button class="timer-btn btn-secondary" onclick="nextTimerRound()">Nächste Runde ➔</button>
-                </div>
+    <div class="bon-container">
+        <div id="bon-bereich">
+            <div class="bon-header">
+                <div contenteditable="true" class="editable-header" id="geschaeft-name" onblur="speichereGeschaeftsdaten()" title="Klicken zum Bearbeiten"><strong>MEIN GESCHÄFT</strong></div>
+                <div contenteditable="true" class="editable-header" id="geschaeft-strasse" onblur="speichereGeschaeftsdaten()" title="Klicken zum Bearbeiten">Musterstraße 12</div>
+                <div contenteditable="true" class="editable-header" id="geschaeft-ort" onblur="speichereGeschaeftsdaten()" title="Klicken zum Bearbeiten">12345 Musterstadt</div>
+                <div contenteditable="true" class="editable-header" id="geschaeft-tel" onblur="speichereGeschaeftsdaten()" title="Klicken zum Bearbeiten">Tel: 0123-456789</div>
             </div>
-        </div>
 
-        <div class="dashboard-grid">
-            <div class="card">
-                <div class="card-header-flex">
-                    <h2>Aktuelle Spielrunde</h2>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button id="btnAddRound" class="btn-secondary btn-add-round" onclick="addExtraRound()">➕ Runde</button>
-                        <button class="btn-secondary btn-shuffle" onclick="shufflePartners()">🔀 Mischen</button>
-                    </div>
+            <div class="trennlinie"></div>
+
+            <div class="eigenbedarf-banner" id="eigenbedarf-banner">HELFER-AUSGABE</div>
+
+            <div id="bon-artikel"></div>
+
+            <div class="trennlinie"></div>
+
+            <div class="bon-zeile bon-summe">
+                <span>GESAMT:</span>
+                <span><span id="summe">0,00</span> €</span>
+            </div>
+
+            <div id="bon-zahlung-bereich" style="display: none;">
+                <div class="bon-zeile">
+                    <span>Gegeben:</span>
+                    <span><span id="bon-gegeben">0,00</span> €</span>
                 </div>
-
-                <div class="round-nav-bar">
-                    <button id="btnPrevRound" class="btn-secondary" onclick="changeViewRound(-1)">◀ Vorherige</button>
-                    <span id="roundNavTitle" class="round-nav-title">Runde 1 von 5</span>
-                    <button id="btnNextRound" class="btn-secondary" onclick="changeViewRound(1)">Nächste ▶</button>
-                </div>
-
-                <div id="matchList">
+                <div class="bon-zeile">
+                    <span>Rückgeld:</span>
+                    <span><span id="bon-rueckgeld">0,00</span> €</span>
                 </div>
             </div>
 
-            <!-- Einklappbare Live-Tabelle im Hintergrund -->
-            <div id="leaderboardSection" class="card">
-                <div class="leaderboard-header-clickable" onclick="toggleLeaderboard()">
-                    <h2 style="margin: 0;">Live-Tabelle (Einzelwertung)</h2>
-                    <button id="btnToggleTable" class="btn-secondary" type="button">👁️ Einblenden</button>
-                </div>
-                
-                <div id="leaderboardWrapper" class="hidden" style="margin-top: 16px;">
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th class="rank">#</th>
-                                <th>Spieler</th>
-                                <th>Gesp.</th>
-                                <th id="thWins" class="hidden">Siege</th>
-                                <th id="thPointsLabel">Games</th>
-                                <th id="thBench">Bankp.</th>
-                                <th id="thDiff" class="hidden">Diff.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboardBody">
-                        </tbody>
-                    </table>
-                </div>
+            <div class="trennlinie"></div>
+
+            <div class="bon-footer">
+                <div contenteditable="true" class="editable-header" id="geschaeft-fusszeile" onblur="speichereGeschaeftsdaten()" title="Klicken zum Bearbeiten">Vielen Dank für Ihren Besuch!</div>
+                <span id="bon-datum"></span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Erklär-Modal für Bankpunkte -->
-<div id="infoModal" class="modal-overlay hidden">
+<!-- Modal Dialog: Inhaber-Bereich (Breitbild/Querformat) -->
+<div class="modal-overlay" id="inhaber-modal">
+    <div class="modal-card inhaber-wide">
+        <h3>🔒 Inhaber-Bereich</h3>
+
+        <div class="inhaber-grid">
+            <!-- Spalte 1: Bon Storno & Tagesabschluss -->
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="inhaber-section">
+                    <h4>Kassensystem Storno</h4>
+                    <button class="btn-action btn-bon-storno" onclick="storniereLetztenBon()" title="Den zuletzt abgerechneten Bon vollständig zurückabwickeln">⚠️ Letzten Bon komplett stornieren</button>
+                </div>
+
+                <div class="inhaber-section">
+                    <h4>Tagesabschluss & Reports</h4>
+                    <button class="btn-action btn-inhaber" style="margin-top:0;" onclick="starteTagesabschlussProcess()">📊 Tagesabschluss & Excel-Export</button>
+                </div>
+
+                <div class="inhaber-section">
+                    <h4>Helferliste verwalten</h4>
+                    <div class="add-product-form">
+                        <input type="text" id="neuer-helfer-name" placeholder="Name des Helfers (z. B. Anna)">
+                        <button class="btn-add" onclick="erstelleNeuenHelfer()">+ Helfer hinzufügen</button>
+                    </div>
+                    <div id="helfer-liste-container" style="max-height: 100px; overflow-y: auto; margin-top: 8px;"></div>
+                </div>
+            </div>
+
+            <!-- Spalte 2: Neues Produkt anlegen -->
+            <div class="inhaber-section">
+                <h4>Neues Produkt anlegen</h4>
+                <div class="add-product-form">
+                    <input type="text" id="neuer-name" placeholder="Name (z. B. Steak)">
+                    <select id="neue-kategorie">
+                        <option value="verzehr">Verzehr</option>
+                        <option value="getraenke">Getränke</option>
+                    </select>
+                    <input type="number" id="neuer-ek" step="0.01" placeholder="EK (€)">
+                    <input type="number" id="neuer-preis" step="0.01" placeholder="VK (€)">
+                    <input type="text" id="neuer-bild-url" placeholder="Bild-URL (optional)">
+                    <div class="color-picker-wrapper">
+                        <label for="neue-farbe">Button-Farbe:</label>
+                        <input type="color" id="neue-farbe" value="#007bff">
+                    </div>
+                    <button class="btn-add" onclick="erstelleNeuesProdukt()">+ Produkt anlegen</button>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="schliesseInhaberModal()">Schließen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dialog: Helfer Auswählen -->
+<div class="modal-overlay" id="helfer-auswahl-modal">
     <div class="modal-card">
-        <h3>ℹ️ Punkteberechnung für Pausierende</h3>
-        <ul>
-            <li>
-                <span class="badge-mode">0 Punkte:</span>
-                Pausierende Spieler erhalten für Runden ohne Match keine Punkte.
-            </li>
-            <li>
-                <span class="badge-mode">Rundendurchschnitt:</span>
-                Ermittelt die durchschnittlichen Punkte pro Spieler aus dem aktuell absolvierten Match dieser Runde.
-            </li>
-            <li>
-                <span class="badge-mode">Hälfte der Zielpunkte:</span>
-                Vergibt exakt 50 % der Zielpunktzahl (z. B. 10.5 Punkte bei 21 Zielpunkten).
-            </li>
-            <li>
-                <span class="badge-mode">Gesamtdurchschnitt:</span>
-                Berechnet den fortlaufenden Mittelwert aller bisherig erzielten Matchpunkte aller aktiven Spieler im Turnier.
-            </li>
-        </ul>
-        <button class="btn-primary" style="margin-top: 0;" onclick="toggleInfoModal(false)">Verstanden</button>
+        <h3>🎁 Helfer auswählen</h3>
+        <p style="font-size: 13px; color: #6c757d;">Wähle einen Helfer aus der hinterlegten Liste oder gib einen neuen Namen ein:</p>
+        
+        <div class="helfer-auswahl-grid" id="helfer-auswahl-grid"></div>
+
+        <div style="border-top: 1px solid #dee2e6; padding-top: 10px;">
+            <input type="text" id="manuell-helfer-input" placeholder="Oder Name manuell eingeben..." style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; margin-bottom: 10px;">
+            <button class="btn-add" onclick="waehleHelferManuell()">Manuell Auswählen</button>
+        </div>
+
+        <div class="modal-actions" style="grid-column: span 1;">
+            <button class="btn-modal-cancel" onclick="schliesseHelferAuswahlModal()">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dialog zum Bearbeiten eines Produkts -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal-card">
+        <h3>Produkt bearbeiten</h3>
+        <input type="hidden" id="edit-index">
+        
+        <label for="edit-name">Produktname:</label>
+        <input type="text" id="edit-name">
+
+        <label for="edit-kategorie">Kategorie:</label>
+        <select id="edit-kategorie">
+            <option value="verzehr">Verzehr</option>
+            <option value="getraenke">Getränke</option>
+        </select>
+
+        <label for="edit-ek">Einkaufspreis (€):</label>
+        <input type="number" id="edit-ek" step="0.01">
+
+        <label for="edit-preis">Verkaufspreis (€):</label>
+        <input type="number" id="edit-preis" step="0.01">
+
+        <label for="edit-bild-url">Bild-URL:</label>
+        <input type="text" id="edit-bild-url">
+
+        <label for="edit-farbe">Farbe:</label>
+        <input type="color" id="edit-farbe" style="width: 100%; height: 38px; cursor: pointer;">
+
+        <div class="modal-actions" style="grid-column: span 1;">
+            <button class="btn-modal-cancel" onclick="schliesseEditModal()">Abbrechen</button>
+            <button class="btn-modal-save" onclick="speichereProduktAenderung()">Speichern</button>
+        </div>
     </div>
 </div>
 
 <script>
-    const defaultPlayerNames = ['Werner', 'David', 'Stefan', 'Christian', 'Marco', 'Tobias'];
+    const INHABER_PIN = "1234";
 
-    let config = {
-        duration: 120,
-        targetPoints: 21,
-        benchPointsMode: 'none',
-        playersCount: 4,
-        players: [],
-        roundTimeMinutes: 20,
-        rounds: []
-    };
+    let gesamt = 0;
+    let loeschModusAktiv = false;
+    let istHelferAusgabe = false;
+    let aktuellerHelferName = "";
+    let warenkorb = []; 
+    let tagesumsatz = 0.00;
+    let tagesgewinn = 0.00;
+    let anzahlVerkaeufe = 0;
+    let anfangsbestand = 0.00;
+    let verkaeufeStatistik = {};
+    let helferStatistik = { anzahl: 0, warenwert: 0.00, helfer: {} };
+    let letzterBon = null;
+    let helferNamenListe = [];
 
-    let timerState = {
-        secondsLeft: 0,
-        interval: null,
-        isRunning: false,
-        currentRound: 0
-    };
-
-    let currentViewRound = 0;
-    let scores = {};
+    const standardProdukte = [
+        { 
+            name: 'Wurst', 
+            kategorie: 'verzehr',
+            ek: 1.00, 
+            preis: 3.50, 
+            farbe: '#d9534f',
+            bildUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80'
+        },
+        { 
+            name: 'Steak', 
+            kategorie: 'verzehr',
+            ek: 4.50, 
+            preis: 12.00, 
+            farbe: '#8b0000',
+            bildUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80'
+        },
+        { 
+            name: 'Pils Bier', 
+            kategorie: 'getraenke',
+            ek: 0.80, 
+            preis: 3.00, 
+            farbe: '#f0ad4e',
+            bildUrl: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=400&q=80'
+        },
+        { 
+            name: 'Weizenbier', 
+            kategorie: 'getraenke',
+            ek: 0.90, 
+            preis: 3.80, 
+            farbe: '#ec971f',
+            bildUrl: 'https://images.unsplash.com/photo-1535958636474-b021ee887b13?auto=format&fit=crop&w=400&q=80'
+        }
+    ];
 
     window.onload = function() {
-        selectDuration(120);
-        updateClock();
-        setInterval(updateClock, 1000);
+        ladeProdukte();
+        ladeTagesdaten();
+        ladeGeschaeftsdaten();
+        ladeHelferListe();
+        aktualisiereKassenbestandAnzeige();
     };
 
-    function toggleLeaderboard() {
-        const wrapper = document.getElementById('leaderboardWrapper');
-        const btn = document.getElementById('btnToggleTable');
-        
-        if (wrapper.classList.contains('hidden')) {
-            wrapper.classList.remove('hidden');
-            btn.innerText = '🙈 Ausblenden';
-        } else {
-            wrapper.classList.add('hidden');
-            btn.innerText = '👁️ Einblenden';
-        }
-    }
-
-    function toggleInfoModal(show) {
-        const modal = document.getElementById('infoModal');
-        if (show) {
-            modal.classList.remove('hidden');
-        } else {
-            modal.classList.add('hidden');
-        }
-    }
-
-    function updateClock() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const clockEl = document.getElementById('clockDisplay');
-        if (clockEl) {
-            clockEl.innerText = `🕒 ${hours}:${minutes} Uhr`;
-        }
-    }
-
-    function selectDuration(dur) {
-        config.duration = dur;
-        document.querySelectorAll('#durationGroup .btn-option').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(dur + ' Min'));
-        });
-
-        const targetSection = document.getElementById('targetPointsSection');
-        const benchSection = document.getElementById('benchPointsSection');
-        const playersSection = document.getElementById('playersCountSection');
-        const titleLabel = document.getElementById('playerSetupTitle');
-
-        if (dur === 120) {
-            targetSection.classList.add('hidden');
-            benchSection.classList.add('hidden');
-            playersSection.classList.add('hidden');
-            titleLabel.innerText = "2. Spielernamen eingeben";
-            config.benchPointsMode = 'none';
-            config.playersCount = 4;
-            config.roundTimeMinutes = 20;
-        } else {
-            targetSection.classList.remove('hidden');
-            benchSection.classList.remove('hidden');
-            playersSection.classList.remove('hidden');
-            titleLabel.innerText = "5. Spielernamen eingeben";
-        }
-
-        renderPlayerInputs();
-    }
-
-    function selectTargetPoints(pts) {
-        config.targetPoints = pts;
-        document.querySelectorAll('#targetPointsGroup .btn-option').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(pts + ' Pkt.'));
-        });
-    }
-
-    function selectBenchPoints(mode) {
-        config.benchPointsMode = mode;
-        const labels = { 
-            'none': '0 Punkte', 
-            'avg': 'Rundendurchschnitt', 
-            'half': 'Hälfte der Zielpunkte',
-            'overall_avg': 'Gesamtdurchschnitt'
+    function speichereGeschaeftsdaten() {
+        const daten = {
+            name: document.getElementById('geschaeft-name').innerHTML,
+            strasse: document.getElementById('geschaeft-strasse').innerText,
+            ort: document.getElementById('geschaeft-ort').innerText,
+            tel: document.getElementById('geschaeft-tel').innerText,
+            fusszeile: document.getElementById('geschaeft-fusszeile').innerText
         };
-        document.querySelectorAll('#benchPointsGroup .btn-option').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(labels[mode]));
-        });
+        localStorage.setItem('kasse_geschaeftsdaten', JSON.stringify(daten));
     }
 
-    function selectPlayers(count) {
-        config.playersCount = count;
-        document.querySelectorAll('#playersCountGroup .btn-option').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(count + ' Spieler'));
-        });
-        renderPlayerInputs();
+    function ladeGeschaeftsdaten() {
+        const daten = JSON.parse(localStorage.getItem('kasse_geschaeftsdaten'));
+        if (daten) {
+            if (daten.name) document.getElementById('geschaeft-name').innerHTML = daten.name;
+            if (daten.strasse) document.getElementById('geschaeft-strasse').innerText = daten.strasse;
+            if (daten.ort) document.getElementById('geschaeft-ort').innerText = daten.ort;
+            if (daten.tel) document.getElementById('geschaeft-tel').innerText = daten.tel;
+            if (daten.fusszeile) document.getElementById('geschaeft-fusszeile').innerText = daten.fusszeile;
+        }
     }
 
-    function renderPlayerInputs() {
-        const container = document.getElementById('playerInputs');
+    function ladeHelferListe() {
+        const gespeicherteListe = localStorage.getItem('kasse_helfer_namen');
+        if (gespeicherteListe) {
+            helferNamenListe = JSON.parse(gespeicherteListe);
+        } else {
+            helferNamenListe = ["Max", "Anna", "Lukas", "Julia"];
+            localStorage.setItem('kasse_helfer_namen', JSON.stringify(helferNamenListe));
+        }
+        renderHelferListeUI();
+    }
+
+    function speichereHelferListe() {
+        localStorage.setItem('kasse_helfer_namen', JSON.stringify(helferNamenListe));
+        renderHelferListeUI();
+    }
+
+    function erstelleNeuenHelfer() {
+        const input = document.getElementById('neuer-helfer-name');
+        const name = input.value.trim();
+        if (name) {
+            if (!helferNamenListe.includes(name)) {
+                helferNamenListe.push(name);
+                speichereHelferListe();
+                input.value = '';
+            } else {
+                alert("Helfer existiert bereits!");
+            }
+        }
+    }
+
+    function loescheHelfer(index) {
+        helferNamenListe.splice(index, 1);
+        speichereHelferListe();
+    }
+
+    function renderHelferListeUI() {
+        const container = document.getElementById('helfer-liste-container');
         container.innerHTML = '';
-        for (let i = 1; i <= config.playersCount; i++) {
-            const defaultName = defaultPlayerNames[i - 1] || `Spieler ${i}`;
-            container.innerHTML += `
-                <div class="input-group">
-                    <label>Spieler ${i}</label>
-                    <input type="text" id="pName_${i}" value="${defaultName}">
-                </div>
+
+        helferNamenListe.forEach((hName, idx) => {
+            const item = document.createElement('div');
+            item.className = 'helfer-liste-item';
+            item.innerHTML = `
+                <span>${hName}</span>
+                <button class="btn-del-helfer" onclick="loescheHelfer(${idx})">Entfernen</button>
             `;
-        }
-    }
-
-    function startTournament() {
-        config.players = [];
-        for (let i = 1; i <= config.playersCount; i++) {
-            const name = document.getElementById(`pName_${i}`).value.trim() || `Spieler ${i}`;
-            config.players.push(name);
-        }
-
-        scores = {};
-        currentViewRound = 0;
-        generateSchedule();
-
-        document.getElementById('setupScreen').classList.add('hidden');
-        document.getElementById('dashboardScreen').classList.remove('hidden');
-
-        if (config.duration === 120) {
-            document.getElementById('timerSection').classList.remove('hidden');
-            document.getElementById('thWins').classList.remove('hidden');
-            document.getElementById('thDiff').classList.remove('hidden');
-            document.getElementById('thBench').classList.add('hidden');
-            document.getElementById('thPointsLabel').innerText = "Games";
-            initTimer();
-        } else {
-            document.getElementById('timerSection').classList.add('hidden');
-            document.getElementById('thWins').classList.add('hidden');
-            document.getElementById('thDiff').classList.add('hidden');
-            document.getElementById('thBench').classList.remove('hidden');
-            document.getElementById('thPointsLabel').innerText = "Punkte";
-        }
-
-        document.getElementById('dashboardTitle').innerText = 
-            `${config.duration} Min (${config.duration === 120 ? '5 Runden à 20 Min' : 'Americano'})${config.duration === 180 ? ' – Zielpunkte: ' + config.targetPoints : ''}`;
-
-        renderMatches();
-        updateLeaderboard();
-    }
-
-    function shufflePartners() {
-        if (confirm("Möchtest du die Partnerreihenfolge wirklich neu mischen? Alle bisher eingegebenen Ergebnisse werden dabei zurückgesetzt.")) {
-            for (let i = config.players.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [config.players[i], config.players[j]] = [config.players[j], config.players[i]];
-            }
-            scores = {};
-            generateSchedule();
-            renderMatches();
-            updateLeaderboard();
-        }
-    }
-
-    function getBalancedBaseRounds() {
-        const p = config.players;
-        if (config.playersCount === 4) {
-            return [
-                { t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [], side: 'Platz 1' },
-                { t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [], side: 'Platz 1' },
-                { t1: [p[0], p[3]], t2: [p[1], p[2]], bench: [], side: 'Platz 1' }
-            ];
-        } else if (config.playersCount === 5) {
-            return [
-                { t1: [p[0], p[3]], t2: [p[1], p[2]], bench: [p[4]], side: 'Platz 1' },
-                { t1: [p[1], p[4]], t2: [p[2], p[3]], bench: [p[0]], side: 'Platz 1' },
-                { t1: [p[2], p[0]], t2: [p[3], p[4]], bench: [p[1]], side: 'Platz 1' },
-                { t1: [p[3], p[1]], t2: [p[4], p[0]], bench: [p[2]], side: 'Platz 1' },
-                { t1: [p[4], p[2]], t2: [p[0], p[1]], bench: [p[3]], side: 'Platz 1' }
-            ];
-        } else if (config.playersCount === 6) {
-            return [
-                { t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [p[4], p[5]], side: 'Platz 1' },
-                { t1: [p[0], p[4]], t2: [p[1], p[5]], bench: [p[2], p[3]], side: 'Platz 1' },
-                { t1: [p[2], p[4]], t2: [p[3], p[5]], bench: [p[0]], side: 'Platz 1' },
-                { t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [p[4], p[5]], side: 'Platz 1' },
-                { t1: [p[0], p[5]], t2: [p[1], p[4]], bench: [p[2], p[3]], side: 'Platz 1' },
-                { t1: [p[2], p[5]], t2: [p[3], p[4]], bench: [p[0], p[1]], side: 'Platz 1' }
-            ];
-        }
-        return [];
-    }
-
-    function addExtraRound() {
-        const baseRounds = getBalancedBaseRounds();
-        const nextRoundIndex = config.rounds.length;
-        const templateMatch = baseRounds[nextRoundIndex % baseRounds.length];
-
-        const newMatch = { ...templateMatch, r: nextRoundIndex + 1, side: 'Platz 1' };
-
-        config.rounds.push(newMatch);
-        currentViewRound = config.rounds.length - 1;
-        renderMatches();
-        updateLeaderboard();
-
-        if (config.duration === 120) {
-            document.getElementById('currentRoundLabel').innerText = `Runde ${timerState.currentRound + 1} von ${config.rounds.length}`;
-        }
-    }
-
-    function generateSchedule() {
-        const p = config.players;
-        config.rounds = [];
-
-        if (config.duration === 120) {
-            config.roundTimeMinutes = 20;
-            config.rounds = [
-                { r: 1, t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [], side: 'Platz 1' },
-                { r: 2, t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [], side: 'Platz 1' },
-                { r: 3, t1: [p[0], p[3]], t2: [p[1], p[2]], bench: [], side: 'Platz 1' },
-                { r: 4, t1: [p[0], p[1]], t2: [p[2], p[3]], bench: [], side: 'Platz 1' },
-                { r: 5, t1: [p[0], p[2]], t2: [p[1], p[3]], bench: [], side: 'Platz 1' }
-            ];
-        } else {
-            const baseRounds = getBalancedBaseRounds();
-            let repeatCount = 2;
-            if (config.playersCount === 4) repeatCount = 3;
-
-            let fullList = [];
-            for (let i = 0; i < repeatCount; i++) {
-                fullList = fullList.concat(baseRounds);
-            }
-
-            config.rounds = fullList.map((m, idx) => ({
-                ...m,
-                r: idx + 1,
-                side: 'Platz 1'
-            }));
-        }
-    }
-
-    function changeViewRound(delta) {
-        let newRound = currentViewRound + delta;
-        if (newRound >= 0 && newRound < config.rounds.length) {
-            currentViewRound = newRound;
-            renderMatches();
-        }
-    }
-
-    function renderMatches() {
-        const container = document.getElementById('matchList');
-        container.innerHTML = '';
-
-        if (currentViewRound < 0) currentViewRound = 0;
-        if (currentViewRound >= config.rounds.length) currentViewRound = config.rounds.length - 1;
-
-        document.getElementById('roundNavTitle').innerText = `Runde ${currentViewRound + 1} von ${config.rounds.length}`;
-        document.getElementById('btnPrevRound').disabled = (currentViewRound === 0);
-        document.getElementById('btnNextRound').disabled = (currentViewRound === config.rounds.length - 1);
-
-        const m = config.rounds[currentViewRound];
-        const idx = currentViewRound;
-        const isAmericano = config.duration === 180;
-        const score1 = scores[idx]?.s1 ?? '';
-        const score2 = scores[idx]?.s2 ?? '';
-        const maxPoints = isAmericano ? config.targetPoints : 15;
-
-        let options1 = '<option value="">-</option>';
-        let options2 = '<option value="">-</option>';
-
-        for (let i = 0; i <= maxPoints; i++) {
-            options1 += `<option value="${i}" ${score1 !== '' && parseInt(score1) === i ? 'selected' : ''}>${i}</option>`;
-            options2 += `<option value="${i}" ${score2 !== '' && parseInt(score2) === i ? 'selected' : ''}>${i}</option>`;
-        }
-
-        container.innerHTML = `
-            <div class="match-card">
-                <div class="match-header">
-                    <span class="match-round-title">Runde ${m.r} <span class="badge-court">${m.side}</span></span>
-                    ${isAmericano ? `<span>Americano (Ziel: ${config.targetPoints} Pkt.)</span>` : `<span>Zeitspiel (${config.roundTimeMinutes} Min)</span>`}
-                </div>
-                <div class="match-teams">
-                    <div class="team">${m.t1[0]} & ${m.t1[1]}</div>
-                    <div class="score-inputs">
-                        <select id="sc_${idx}_1" class="score-select" onchange="handleScoreInput(${idx}, 1, this.value)">
-                            ${options1}
-                        </select>
-                        <span style="font-size: 1.5rem; font-weight: bold; color: var(--accent-color);">:</span>
-                        <select id="sc_${idx}_2" class="score-select" onchange="handleScoreInput(${idx}, 2, this.value)">
-                            ${options2}
-                        </select>
-                    </div>
-                    <div class="team team-right">${m.t2[0]} & ${m.t2[1]}</div>
-                </div>
-                ${m.bench.length > 0 ? `
-                    <div class="bench-info-box">
-                        <div class="bench-title">☕ PAUSE IN DIESER RUNDE</div>
-                        <div class="bench-names">${m.bench.join(' & ')}</div>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }
-
-    function handleScoreInput(matchIdx, team, val) {
-        if (!scores[matchIdx]) scores[matchIdx] = { s1: '', s2: '' };
-
-        let numVal = val === '' ? '' : parseInt(val);
-
-        if (team === 1) {
-            scores[matchIdx].s1 = numVal;
-            if (numVal !== '' && config.duration === 180 && config.targetPoints && numVal <= config.targetPoints) {
-                scores[matchIdx].s2 = config.targetPoints - numVal;
-                document.getElementById(`sc_${matchIdx}_2`).value = scores[matchIdx].s2;
-            }
-        } else {
-            scores[matchIdx].s2 = numVal;
-            if (numVal !== '' && config.duration === 180 && config.targetPoints && numVal <= config.targetPoints) {
-                scores[matchIdx].s1 = config.targetPoints - numVal;
-                document.getElementById(`sc_${matchIdx}_1`).value = scores[matchIdx].s1;
-            }
-        }
-
-        updateLeaderboard();
-
-        if (scores[matchIdx].s1 !== '' && scores[matchIdx].s2 !== '' && scores[matchIdx].s1 !== undefined && scores[matchIdx].s2 !== undefined) {
-            if (matchIdx < config.rounds.length - 1) {
-                setTimeout(() => {
-                    currentViewRound = matchIdx + 1;
-                    if (config.duration === 120) {
-                        loadTimerRound(currentViewRound);
-                    } else {
-                        renderMatches();
-                    }
-                }, 600);
-            }
-        }
-    }
-
-    function editTimerDirectly() {
-        const currentMins = Math.floor(timerState.secondsLeft / 60);
-        const input = prompt("Restzeit in Minuten eingeben:", currentMins);
-        if (input !== null) {
-            const mins = parseInt(input);
-            if (!isNaN(mins) && mins >= 0) {
-                timerState.secondsLeft = mins * 60;
-                updateTimerDisplay();
-            }
-        }
-    }
-
-    function adjustTimerMinutes(minutes) {
-        timerState.secondsLeft = Math.max(0, timerState.secondsLeft + (minutes * 60));
-        updateTimerDisplay();
-    }
-
-    function initTimer() {
-        timerState.currentRound = 0;
-        loadTimerRound(0);
-    }
-
-    function loadTimerRound(roundIdx) {
-        if (roundIdx >= config.rounds.length) roundIdx = 0;
-        timerState.currentRound = roundIdx;
-        currentViewRound = roundIdx;
-        timerState.secondsLeft = config.roundTimeMinutes * 60;
-        document.getElementById('currentRoundLabel').innerText = `Runde ${roundIdx + 1} von ${config.rounds.length}`;
-        updateTimerDisplay();
-        renderMatches();
-    }
-
-    function toggleTimer() {
-        const btn = document.getElementById('startBtn');
-        if (timerState.isRunning) {
-            clearInterval(timerState.interval);
-            timerState.isRunning = false;
-            btn.innerText = 'Weiter';
-            btn.className = 'timer-btn btn-start';
-        } else {
-            timerState.isRunning = true;
-            btn.innerText = 'Pause';
-            btn.className = 'timer-btn btn-pause';
-            timerState.interval = setInterval(() => {
-                if (timerState.secondsLeft > 0) {
-                    timerState.secondsLeft--;
-                    updateTimerDisplay();
-                } else {
-                    clearInterval(timerState.interval);
-                    timerState.isRunning = false;
-                    btn.innerText = 'Start';
-                    btn.className = 'timer-btn btn-start';
-                    alert(`Zeit für Runde ${timerState.currentRound + 1} abgelaufen!`);
-                }
-            }, 1000);
-        }
-    }
-
-    function resetTimer() {
-        if (timerState.isRunning) toggleTimer();
-        loadTimerRound(timerState.currentRound);
-    }
-
-    function nextTimerRound() {
-        if (timerState.isRunning) toggleTimer();
-        loadTimerRound(timerState.currentRound + 1);
-    }
-
-    function updateTimerDisplay() {
-        const mins = Math.floor(timerState.secondsLeft / 60);
-        const secs = timerState.secondsLeft % 60;
-        document.getElementById('timerDisplay').innerText = 
-            `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-
-    function updateLeaderboard() {
-        let stats = {};
-        config.players.forEach(p => stats[p] = { played: 0, wins: 0, matchPoints: 0, benchPoints: 0, totalPoints: 0, diff: 0 });
-
-        const isTimeMode = config.duration === 120;
-
-        let totalCompletedPlayedPoints = 0;
-        let totalCompletedPlayerMatches = 0;
-
-        config.rounds.forEach((m, idx) => {
-            const sc = scores[idx];
-            if (sc && (sc.s1 !== '' || sc.s2 !== '') && sc.s1 !== null && sc.s2 !== null) {
-                const s1 = parseInt(sc.s1) || 0;
-                const s2 = parseInt(sc.s2) || 0;
-                totalCompletedPlayedPoints += (s1 + s2) * 2;
-                totalCompletedPlayerMatches += 4;
-            }
+            container.appendChild(item);
         });
+    }
 
-        const overallAveragePlayerScore = totalCompletedPlayerMatches > 0 
-            ? Math.round(totalCompletedPlayedPoints / totalCompletedPlayerMatches) 
-            : Math.round((config.targetPoints || 21) / 2);
+    function ladeTagesdaten() {
+        const gespeicherterUmsatz = localStorage.getItem('kasse_tagesumsatz');
+        const gespeicherterGewinn = localStorage.getItem('kasse_tagesgewinn');
+        const gespeicherteAnzahl = localStorage.getItem('kasse_anzahl_verkaeufe');
+        const gespeicherterAnfangsbestand = localStorage.getItem('kasse_anfangsbestand');
+        const gespeicherteStatistik = localStorage.getItem('kasse_verkaeufe_statistik');
+        const gespeicherteHelferStatistik = localStorage.getItem('kasse_helfer_statistik');
+        const gespeicherterLetzterBon = localStorage.getItem('kasse_letzter_bon');
 
-        config.rounds.forEach((m, idx) => {
-            const sc = scores[idx];
-            if (sc && (sc.s1 !== '' || sc.s2 !== '') && sc.s1 !== null && sc.s2 !== null) {
-                const s1 = parseInt(sc.s1) || 0;
-                const s2 = parseInt(sc.s2) || 0;
+        if (gespeicherterUmsatz !== null) tagesumsatz = parseFloat(gespeicherterUmsatz);
+        if (gespeicherterGewinn !== null) tagesgewinn = parseFloat(gespeicherterGewinn);
+        if (gespeicherteAnzahl !== null) anzahlVerkaeufe = parseInt(gespeicherteAnzahl, 10);
+        if (gespeicherterAnfangsbestand !== null) anfangsbestand = parseFloat(gespeicherterAnfangsbestand);
+        if (gespeicherteStatistik !== null) verkaeufeStatistik = JSON.parse(gespeicherteStatistik);
+        if (gespeicherteHelferStatistik !== null) {
+            helferStatistik = JSON.parse(gespeicherteHelferStatistik);
+            if (!helferStatistik.helfer) helferStatistik.helfer = {};
+        }
+        if (gespeicherterLetzterBon !== null) letzterBon = JSON.parse(gespeicherterLetzterBon);
+    }
 
-                m.t1.forEach(p => {
-                    stats[p].played += 1;
-                    stats[p].matchPoints += s1;
-                    stats[p].diff += (s1 - s2);
-                    if (s1 > s2) stats[p].wins += 1;
-                });
+    function speichereTagesdaten() {
+        localStorage.setItem('kasse_tagesumsatz', tagesumsatz.toString());
+        localStorage.setItem('kasse_tagesgewinn', tagesgewinn.toString());
+        localStorage.setItem('kasse_anzahl_verkaeufe', anzahlVerkaeufe.toString());
+        localStorage.setItem('kasse_verkaeufe_statistik', JSON.stringify(verkaeufeStatistik));
+        localStorage.setItem('kasse_helfer_statistik', JSON.stringify(helferStatistik));
+        localStorage.setItem('kasse_letzter_bon', JSON.stringify(letzterBon));
+    }
 
-                m.t2.forEach(p => {
-                    stats[p].played += 1;
-                    stats[p].matchPoints += s2;
-                    stats[p].diff += (s2 - s1);
-                    if (s2 > s1) stats[p].wins += 1;
-                });
+    function aktualisiereKassenbestandAnzeige() {
+        const gesamtKassenbestand = anfangsbestand + tagesumsatz;
+        document.getElementById('kassenbestand-anzeige').textContent = gesamtKassenbestand.toFixed(2).replace('.', ',');
+        document.getElementById('anfangsbestand-anzeige').textContent = anfangsbestand.toFixed(2).replace('.', ',');
+    }
 
-                let calculatedBenchPoints = 0;
-                if (!isTimeMode) {
-                    if (config.benchPointsMode === 'avg') {
-                        calculatedBenchPoints = Math.round((s1 + s2) / 4);
-                    } else if (config.benchPointsMode === 'half') {
-                        calculatedBenchPoints = Math.round(config.targetPoints / 2);
-                    } else if (config.benchPointsMode === 'overall_avg') {
-                        calculatedBenchPoints = overallAveragePlayerScore;
-                    }
-                }
-
-                if (calculatedBenchPoints > 0 && m.bench) {
-                    m.bench.forEach(p => {
-                        stats[p].benchPoints += calculatedBenchPoints;
-                    });
-                }
+    function anfangsbestandAendern() {
+        const eingabe = prompt("Wechselgeld-Anfangsbestand eingeben (€):", anfangsbestand.toFixed(2));
+        if (eingabe !== null) {
+            const neuBestand = parseFloat(eingabe.replace(',', '.'));
+            if (!isNaN(neuBestand) && neuBestand >= 0) {
+                anfangsbestand = neuBestand;
+                localStorage.setItem('kasse_anfangsbestand', anfangsbestand.toString());
+                aktualisiereKassenbestandAnzeige();
+            } else {
+                alert("Bitte einen gültigen Zahlenwert eingeben!");
             }
-        });
+        }
+    }
 
-        Object.keys(stats).forEach(p => {
-            stats[p].totalPoints = stats[p].matchPoints + stats[p].benchPoints;
-        });
-
-        const sorted = Object.keys(stats)
-            .map(p => ({ name: p, ...stats[p] }))
-            .sort((a, b) => {
-                if (isTimeMode) {
-                    if (b.wins !== a.wins) return b.wins - a.wins;
-                    if (b.diff !== a.diff) return b.diff - a.diff;
-                    return b.totalPoints - a.totalPoints;
-                } else {
-                    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-                    return b.diff - a.diff;
-                }
+    function verbucheUmsatz(betrag, verkaufteArtikel) {
+        if (istHelferAusgabe) {
+            let reelerWarenwert = 0;
+            verkaufteArtikel.forEach(item => {
+                reelerWarenwert += item.originalPreis;
             });
 
-        const tbody = document.getElementById('leaderboardBody');
-        tbody.innerHTML = '';
-        sorted.forEach((item, index) => {
-            const diffFormatted = item.diff > 0 ? `+${item.diff}` : item.diff;
-            tbody.innerHTML += `
-                <tr>
-                    <td class="rank">${index + 1}</td>
-                    <td><strong>${item.name}</strong></td>
-                    <td>${item.played}</td>
-                    ${isTimeMode ? `<td>${item.wins}</td>` : ''}
-                    <td style="color: var(--accent-color); font-weight: 800;">${item.totalPoints}</td>
-                    ${!isTimeMode ? `<td>${item.benchPoints}</td>` : ''}
-                    ${isTimeMode ? `<td>${diffFormatted}</td>` : ''}
-                </tr>
-            `;
+            helferStatistik.anzahl += 1;
+            helferStatistik.warenwert += reelerWarenwert;
+
+            if (!helferStatistik.helfer[aktuellerHelferName]) {
+                helferStatistik.helfer[aktuellerHelferName] = { anzahl: 0, warenwert: 0.00 };
+            }
+            helferStatistik.helfer[aktuellerHelferName].anzahl += 1;
+            helferStatistik.helfer[aktuellerHelferName].warenwert += reelerWarenwert;
+        } else {
+            tagesumsatz += betrag;
+            anzahlVerkaeufe += 1;
+
+            verkaufteArtikel.forEach(item => {
+                const artikelGewinn = item.preis - item.ek;
+                tagesgewinn += artikelGewinn;
+
+                if (!verkaeufeStatistik[item.name]) {
+                    verkaeufeStatistik[item.name] = { 
+                        anzahl: 0, 
+                        gesamt: 0.00, 
+                        ek: item.ek, 
+                        preis: item.preis,
+                        gewinn: 0.00 
+                    };
+                }
+                verkaeufeStatistik[item.name].anzahl += 1;
+                verkaeufeStatistik[item.name].gesamt += item.preis;
+                verkaeufeStatistik[item.name].gewinn += artikelGewinn;
+            });
+        }
+
+        letzterBon = {
+            betrag: betrag,
+            artikel: [...verkaufteArtikel],
+            istHelfer: istHelferAusgabe,
+            helferName: aktuellerHelferName
+        };
+
+        speichereTagesdaten();
+        aktualisiereKassenbestandAnzeige();
+    }
+
+    function storniereLetztenBon() {
+        if (!letzterBon || !letzterBon.artikel || letzterBon.artikel.length === 0) {
+            alert("Es gibt keinen abgerechneten Bon, der storniert werden kann!");
+            return;
+        }
+
+        const summeStr = letzterBon.betrag.toFixed(2).replace('.', ',');
+        const anzArtikel = letzterBon.artikel.length;
+
+        const bestaetigung = confirm(
+            `Möchten Sie den LETZTEN BON wirklich stornieren?\n\n` +
+            `• Typ: ${letzterBon.istHelfer ? 'Helfer-Ausgabe (' + letzterBon.helferName + ')' : 'Regulärer Verkauf'}\n` +
+            `• Betrag: ${summeStr} €\n` +
+            `• Anzahl Artikel: ${anzArtikel}\n\n` +
+            `Der Bon wird rückabgewickelt.`
+        );
+
+        if (bestaetigung) {
+            if (letzterBon.istHelfer) {
+                let reelerWarenwert = 0;
+                letzterBon.artikel.forEach(item => {
+                    reelerWarenwert += item.originalPreis;
+                });
+
+                helferStatistik.anzahl = Math.max(0, helferStatistik.anzahl - 1);
+                helferStatistik.warenwert = Math.max(0, helferStatistik.warenwert - reelerWarenwert);
+
+                if (helferStatistik.helfer[letzterBon.helferName]) {
+                    helferStatistik.helfer[letzterBon.helferName].anzahl = Math.max(0, helferStatistik.helfer[letzterBon.helferName].anzahl - 1);
+                    helferStatistik.helfer[letzterBon.helferName].warenwert = Math.max(0, helferStatistik.helfer[letzterBon.helferName].warenwert - reelerWarenwert);
+                    if (helferStatistik.helfer[letzterBon.helferName].anzahl === 0) {
+                        delete helferStatistik.helfer[letzterBon.helferName];
+                    }
+                }
+            } else {
+                tagesumsatz -= letzterBon.betrag;
+                if (tagesumsatz < 0) tagesumsatz = 0;
+
+                anzahlVerkaeufe = Math.max(0, anzahlVerkaeufe - 1);
+
+                letzterBon.artikel.forEach(item => {
+                    const artikelGewinn = item.preis - item.ek;
+                    tagesgewinn -= artikelGewinn;
+
+                    if (verkaeufeStatistik[item.name]) {
+                        verkaeufeStatistik[item.name].anzahl -= 1;
+                        verkaeufeStatistik[item.name].gesamt -= item.preis;
+                        verkaeufeStatistik[item.name].gewinn -= artikelGewinn;
+
+                        if (verkaeufeStatistik[item.name].anzahl <= 0) {
+                            delete verkaeufeStatistik[item.name];
+                        }
+                    }
+                });
+
+                if (tagesgewinn < 0) tagesgewinn = 0;
+            }
+
+            letzterBon = null;
+            localStorage.removeItem('kasse_letzter_bon');
+
+            speichereTagesdaten();
+            aktualisiereKassenbestandAnzeige();
+
+            alert("Der letzte Bon wurde erfolgreich storniert!");
+            schliesseInhaberModal();
+        }
+    }
+
+    function aktiviereHelferEigenbedarfMitPasswort() {
+        const eingabePin = prompt("Bitte PIN für Helfer-Ausgabe eingeben:");
+        if (eingabePin === null) return;
+
+        if (eingabePin === INHABER_PIN) {
+            oefneHelferAuswahlModal();
+        } else {
+            alert("Falscher PIN!");
+        }
+    }
+
+    function oefneHelferAuswahlModal() {
+        const grid = document.getElementById('helfer-auswahl-grid');
+        grid.innerHTML = '';
+
+        helferNamenListe.forEach(hName => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-helfer-select';
+            btn.textContent = hName;
+            btn.onclick = function() { waehleHelfer(hName); };
+            grid.appendChild(btn);
+        });
+
+        document.getElementById('manuell-helfer-input').value = '';
+        document.getElementById('helfer-auswahl-modal').classList.add('active');
+    }
+
+    function schliesseHelferAuswahlModal() {
+        document.getElementById('helfer-auswahl-modal').classList.remove('active');
+    }
+
+    function waehleHelferManuell() {
+        const val = document.getElementById('manuell-helfer-input').value.trim();
+        if (val) {
+            waehleHelfer(val);
+        } else {
+            alert("Bitte einen Namen eingeben!");
+        }
+    }
+
+    function waehleHelfer(hName) {
+        aktuellerHelferName = hName;
+        istHelferAusgabe = true;
+
+        warenkorb.forEach(item => {
+            item.preis = 0;
+        });
+
+        const banner = document.getElementById('eigenbedarf-banner');
+        banner.innerText = `HELFER: ${aktuellerHelferName.toUpperCase()}`;
+        banner.classList.add('active');
+
+        aktualisiereBon();
+        schliesseHelferAuswahlModal();
+    }
+
+    function oefneInhaberBereich() {
+        const eingabePin = prompt("Bitte Inhaber-PIN eingeben:");
+        if (eingabePin === null) return;
+
+        if (eingabePin === INHABER_PIN) {
+            document.getElementById('inhaber-modal').classList.add('active');
+        } else {
+            alert("Falscher PIN!");
+        }
+    }
+
+    function schliesseInhaberModal() {
+        document.getElementById('inhaber-modal').classList.remove('active');
+    }
+
+    function starteTagesabschlussProcess() {
+        const umsatzStr = tagesumsatz.toFixed(2).replace('.', ',');
+        const gewinnStr = tagesgewinn.toFixed(2).replace('.', ',');
+        const anfangsbestandStr = anfangsbestand.toFixed(2).replace('.', ',');
+        const kassenbestandStr = (anfangsbestand + tagesumsatz).toFixed(2).replace('.', ',');
+        const helferWarenwertStr = helferStatistik.warenwert.toFixed(2).replace('.', ',');
+        
+        let artikelListe = "\nVerkaufte Artikel:\n";
+        let hatArtikel = false;
+        
+        for (let name in verkaeufeStatistik) {
+            hatArtikel = true;
+            const item = verkaeufeStatistik[name];
+            artikelListe += `- ${name}: ${item.anzahl}x (${item.gesamt.toFixed(2).replace('.', ',')} €)\n`;
+        }
+
+        if (!hatArtikel) {
+            artikelListe += "(Keine Verkäufe heute)\n";
+        }
+
+        let helferListe = "\nHelfer-Übersicht:\n";
+        let hatHelfer = false;
+        for (let hName in helferStatistik.helfer) {
+            hatHelfer = true;
+            const hData = helferStatistik.helfer[hName];
+            helferListe += `- ${hName}: ${hData.anzahl} Bons (Wert: ${hData.warenwert.toFixed(2).replace('.', ',')} €)\n`;
+        }
+        if (!hatHelfer) {
+            helferListe += "(Keine Helfer-Ausgaben)\n";
+        }
+
+        const nachricht = `=== INHABER-STATISTIK ===\n\n` +
+                          `Anfangsbestand (Wechselgeld): ${anfangsbestandStr} €\n` +
+                          `Tageseinnahmen (Umsatz): ${umsatzStr} €\n` +
+                          `----------------------------------\n` +
+                          `SOLL-KASSENBESTAND GESAMT: ${kassenbestandStr} €\n` +
+                          `----------------------------------\n` +
+                          `Tagesgewinn: ${gewinnStr} €\n` +
+                          `Anzahl Bon-Kunden: ${anzahlVerkaeufe}\n` +
+                          `Helfer-Ausgaben gesamt: ${helferStatistik.anzahl}x (Wert: ${helferWarenwertStr} €)\n` +
+                          `${helferListe}` +
+                          `${artikelListe}\n` +
+                          `Möchten Sie den Tagesabschluss durchführen, die EXCEL-DATEI herunterladen und die Werte auf 0 zurücksetzen?`;
+
+        if (confirm(nachricht)) {
+            exportiereTagesabschlussExcel();
+            
+            if (confirm("Möchten Sie die Tagesstatistik auch direkt drucken?")) {
+                window.print();
+            }
+
+            tagesabschlussZuruecksetzen();
+            schliesseInhaberModal();
+        }
+    }
+
+    function exportiereTagesabschlussExcel() {
+        const datum = new Date().toLocaleDateString('de-DE');
+        
+        let data = [
+            ["TAGESABSCHLUSS & KASSENBERICHT"],
+            ["Datum:", datum],
+            ["Kassen-ID:", "KASSE-01"],
+            ["Bediener:", "Administrator"],
+            [""],
+            ["1. KASSENBESTAND & TAGESZUSAMMENFASSUNG", ""],
+            ["Wechselgeld-Anfangsbestand (A)", anfangsbestand],
+            ["Tageseinnahmen / Umsatz (B)", tagesumsatz],
+            ["SOLL-KASSENBESTAND GESAMT (A + B)", anfangsbestand + tagesumsatz],
+            ["Gesamter Tagesgewinn (Rohertrag)", tagesgewinn],
+            ["Anzahl der Transaktionen (Bons)", anzahlVerkaeufe],
+            ["Helfer-Ausgaben Gesamt (Anzahl)", helferStatistik.anzahl],
+            ["Helfer-Ausgaben Gesamt (Warenwert €)", helferStatistik.warenwert],
+            [""],
+            ["2. HELFER-STATISTIK (PRO PERSON)"],
+            ["Helfer Name", "Anzahl Bons", "Warenwert (€)"]
+        ];
+
+        for (let hName in helferStatistik.helfer) {
+            let hData = helferStatistik.helfer[hName];
+            data.push([
+                hName,
+                hData.anzahl,
+                hData.warenwert
+            ]);
+        }
+
+        data.push([""]);
+        data.push(["3. DETAIL-ARTIKELSTATISTIK (VERKÄUFE HEUTE)"]);
+        data.push(["Artikelbezeichnung", "Anzahl", "EK / Stk. (€)", "VK / Stk. (€)", "Gesamtumsatz (€)", "Gewinn (€)"]);
+
+        for (let name in verkaeufeStatistik) {
+            let item = verkaeufeStatistik[name];
+            data.push([
+                name,
+                item.anzahl,
+                item.ek,
+                item.preis,
+                item.gesamt,
+                item.gewinn
+            ]);
+        }
+
+        let ws = XLSX.utils.aoa_to_sheet(data);
+        
+        ws['!cols'] = [
+            { wch: 35 },
+            { wch: 12 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 18 },
+            { wch: 16 }
+        ];
+
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Tagesabschluss");
+
+        const dateiName = `Tagesabschluss_${datum.replace(/\./g, '-')}.xlsx`;
+        XLSX.writeFile(wb, dateiName);
+    }
+
+    function tagesabschlussZuruecksetzen() {
+        localStorage.removeItem('kasse_tagesumsatz');
+        localStorage.removeItem('kasse_tagesgewinn');
+        localStorage.removeItem('kasse_anzahl_verkaeufe');
+        localStorage.removeItem('kasse_verkaeufe_statistik');
+        localStorage.removeItem('kasse_helfer_statistik');
+        localStorage.removeItem('kasse_letzter_bon');
+        
+        tagesumsatz = 0.00;
+        tagesgewinn = 0.00;
+        anzahlVerkaeufe = 0;
+        verkaeufeStatistik = {};
+        helferStatistik = { anzahl: 0, warenwert: 0.00, helfer: {} };
+        letzterBon = null;
+        
+        aktualisiereKassenbestandAnzeige();
+        alert("Tagesabschluss erfolgreich! Die Datei wurde heruntergeladen und die Einnahmen zurückgesetzt.");
+    }
+
+    function ladeProdukte() {
+        const gridGetraenke = document.getElementById('grid-getraenke');
+        const gridVerzehr = document.getElementById('grid-verzehr');
+        gridGetraenke.innerHTML = '';
+        gridVerzehr.innerHTML = '';
+
+        let produkte = JSON.parse(localStorage.getItem('kasse_produkte'));
+        if (!produkte || produkte.length === 0) {
+            produkte = standardProdukte;
+            localStorage.setItem('kasse_produkte', JSON.stringify(produkte));
+        }
+
+        produkte.forEach((p, index) => {
+            renderProduktButton(p.name, p.kategorie || 'verzehr', p.ek || 0, p.preis, p.farbe || '#007bff', p.bildUrl || '', index);
         });
     }
 
-    function resetSetup() {
-        if (timerState.isRunning) clearInterval(timerState.interval);
-        scores = {};
-        document.getElementById('dashboardScreen').classList.add('hidden');
-        document.getElementById('setupScreen').classList.remove('hidden');
+    function renderProduktButton(name, kategorie, ek, preis, farbe, bildUrl, index) {
+        const targetGrid = kategorie === 'getraenke' 
+            ? document.getElementById('grid-getraenke') 
+            : document.getElementById('grid-verzehr');
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'produkt-wrapper';
+
+        const btn = document.createElement('button');
+        btn.className = 'btn-produkt';
+        btn.style.backgroundColor = farbe;
+        if (bildUrl) {
+            btn.style.backgroundImage = `url('${bildUrl}')`;
+        }
+        
+        btn.innerHTML = `
+            <div class="btn-produkt-content">
+                ${name}<br>${preis.toFixed(2).replace('.', ',')} €
+            </div>
+        `;
+        btn.onclick = function() { addProdukt(name, ek, preis); };
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-edit-item';
+        editBtn.innerHTML = '✏️';
+        editBtn.title = 'Produkt bearbeiten';
+        editBtn.onclick = function(e) {
+            e.stopPropagation();
+            oefneEditModal(index);
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-delete-item';
+        delBtn.innerHTML = '&#10005;';
+        delBtn.title = 'Produkt löschen';
+        delBtn.onclick = function(e) {
+            e.stopPropagation();
+            loescheProdukt(index);
+        };
+
+        wrapper.appendChild(btn);
+        wrapper.appendChild(editBtn);
+        wrapper.appendChild(delBtn);
+        targetGrid.appendChild(wrapper);
+    }
+
+    function oefneEditModal(index) {
+        let produkte = JSON.parse(localStorage.getItem('kasse_produkte')) || [];
+        const p = produkte[index];
+        if (!p) return;
+
+        document.getElementById('edit-index').value = index;
+        document.getElementById('edit-name').value = p.name || '';
+        document.getElementById('edit-kategorie').value = p.kategorie || 'verzehr';
+        document.getElementById('edit-ek').value = p.ek || 0;
+        document.getElementById('edit-preis').value = p.preis || 0;
+        document.getElementById('edit-bild-url').value = p.bildUrl || '';
+        document.getElementById('edit-farbe').value = p.farbe || '#007bff';
+
+        document.getElementById('edit-modal').classList.add('active');
+    }
+
+    function schliesseEditModal() {
+        document.getElementById('edit-modal').classList.remove('active');
+    }
+
+    function speichereProduktAenderung() {
+        const index = parseInt(document.getElementById('edit-index').value, 10);
+        let produkte = JSON.parse(localStorage.getItem('kasse_produkte')) || [];
+
+        if (isNaN(index) || !produkte[index]) return;
+
+        const neuName = document.getElementById('edit-name').value.trim();
+        const neuKategorie = document.getElementById('edit-kategorie').value;
+        const neuEk = parseFloat(document.getElementById('edit-ek').value) || 0;
+        const neuPreis = parseFloat(document.getElementById('edit-preis').value);
+        const neuBildUrl = document.getElementById('edit-bild-url').value.trim();
+        const neuFarbe = document.getElementById('edit-farbe').value;
+
+        if (!neuName || isNaN(neuPreis) || neuPreis <= 0) {
+            alert('Bitte einen gültigen Namen und Verkaufspreis eingeben!');
+            return;
+        }
+
+        produkte[index] = {
+            name: neuName,
+            kategorie: neuKategorie,
+            ek: neuEk,
+            preis: neuPreis,
+            bildUrl: neuBildUrl,
+            farbe: neuFarbe
+        };
+
+        localStorage.setItem('kasse_produkte', JSON.stringify(produkte));
+        schliesseEditModal();
+        ladeProdukte();
+
+        if (loeschModusAktiv) {
+            setDeleteModeUI(true);
+        }
+    }
+
+    function toggleLöschModus() {
+        loeschModusAktiv = !loeschModusAktiv;
+        setDeleteModeUI(loeschModusAktiv);
+    }
+
+    function setDeleteModeUI(active) {
+        const gridG = document.getElementById('grid-getraenke');
+        const gridV = document.getElementById('grid-verzehr');
+        const toggleBtn = document.getElementById('toggle-delete-btn');
+
+        if (active) {
+            gridG.classList.add('delete-mode');
+            gridV.classList.add('delete-mode');
+            toggleBtn.textContent = 'Fertig';
+            toggleBtn.classList.add('active');
+        } else {
+            gridG.classList.remove('delete-mode');
+            gridV.classList.remove('delete-mode');
+            toggleBtn.textContent = 'Produkte verwalten';
+            toggleBtn.classList.remove('active');
+        }
+    }
+
+    function loescheProdukt(index) {
+        let produkte = JSON.parse(localStorage.getItem('kasse_produkte')) || [];
+        produkte.splice(index, 1);
+        localStorage.setItem('kasse_produkte', JSON.stringify(produkte));
+        
+        ladeProdukte();
+        
+        if (loeschModusAktiv) {
+            setDeleteModeUI(true);
+        }
+    }
+
+    function erstelleNeuesProdukt() {
+        const nameInput = document.getElementById('neuer-name');
+        const kategorieSelect = document.getElementById('neue-kategorie');
+        const ekInput = document.getElementById('neuer-ek');
+        const preisInput = document.getElementById('neuer-preis');
+        const farbeInput = document.getElementById('neue-farbe');
+        const bildUrlInput = document.getElementById('neuer-bild-url');
+
+        const name = nameInput.value.trim();
+        const kategorie = kategorieSelect.value;
+        const ek = parseFloat(ekInput.value) || 0.00;
+        const preis = parseFloat(preisInput.value);
+        const farbe = farbeInput.value;
+        const bildUrl = bildUrlInput.value.trim();
+
+        if (!name || isNaN(preis) || preis <= 0) {
+            alert('Bitte geben Sie einen gültigen Namen und Verkaufspreis ein!');
+            return;
+        }
+
+        const produkte = JSON.parse(localStorage.getItem('kasse_produkte')) || [];
+        produkte.push({ name: name, kategorie: kategorie, ek: ek, preis: preis, farbe: farbe, bildUrl: bildUrl });
+        localStorage.setItem('kasse_produkte', JSON.stringify(produkte));
+
+        ladeProdukte();
+
+        nameInput.value = '';
+        ekInput.value = '';
+        preisInput.value = '';
+        bildUrlInput.value = '';
+        farbeInput.value = '#007bff';
+
+        alert(`Produkt "${name}" wurde erfolgreich hinzugefügt!`);
+    }
+
+    function addProdukt(name, ek, preis) {
+        const effekPreis = istHelferAusgabe ? 0 : preis;
+
+        const item = {
+            id: Date.now() + Math.random(),
+            name: name,
+            ek: ek,
+            preis: effekPreis,
+            originalPreis: preis
+        };
+        warenkorb.push(item);
+        aktualisiereBon();
+    }
+
+    function entferneArtikelDirekt(id) {
+        warenkorb = warenkorb.filter(item => item.id !== id);
+        aktualisiereBon();
+    }
+
+    function entferneLetztenArtikel() {
+        if (warenkorb.length > 0) {
+            warenkorb.pop();
+            aktualisiereBon();
+        }
+    }
+
+    function aktualisiereBon() {
+        const artikelContainer = document.getElementById('bon-artikel');
+        artikelContainer.innerHTML = '';
+        gesamt = 0;
+
+        warenkorb.forEach(item => {
+            const zeile = document.createElement('div');
+            zeile.className = 'bon-zeile item-row';
+            zeile.title = 'Klicken zum Stornieren dieser Position';
+            zeile.innerHTML = `<span>${item.name}</span><span>${item.preis.toFixed(2).replace('.', ',')} €</span>`;
+            zeile.onclick = function() { entferneArtikelDirekt(item.id); };
+            
+            artikelContainer.appendChild(zeile);
+            gesamt += item.preis;
+        });
+
+        document.getElementById('summe').textContent = gesamt.toFixed(2).replace('.', ',');
+        berechneRueckgeld();
+    }
+
+    function setGegeben(betrag) {
+        document.getElementById('gegeben-geld').value = betrag;
+        berechneRueckgeld();
+    }
+
+    function berechneRueckgeld() {
+        const gegebenInput = parseFloat(document.getElementById('gegeben-geld').value) || 0;
+        const rueckgeld = gegebenInput - gesamt;
+        const rueckgeldText = document.getElementById('rueckgeld-text');
+        
+        if (gegebenInput >= gesamt && gesamt >= 0) {
+            rueckgeldText.textContent = rueckgeld.toFixed(2).replace('.', ',');
+            rueckgeldText.style.color = '#28a745';
+        } else {
+            rueckgeldText.textContent = '0,00';
+            rueckgeldText.style.color = '#dc3545';
+        }
+    }
+
+    function bonDrucken() {
+        if (warenkorb.length === 0) {
+            alert("Der Warenkorb ist leer!");
+            return;
+        }
+
+        const gegebenInput = parseFloat(document.getElementById('gegeben-geld').value) || 0;
+        
+        if (!istHelferAusgabe && gegebenInput > 0 && gegebenInput < gesamt) {
+            alert("Das gegebene Geld reicht nicht aus!");
+            return;
+        }
+
+        const bonZahlungBereich = document.getElementById('bon-zahlung-bereich');
+        if (!istHelferAusgabe && gegebenInput >= gesamt) {
+            const rueckgeld = gegebenInput - gesamt;
+            document.getElementById('bon-gegeben').textContent = gegebenInput.toFixed(2).replace('.', ',');
+            document.getElementById('bon-rueckgeld').textContent = rueckgeld.toFixed(2).replace('.', ',');
+            bonZahlungBereich.style.display = 'block';
+        } else {
+            bonZahlungBereich.style.display = 'none';
+        }
+
+        const jetzt = new Date();
+        const datumStr = jetzt.toLocaleDateString('de-DE') + ' ' + jetzt.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('bon-datum').textContent = datumStr;
+
+        verbucheUmsatz(gesamt, warenkorb);
+
+        window.print();
+        storno();
+    }
+
+    function storno() {
+        warenkorb = [];
+        istHelferAusgabe = false;
+        aktuellerHelferName = "";
+        document.getElementById('eigenbedarf-banner').classList.remove('active');
+        document.getElementById('eigenbedarf-banner').innerText = 'HELFER-AUSGABE';
+        aktualisiereBon();
+        document.getElementById('bon-datum').textContent = '';
+        document.getElementById('gegeben-geld').value = '';
+        document.getElementById('rueckgeld-text').textContent = '0,00';
+        document.getElementById('bon-zahlung-bereich').style.display = 'none';
     }
 </script>
+
 </body>
 </html>
