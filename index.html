@@ -48,7 +48,7 @@
             <!-- Apple Watch / Smartwatch Button -->
             <button onclick="openWatchModal()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition border border-cyan-500/30 shadow-sm" title="Apple Watch Ansicht">
                 <i data-lucide="watch" class="w-4 h-4"></i>
-                <span class="hidden md:inline">Apple Watch</span>
+                <span class="hidden md:inline">Apple Watch / WatchOS</span>
             </button>
 
             <!-- WhatsApp / Messages Quick Share Button -->
@@ -335,44 +335,42 @@
 
     <!-- APPLE WATCH COMPATIBILITY MODAL -->
     <div id="watch-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[40px] p-6 shadow-2xl space-y-4 text-center relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
-            
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[32px] p-5 shadow-2xl space-y-3 text-center relative overflow-hidden">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                 <div class="flex items-center gap-2 mx-auto">
-                    <div class="bg-cyan-500/20 text-cyan-400 p-2 rounded-xl border border-cyan-500/30">
-                        <i data-lucide="watch" class="w-5 h-5"></i>
+                    <div class="bg-cyan-500/20 text-cyan-400 p-1.5 rounded-xl border border-cyan-500/30">
+                        <i data-lucide="watch" class="w-4 h-4"></i>
                     </div>
-                    <h2 class="text-base font-black text-white">Apple Watch / iPhone Link</h2>
+                    <h2 class="text-sm font-black text-white">Apple Watch OS / Watch-Modus</h2>
                 </div>
             </div>
 
-            <div class="space-y-3">
-                <p class="text-xs text-slate-300 leading-relaxed">
-                    Falls der QR-Code nicht scannt, kopiere den Link oder teile ihn direkt per Nachricht:
+            <div class="space-y-3 text-left">
+                <p class="text-[11px] text-slate-300 leading-tight">
+                    Für Smartwatches oder Begleitgeräte kannst du den Mini-Watch-Modus direkt hier öffnen oder den Fernbedienungs-Link teilen:
                 </p>
 
-                <!-- QR Code Container with white padding -->
-                <div class="bg-white p-3 rounded-2xl w-40 h-40 mx-auto flex items-center justify-center shadow-lg border border-slate-700">
-                    <img id="watch-qrcode" src="" alt="QR Code" class="w-full h-full object-contain">
-                </div>
+                <!-- Direct Mini Watch Mode Launcher -->
+                <button onclick="openMiniWatchView()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 p-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition">
+                    <i data-lucide="smartphone" class="w-4 h-4"></i> Direkt als Watch-Screen öffnen
+                </button>
 
                 <!-- Direct Copy Field -->
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
-                    <input type="text" id="watch-link-input" readonly class="bg-transparent text-[10px] text-cyan-400 font-mono w-full outline-none select-all truncate" value="">
-                    <button onclick="copyWatchLink()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0">Kopieren</button>
-                </div>
-                
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-left space-y-2">
-                    <span class="text-[10px] font-bold text-cyan-400 block">Schnell teilen:</span>
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <button onclick="shareViaMessages()" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1">
-                            <i data-lucide="message-square" class="w-3 h-3"></i> iMessage
-                        </button>
-                        <button onclick="shareViaWhatsApp()" class="bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/40 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1">
-                            <i data-lucide="message-circle" class="w-3 h-3"></i> WhatsApp
-                        </button>
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase font-bold text-slate-400 block">Link kopieren & auf Gerät öffnen:</label>
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between gap-1">
+                        <input type="text" id="watch-link-input" readonly class="bg-transparent text-[10px] text-cyan-400 font-mono w-full outline-none select-all truncate" value="">
+                        <button onclick="copyWatchLink()" class="bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold shrink-0">Kopieren</button>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="shareViaMessages()" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 py-2 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1">
+                        <i data-lucide="message-square" class="w-3 h-3"></i> iMessage
+                    </button>
+                    <button onclick="shareViaWhatsApp()" class="bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/40 py-2 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1">
+                        <i data-lucide="message-circle" class="w-3 h-3"></i> WhatsApp
+                    </button>
                 </div>
             </div>
 
@@ -381,6 +379,41 @@
                     Schließen
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- MINI WATCH DEDICATED VIEW OVERLAY -->
+    <div id="mini-watch-overlay" class="fixed inset-0 bg-slate-950 z-50 hidden flex flex-col p-4 justify-between select-none">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <span class="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-1">
+                <i data-lucide="watch" class="w-3.5 h-3.5"></i> Watch / Remote Modus
+            </span>
+            <button onclick="closeMiniWatchView()" class="bg-slate-800 text-slate-300 px-3 py-1 rounded-xl text-xs font-bold">Schließen</button>
+        </div>
+
+        <div class="flex-1 grid grid-rows-2 gap-3 my-2">
+            <!-- Team A Control -->
+            <button onclick="incrementScore('A'); updateMiniWatchDisplay();" class="touch-zone bg-amber-500/20 active:bg-amber-500/40 border border-amber-500/40 rounded-3xl p-4 flex flex-col justify-center items-center text-center cursor-pointer">
+                <span class="text-[10px] uppercase font-bold text-amber-400" id="mw-team-a-name">Team 1</span>
+                <span class="text-5xl font-black text-white my-1" id="mw-team-a-pts">0</span>
+                <span class="text-[10px] text-amber-300 font-bold">+1 Punkt tippen</span>
+            </button>
+
+            <!-- Team B Control -->
+            <button onclick="incrementScore('B'); updateMiniWatchDisplay();" class="touch-zone bg-sky-500/20 active:bg-sky-500/40 border border-sky-500/40 rounded-3xl p-4 flex flex-col justify-center items-center text-center cursor-pointer">
+                <span class="text-[10px] uppercase font-bold text-sky-400" id="mw-team-b-name">Team 2</span>
+                <span class="text-5xl font-black text-white my-1" id="mw-team-b-pts">0</span>
+                <span class="text-[10px] text-sky-300 font-bold">+1 Punkt tippen</span>
+            </button>
+        </div>
+
+        <div class="flex gap-2">
+            <button onclick="undoScore(); updateMiniWatchDisplay();" class="flex-1 bg-slate-900 border border-slate-800 text-slate-200 py-3 rounded-2xl text-xs font-bold">
+                Rückgängig
+            </button>
+            <button onclick="closeMiniWatchView()" class="flex-1 bg-slate-800 text-white py-3 rounded-2xl text-xs font-bold">
+                Zurück zur Arena
+            </button>
         </div>
     </div>
 
@@ -425,10 +458,9 @@
                 incrementScore('A');
             } else if (urlParams.get('action') === 'p2') {
                 incrementScore('B');
-            } else if (urlParams.get('remote') === '1') {
-                // Automatically open remote control view if opened via remote link
+            } else if (urlParams.get('remote') === '1' || urlParams.get('watch') === '1') {
                 setTimeout(() => {
-                    openRemoteModal();
+                    openMiniWatchView();
                 }, 300);
             }
 
@@ -616,42 +648,76 @@
 
         // Apple Watch Modal Management
         function openWatchModal() {
-            let currentUrl = window.location.href.split('?')[0] + "?remote=1";
-            document.getElementById('watch-link-input').value = currentUrl;
-            // Using a reliable public QR API with high error correction
-            let qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(currentUrl)}&color=0f172a&bgcolor=ffffff`;
-            document.getElementById('watch-qrcode').src = qrApiUrl;
-            document.getElementById('watch-modal').classList.remove('hidden');
+            let currentUrl = window.location.href.split('?')[0] + "?watch=1";
+            let watchInput = document.getElementById('watch-link-input');
+            if (watchInput) watchInput.value = currentUrl;
+            let modal = document.getElementById('watch-modal');
+            if (modal) modal.classList.remove('hidden');
             lucide.createIcons();
         }
 
         function closeWatchModal() {
-            document.getElementById('watch-modal').classList.add('hidden');
+            let modal = document.getElementById('watch-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function openMiniWatchView() {
+            closeWatchModal();
+            let overlay = document.getElementById('mini-watch-overlay');
+            if (overlay) overlay.classList.remove('hidden');
+            updateMiniWatchDisplay();
+            lucide.createIcons();
+        }
+
+        function closeMiniWatchView() {
+            let overlay = document.getElementById('mini-watch-overlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
+        function updateMiniWatchDisplay() {
+            let aName = document.getElementById('team-a-names') ? document.getElementById('team-a-names').innerText : "Team 1";
+            let bName = document.getElementById('team-b-names') ? document.getElementById('team-b-names').innerText : "Team 2";
+            
+            if (document.getElementById('mw-team-a-name')) document.getElementById('mw-team-a-name').innerText = aName;
+            if (document.getElementById('mw-team-b-name')) document.getElementById('mw-team-b-name').innerText = bName;
+            
+            if (document.getElementById('mw-team-a-pts')) document.getElementById('mw-team-a-pts').innerText = state.teamA.points;
+            if (document.getElementById('mw-team-b-pts')) document.getElementById('mw-team-b-pts').innerText = state.teamB.points;
         }
 
         function copyWatchLink() {
             let input = document.getElementById('watch-link-input');
-            input.select();
-            document.execCommand('copy');
-            alert("Link in die Zwischenablage kopiert!");
+            if (input) {
+                input.select();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(input.value).catch(() => {});
+                } else {
+                    document.execCommand('copy');
+                }
+                alert("Link in die Zwischenablage kopiert!");
+            }
         }
 
         function copyRemoteLink() {
             let input = document.getElementById('remote-link-input');
             input.select();
-            document.execCommand('copy');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(input.value).catch(() => {});
+            } else {
+                document.execCommand('copy');
+            }
             alert("Link in die Zwischenablage kopiert!");
         }
 
         function shareViaMessages() {
-            let currentUrl = window.location.href.split('?')[0] + "?remote=1";
-            let messageText = encodeURIComponent("🎾 Padel Live-Score & Fernbedienung: " + currentUrl);
+            let currentUrl = window.location.href.split('?')[0] + "?watch=1";
+            let messageText = encodeURIComponent("🎾 Padel Watch/Remote Scoreboard: " + currentUrl);
             window.location.href = `sms:?body=${messageText}`;
         }
 
         function shareViaWhatsApp() {
-            let currentUrl = window.location.href.split('?')[0] + "?remote=1";
-            let messageText = encodeURIComponent("🎾 Padel Live-Score & Fernbedienung: " + currentUrl);
+            let currentUrl = window.location.href.split('?')[0] + "?watch=1";
+            let messageText = encodeURIComponent("🎾 Padel Watch/Remote Scoreboard: " + currentUrl);
             window.open(`https://wa.me/?text=${messageText}`, '_blank');
         }
 
