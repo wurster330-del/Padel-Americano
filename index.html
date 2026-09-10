@@ -1,1806 +1,1010 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Kassensystem">
-    
-    <title>Kassensystem - Verein der Hundefreunde Oberboihingen e.V.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Padel Scoreboard & Americano Pro</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --success: #16a34a;
-            --danger: #dc2626;
-            --warning: #d97706;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --radius: 12px;
-        }
-
-        * {
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            padding-top: max(20px, env(safe-area-inset-top));
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
-            padding-left: max(20px, env(safe-area-inset-left));
-            padding-right: max(20px, env(safe-area-inset-right));
-            -webkit-touch-callout: none;
+            user-select: none;
             -webkit-user-select: none;
-            user-select: none;
-        }
-
-        input, select, textarea, [contenteditable="true"] {
-            -webkit-user-select: text;
-            user-select: text;
-        }
-
-        .container {
-            display: flex;
-            gap: 24px;
-            max-width: 1300px;
-            margin: 0 auto;
-            align-items: flex-start;
-        }
-
-        @media (max-width: 1024px) {
-            .container {
-                flex-direction: column;
-            }
-        }
-
-        .kasse-panel {
-            flex: 1;
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: var(--radius);
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
-            width: 100%;
-        }
-
-        .produkte-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .produkte-header h2 {
-            font-size: 18px;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .kategorie-titel {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 15px;
-            min-height: 40px;
-        }
-
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .btn-produkt {
-            width: 100%;
-            height: 75px;
-            padding: 8px;
-            font-weight: bold;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-        }
-
-        .btn-produkt:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.15);
-            filter: brightness(1.05);
-        }
-
-        .btn-produkt:active {
-            transform: translateY(1px) scale(0.97);
-        }
-
-        .btn-produkt::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.55) 100%);
-            z-index: 1;
-        }
-
-        .btn-produkt-content {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: none;
-        }
-
-        .produkt-title {
-            font-size: 12px;
-            font-weight: 700;
-            text-align: center;
-            line-height: 1.1;
-            text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
-            word-break: break-word;
-            margin-top: 2px;
-        }
-
-        .produkt-preis-badge {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 20px;
-            padding: 2px 8px;
-            font-size: 11px;
-            font-weight: 800;
-            text-shadow: 0px 1px 2px rgba(0,0,0,0.8);
-        }
-
-        .zahlungs-bereich {
-            background: #fffbeb;
-            border: 1px solid #fef3c7;
-            padding: 16px;
-            border-radius: 10px;
-            margin-bottom: 16px;
-        }
-
-        .zahlungs-zeile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-        }
-
-        .zahlungs-zeile input {
-            padding: 10px;
-            font-size: 16px;
-            width: 110px;
-            font-weight: bold;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            text-align: center;
-            background: white;
-        }
-
-        .schnell-geld {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .btn-schein {
-            background: white;
-            color: var(--text-main);
-            border: 1px solid #cbd5e1;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            transition: all 0.1s;
-        }
-        .btn-schein:hover { background: #f1f5f9; border-color: #94a3b8; }
-
-        .rueckgeld-anzeige {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--warning);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            background: #ffffff;
-            border: 2px solid #fde68a;
-            padding: 12px 16px;
-            border-radius: 10px;
-        }
-
-        .rueckgeld-wert-gross {
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--warning);
-            letter-spacing: -0.5px;
-        }
-
-        .storno-gruppe {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
-        .btn-action-flex {
-            width: 100%;
-            padding: 12px 8px;
-            font-size: 13px;
-            font-weight: 700;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            text-align: center;
-            transition: filter 0.1s, transform 0.1s;
-        }
-
-        .btn-action-flex:hover { filter: brightness(0.96); }
-        .btn-action-flex:active { transform: scale(0.98); }
-
-        .btn-undo {
-            background-color: #fef3c7;
-            color: #b45309;
-            border: 1px solid #fde68a;
-        }
-
-        .btn-storno {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-
-        .btn-helfer-klein {
-            background-color: #ecfeff;
-            color: #0e7490;
-            border: 1px solid #cffafe;
-        }
-
-        .btn-action {
-            width: 100%;
-            padding: 14px;
-            font-size: 14px;
-            font-weight: 700;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: filter 0.1s, transform 0.1s;
-        }
-
-        .btn-action:hover { filter: brightness(0.96); }
-        .btn-action:active { transform: scale(0.98); }
-
-        .btn-drucken {
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-            color: white;
-            padding: 18px 16px;
-            font-size: 16px;
-            font-weight: 800;
-            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
-            border-radius: 10px;
-            flex: 0 0 240px;
-            max-width: 100%;
-        }
-
-        @media (max-width: 640px) {
-            .btn-drucken {
-                flex: 1 1 100%;
-            }
-        }
-
-        .btn-inhaber {
-            background-color: #334155;
-            color: white;
-            border-radius: 10px;
-            padding: 16px;
-            font-size: 14px;
-            flex: 1;
-        }
-
-        .unterer-haupt-container {
-            display: flex;
-            gap: 16px;
-            align-items: stretch;
-            margin-top: 14px;
-        }
-
-        @media (max-width: 768px) {
-            .unterer-haupt-container {
-                flex-direction: column;
-            }
-        }
-
-        .gutschein-schmal-box {
-            flex: 1;
-            background: #f0fdf4;
-            border: 1px solid #dcfce7;
-            padding: 14px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .aktionen-rechts-box {
-            flex: 1.5;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            justify-content: space-between;
-        }
-
-        .bon-container {
-            width: 320px;
-            background: white;
-            padding: 24px;
-            border-radius: var(--radius);
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            border: 1px solid var(--border-color);
-            position: sticky;
-            top: 20px;
-        }
-
-        @media (max-width: 1024px) {
-            .bon-container {
-                width: 100%;
-                position: static;
-            }
-        }
-
-        #bon-bereich {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            color: #1e293b;
-        }
-
-        .bon-header, .bon-footer { text-align: center; }
-
-        .bon-logo {
-            max-width: 100%;
-            max-height: 70px;
-            object-fit: contain;
-            margin-bottom: 8px;
-            display: none;
-        }
-
-        .editable-header {
-            outline: none;
-            padding: 3px 6px;
-            border: 1px dashed transparent;
-            border-radius: 4px;
-        }
-        .editable-header:hover { border-color: #cbd5e1; }
-
-        #geschaeft-name { font-size: 16px; line-height: 1.2; font-weight: bold; }
-
-        .trennlinie {
-            border-bottom: 1px dashed #cbd5e1;
-            margin: 12px 0;
-        }
-
-        .bon-zeile {
-            display: flex;
-            justify-content: space-between;
-            margin: 6px 0;
-            padding: 4px 6px;
-            border-radius: 4px;
-            transition: background 0.1s;
-        }
-
-        .bon-zeile.item-row {
-            cursor: pointer;
-            user-select: none;
-        }
-        .bon-zeile.item-row:hover {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-
-        .bon-summe {
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .eigenbedarf-banner {
-            display: none;
-            background-color: #06b6d4;
-            color: white;
-            text-align: center;
-            padding: 8px;
-            font-weight: bold;
-            font-size: 12px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
-        }
-        .eigenbedarf-banner.active { display: block; }
-
-        #druck-ansicht-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: white;
-            z-index: 9999;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .druck-bon-einzel {
-            width: 300px;
-            margin: 0 auto 30px auto;
-            padding: 15px;
-            border: 1px dashed #333;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            color: #000;
-            background: white;
-            page-break-after: always;
-        }
-
-        .druck-header-art {
-            text-align: center;
-            font-weight: bold;
-            font-size: 15px;
-            margin-bottom: 8px;
-            background: #eee;
-            padding: 4px;
-            border-radius: 4px;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        .modal-overlay.active { display: flex; }
-
-        .modal-card {
-            background: white;
-            padding: 24px;
-            border-radius: var(--radius);
-            width: 100%;
-            max-width: 520px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-        }
-
-        .modal-card.inhaber-wide {
-            max-width: 980px;
-            width: 95vw;
-        }
-
-        .modal-card h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 20px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-
-        .modal-card label {
-            display: block;
-            font-size: 13px;
-            font-weight: 700;
-            margin-top: 12px;
-            margin-bottom: 6px;
-            color: var(--text-main);
-        }
-
-        .modal-card input[type="text"],
-        .modal-card input[type="number"],
-        .modal-card input[type="time"],
-        .modal-card input[type="date"],
-        .modal-card select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-            background: #f8fafc;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            justify-content: flex-end;
-        }
-
-        .modal-actions button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .btn-modal-save { background-color: var(--success); color: white; }
-        .btn-modal-cancel { background-color: #64748b; color: white; }
-
-        .inhaber-header { margin-bottom: 20px; }
-        .inhaber-tabs {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 2px;
-        }
-
-        .tab-btn {
-            background: #f1f5f9;
-            border: none;
-            padding: 10px 16px;
-            font-weight: 700;
-            border-radius: 8px 8px 0 0;
-            cursor: pointer;
-            color: var(--text-muted);
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .tab-pane { display: none; }
-        .tab-pane.active { display: block; }
-
-        .inhaber-section {
-            border: 1px solid var(--border-color);
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .inhaber-section h4 { margin-top: 0; margin-bottom: 12px; color: var(--text-main); font-size: 16px; }
-
-        .inhaber-grid-2col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        @media (max-width: 768px) {
-            .inhaber-grid-2col {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .tagesabschluss-vorschau-tabelle, .produkt-verwaltungs-tabelle {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            margin-top: 10px;
-        }
-        .tagesabschluss-vorschau-tabelle th, .tagesabschluss-vorschau-tabelle td,
-        .produkt-verwaltungs-tabelle th, .produkt-verwaltungs-tabelle td {
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--border-color);
-            text-align: left;
-        }
-        .tagesabschluss-vorschau-tabelle th, .produkt-verwaltungs-tabelle th {
-            background-color: #f1f5f9;
-            color: var(--text-main);
-            font-weight: 700;
-        }
-        .tagesabschluss-vorschau-tabelle tr:last-child td {
-            border-bottom: none;
-            font-weight: bold;
-            background-color: #f0fdf4;
-        }
-
-        .add-product-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .span-2 { grid-column: span 2; }
-
-        .highlight-card { background: #eff6ff; border-color: #bfdbfe; }
-        .danger-card { background: #fef2f2; border-color: #fecaca; }
-
-        .btn-tabelle-aktion {
-            padding: 4px 8px;
-            font-size: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-        }
-        .btn-tabelle-edit { background-color: var(--warning); margin-right: 4px; }
-        .btn-tabelle-del { background-color: var(--danger); }
-
-        .helfer-liste-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            border: 1px solid var(--border-color);
-            padding: 6px 10px;
-            border-radius: 6px;
-            margin-bottom: 6px;
-            font-size: 13px;
-        }
-
-        .btn-del-helfer {
-            background: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 3px 8px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .helfer-auswahl-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn-helfer-select {
-            background: #f8fafc;
-            border: 1px solid var(--border-color);
-            padding: 12px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-            transition: background 0.1s;
-        }
-        .btn-helfer-select:hover {
-            background: #e2e8f0;
-        }
-
-        @media print {
-            body * {
-                visibility: hidden !important;
-            }
-            #druck-ansicht-overlay, #druck-ansicht-overlay * {
-                visibility: visible !important;
-            }
-            #druck-ansicht-overlay {
-                display: block !important;
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                height: auto !important;
-                background: white !important;
-                z-index: 99999 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .druck-bon-einzel {
-                page-break-after: always;
-                break-after: page;
-            }
-            .no-print, .modal-overlay {
-                display: none !important;
-            }
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+            overscroll-behavior: none;
+        }
+        .tap-flash {
+            animation: flashPulse 0.25s ease-out;
+        }
+        @keyframes flashPulse {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(0.98); filter: brightness(1.25); }
+            100% { transform: scale(1); filter: brightness(1); }
         }
     </style>
 </head>
-<body>
+<body class="h-full bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden select-none">
 
-<div class="container no-print">
-    <div class="kasse-panel">
-        <div class="produkte-header">
-            <h2>Produkte</h2>
-        </div>
-
-        <div class="kategorie-titel">🍺 Getränke</div>
-        <div class="grid" id="grid-getraenke"></div>
-
-        <div class="kategorie-titel">🍔 Verzehr</div>
-        <div class="grid" id="grid-verzehr"></div>
-
-        <div class="zahlungs-bereich">
-            <div class="zahlungs-zeile">
-                <label for="gegeben-geld"><strong>Gegeben:</strong></label>
-                <input type="number" id="gegeben-geld" step="0.01" placeholder="0,00" oninput="berechneRueckgeld()"> €
-                
-                <div class="schnell-geld">
-                    <button class="btn-schein" onclick="setGegeben(5)">5 €</button>
-                    <button class="btn-schein" onclick="setGegeben(10)">10 €</button>
-                    <button class="btn-schein" onclick="setGegeben(20)">20 €</button>
-                    <button class="btn-schein" onclick="setGegeben(50)">50 €</button>
-                </div>
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between shrink-0 shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="bg-emerald-500 text-slate-950 px-3.5 py-1.5 rounded-xl font-black text-lg flex items-center shadow-md">
+                <i data-lucide="activity" class="w-5 h-5 mr-1.5 stroke-[2.5]"></i>
+                PADEL
             </div>
-            <div class="rueckgeld-anzeige">
-                <span>Rückgeld: <span id="rueckgeld-text" class="rueckgeld-wert-gross">0,00</span> €</span>
-                <button class="btn-action btn-drucken" onclick="bonDrucken()">🖨️ Bon Drucken & Abrechnen</button>
-            </div>
-        </div>
-
-        <div class="storno-gruppe">
-            <button class="btn-action-flex btn-undo" onclick="entferneLetztenArtikel()">
-                <span>↩</span> <span>Letzter Artikel</span>
-            </button>
-            <button class="btn-action-flex btn-storno" onclick="storno()">
-                <span>🗑️</span> <span>Warenkorb leeren</span>
-            </button>
-            <button class="btn-action-flex btn-helfer-klein" onclick="oefneHelferAuswahlModal()">
-                <span>🎁</span> <span>Helfer-Ausgabe</span>
-            </button>
-        </div>
-        
-        <div class="unterer-haupt-container">
-            <div class="gutschein-schmal-box">
-                <label style="margin-bottom: 6px; display: block; font-size: 13px;"><strong>Gutscheine:</strong></label>
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <button class="btn-schein" style="width: 100%; background: #0284c7; color: white; font-weight: 700; border: none; padding: 7px 10px; text-align: left; font-size: 13px;" onclick="druckeDirektWertgutschein(10)">🎟️ 10 € Bon</button>
-                    <button class="btn-schein" style="width: 100%; background: #0284c7; color: white; font-weight: 700; border: none; padding: 7px 10px; text-align: left; font-size: 13px;" onclick="druckeDirektWertgutschein(15)">🎟️ 15 € Bon</button>
-                    <button class="btn-schein" style="width: 100%; background: #0284c7; color: white; font-weight: 700; border: none; padding: 7px 10px; text-align: left; font-size: 13px;" onclick="druckeDirektWertgutschein(20)">🎟️ 20 € Bon</button>
-                </div>
-            </div>
-
-            <div class="aktionen-rechts-box" style="justify-content: flex-end;">
-                <button class="btn-action btn-inhaber" onclick="oefneInhaberBereich()">🔒 Inhaber-Bereich</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="bon-container">
-        <div id="bon-bereich">
-            <div class="bon-header">
-                <img id="bon-logo-img" class="bon-logo" src="" alt="Vereins-Logo">
-                <div contenteditable="true" class="editable-header" id="geschaeft-name" onblur="speichereGeschaeftsdaten()"><strong>Verein der Hundefreunde Oberboihingen e.V.</strong></div>
-                <div contenteditable="true" class="editable-header" id="geschaeft-strasse" onblur="speichereGeschaeftsdaten()">Musterstraße 12</div>
-                <div contenteditable="true" class="editable-header" id="geschaeft-ort" onblur="speichereGeschaeftsdaten()">72644 Oberboihingen</div>
-                <div contenteditable="true" class="editable-header" id="geschaeft-tel" onblur="speichereGeschaeftsdaten()">Tel: 0123-456789</div>
-            </div>
-
-            <div class="trennlinie"></div>
-            <div class="eigenbedarf-banner" id="eigenbedarf-banner">HELFER-AUSGABE</div>
-            <div id="bon-artikel"></div>
-            <div class="trennlinie"></div>
-
-            <div class="bon-zeile bon-summe">
-                <span>GESAMT:</span>
-                <span><span id="summe">0,00</span> €</span>
-            </div>
-
-            <div id="bon-zahlung-bereich" style="display: none;">
-                <div class="bon-zeile">
-                    <span>Gegeben:</span>
-                    <span><span id="bon-gegeben">0,00</span> €</span>
-                </div>
-                <div class="bon-zeile">
-                    <span>Rückgeld:</span>
-                    <span><span id="bon-rueckgeld">0,00</span> €</span>
-                </div>
-            </div>
-
-            <div class="trennlinie"></div>
-
-            <div class="bon-footer">
-                <div contenteditable="true" class="editable-header" id="geschaeft-fusszeile" onblur="speichereGeschaeftsdaten()">Vielen Dank für Ihren Besuch!</div>
-                <span id="bon-datum"></span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="druck-ansicht-overlay"></div>
-
-<!-- INHABER-BEREICH MODAL -->
-<div class="modal-overlay" id="inhaber-modal">
-    <div class="modal-card inhaber-wide">
-        <div class="inhaber-header">
-            <h3>🔒 Inhaber-Bereich</h3>
-            <div class="inhaber-tabs">
-                <button class="tab-btn active" onclick="switchTab('tab-tagesabschluss', event)">📊 Tagesabschluss</button>
-                <button class="tab-btn" onclick="switchTab('tab-wertbons', event)">🎟️ Wertbons entwerten</button>
-                <button class="tab-btn" onclick="switchTab('tab-wertbon-config', event)">⚙️ Stückelung verwalten</button>
-                <button class="tab-btn" onclick="switchTab('tab-produkte', event)" id="btn-tab-produkte">🍕 Produkte</button>
-                <button class="tab-btn" onclick="switchTab('tab-helfer', event)">👥 Helfer</button>
-                <button class="tab-btn" onclick="switchTab('tab-einstellungen', event)">⚙️ Einstellungen</button>
-            </div>
-        </div>
-
-        <div class="inhaber-tab-content">
-            <!-- TAGESABSCHLUSS -->
-            <div id="tab-tagesabschluss" class="tab-pane active">
-                <div class="inhaber-section highlight-card">
-                    <h4>📋 Live-Vorschau des Tagesabschlusses</h4>
-                    <table class="tagesabschluss-vorschau-tabelle">
-                        <tr>
-                            <th>Kennzahl</th>
-                            <th style="text-align: right;">Wert</th>
-                        </tr>
-                        <tr>
-                            <td>Wechselgeld-Anfangsbestand</td>
-                            <td id="v-anfang" style="text-align: right;">0,00 €</td>
-                        </tr>
-                        <tr>
-                            <td>Tageseinnahmen (Umsatz)</td>
-                            <td id="v-umsatz" style="text-align: right;">0,00 €</td>
-                        </tr>
-                        <tr>
-                            <td style="padding-left: 20px; color: var(--text-muted);">└ 🍺 davon Getränke</td>
-                            <td id="v-umsatz-getraenke" style="text-align: right; color: var(--text-muted);">0,00 €</td>
-                        </tr>
-                        <tr>
-                            <td style="padding-left: 20px; color: var(--text-muted);">└ 🍔 davon Verzehr</td>
-                            <td id="v-umsatz-verzehr" style="text-align: right; color: var(--text-muted);">0,00 €</td>
-                        </tr>
-                        <tr>
-                            <td>Tagesgewinn (kalkuliert)</td>
-                            <td id="v-gewinn" style="text-align: right;">0,00 €</td>
-                        </tr>
-                        <tr>
-                            <td>Anzahl Transaktionen (Kunden)</td>
-                            <td id="v-anzahl" style="text-align: right;">0</td>
-                        </tr>
-                        <tr>
-                            <td>🎁 Helfer-Aktionen (Bons)</td>
-                            <td id="v-helfer-anzahl" style="text-align: right;">0</td>
-                        </tr>
-                        <tr>
-                            <td>🎁 Kostenloser Warenwert (Helfer)</td>
-                            <td id="v-helfer-wert" style="text-align: right; color: var(--danger);">0,00 €</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Soll-Kassenbestand Gesamt</strong></td>
-                            <td id="v-soll" style="text-align: right; color: var(--success);"><strong>0,00 €</strong></td>
-                        </tr>
-                    </table>
-
-                    <h4 style="margin-top: 20px; margin-bottom: 6px; font-size: 14px;">📦 Verkaufte Artikel im Detail</h4>
-                    <table class="tagesabschluss-vorschau-tabelle" id="v-artikel-tabelle">
-                        <tr>
-                            <th>Produkt</th>
-                            <th style="text-align: center;">Menge (Stk.)</th>
-                            <th style="text-align: right;">Gesamtumsatz</th>
-                        </tr>
-                    </table>
-
-                    <h4 style="margin-top: 20px; margin-bottom: 6px; font-size: 14px;">👥 Helfer-Guthaben im Detail</h4>
-                    <table class="tagesabschluss-vorschau-tabelle" id="v-helfer-tabelle">
-                        <tr>
-                            <th>Helfer</th>
-                            <th style="text-align: center;">Anzahl Bons</th>
-                            <th style="text-align: right;">Warenwert (kostenlos)</th>
-                        </tr>
-                    </table>
-                </div>
-
-                <div class="inhaber-grid-2col">
-                    <div class="inhaber-section" style="background: white;">
-                        <h4>✅ Freigabe & Export</h4>
-                        <p style="font-size: 12px; color: var(--text-muted);">Nach dem Download werden die Tagesdaten zurückgesetzt.</p>
-                        <button class="btn-action btn-inhaber" style="margin-top:5px; background: var(--success);" onclick="starteTagesabschlussProcess()">🚀 Freigeben & CSV-Bericht herunterladen</button>
-                    </div>
-
-                    <div class="inhaber-section danger-card">
-                        <h4>⚠️ Storno</h4>
-                        <p style="font-size: 12px; color: var(--text-muted);">Macht den als letzten gedruckten Bon vollständig rückgängig.</p>
-                        <button class="btn-action btn-storno" onclick="storniereLetztenBon()">⚠️ Letzten Bon komplett stornieren</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- WERTBONS ENTWERTEN -->
-            <div id="tab-wertbons" class="tab-pane">
-                <div class="inhaber-section highlight-card">
-                    <h4>🎟️ Aktive Wertbons prüfen & Positionen abstreichen</h4>
-                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <input type="text" id="such-bon-id" placeholder="Bon-ID eingeben..." style="flex:1;">
-                        <button class="btn-action btn-modal-save" style="width: auto; padding: 10px 20px;" onclick="sucheWertBonEinloesen()">Bon suchen</button>
-                    </div>
-
-                    <div id="wertbon-einloesen-container" style="background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: none;">
-                        <h5 id="wb-titel" style="margin-top:0; font-size:15px; color:var(--primary);">Bon Details</h5>
-                        <p id="wb-info" style="font-size: 13px; color: var(--text-muted);"></p>
-                        <div id="wb-positionen-liste" style="margin: 15px 0;"></div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-action btn-modal-save" style="flex: 1;" onclick="speichereWertbonEinloesung()">Ausgewählte Positionen entwerten</button>
-                            <button class="btn-action" style="flex: 1; background-color: var(--warning);" onclick="auszahlenRestwertBon()">Restbetrag ausbezahlen</button>
-                        </div>
-                    </div>
-
-                    <h4 style="margin-top: 20px; font-size: 14px;">Liste aller offenen Wertbons</h4>
-                    <table class="tagesabschluss-vorschau-tabelle" id="offene-wertbons-tabelle">
-                        <tr>
-                            <th>Bon-ID</th>
-                            <th>Uhrzeit</th>
-                            <th>Gesamtwert</th>
-                            <th>Restwert</th>
-                            <th style="text-align: right;">Aktion</th>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            <!-- WERTBON-KONFIGURATION -->
-            <div id="tab-wertbon-config" class="tab-pane">
-                <div class="inhaber-section highlight-card">
-                    <h4>⚙️ Standard-Stückelung für Verzehrbons</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Legen Sie hier fest, aus welchen Einzelwerten sich die jeweiligen Standard-Gutscheine (10€, 15€, 20€) standardmäßig zusammensetzen sollen (Werte getrennt durch Komma).</p>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px;">
-                        <div>
-                            <label for="config-stueck-10">Standardwerte für 10 € Gutschein:</label>
-                            <input type="text" id="config-stueck-10" placeholder="z. B. 5, 3, 2">
-                        </div>
-                        <div>
-                            <label for="config-stueck-15">Standardwerte für 15 € Gutschein:</label>
-                            <input type="text" id="config-stueck-15" placeholder="z. B. 5, 5, 3, 2">
-                        </div>
-                        <div>
-                            <label for="config-stueck-20">Standardwerte für 20 € Gutschein:</label>
-                            <input type="text" id="config-stueck-20" placeholder="z. B. 10, 5, 3, 2">
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <button class="btn-action btn-modal-save" style="width: auto; padding: 10px 20px;" onclick="saveFlexibleStueckelungConfig()">💾 Konfiguration speichern</button>
-                        <span id="admin-save-status" style="color: var(--success); font-weight: bold; font-size: 13px;"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PRODUKTE VERWALTEN -->
-            <div id="tab-produkte" class="tab-pane">
-                <div class="inhaber-section">
-                    <h4>Neues Produkt anlegen / Bearbeiten</h4>
-                    <input type="hidden" id="edit-produkt-id" value="">
-                    <div class="add-product-form-grid">
-                        <div class="span-2">
-                            <label for="neuer-name">Produktname *</label>
-                            <input type="text" id="neuer-name" placeholder="z. B. Currywurst">
-                        </div>
-                        <div>
-                            <label for="neuer-preis">Verkaufspreis (€) *</label>
-                            <input type="number" id="neuer-preis" step="0.01" placeholder="3.50">
-                        </div>
-                        <div>
-                            <label for="neuer-einkaufspreis">Einkaufspreis (€) [optional]</label>
-                            <input type="number" id="neuer-einkaufspreis" step="0.01" placeholder="1.50">
-                        </div>
-                        <div>
-                            <label for="neue-kategorie">Kategorie *</label>
-                            <select id="neue-kategorie">
-                                <option value="getraenke">Getränke</option>
-                                <option value="verzehr">Verzehr</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="neue-farbe">Button-Farbe</label>
-                            <input type="color" id="neue-farbe" value="#2563eb" style="width:100%; height:38px; border:1px solid var(--border-color); border-radius:8px; padding:2px;">
-                        </div>
-                        <div class="span-2">
-                            <label for="neues-bild">Hintergrundbild (URL) [optional]</label>
-                            <input type="text" id="neues-bild" placeholder="https://beispiel.de/bild.jpg">
-                        </div>
-                    </div>
-                    <div style="margin-top: 15px; display: flex; gap: 10px;">
-                        <button class="btn-action btn-modal-save" onclick="speichereProdukt()">Produkt speichern</button>
-                        <button class="btn-action btn-modal-cancel" onclick="zuruecksetzenProduktFormular()" style="display:none;" id="btn-produkt-abbrechen">Abbrechen</button>
-                    </div>
-                </div>
-
-                <div class="inhaber-section" style="background: white;">
-                    <h4>Vorhandene Produkte</h4>
-                    <table class="produkt-verwaltungs-tabelle" id="tabelle-produkte-verwaltung">
-                        <tr>
-                            <th>Produkt</th>
-                            <th>Kat.</th>
-                            <th>Preis</th>
-                            <th style="text-align: right;">Aktion</th>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            <!-- HELFER -->
-            <div id="tab-helfer" class="tab-pane">
-                <div class="inhaber-section">
-                    <h4>Helfer verwalten</h4>
-                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <input type="text" id="neuer-helfer-name" placeholder="Name des Helfers...">
-                        <button class="btn-action btn-modal-save" style="width: auto; padding: 10px 20px;" onclick="fuegeHelferHinzu()">Hinzufügen</button>
-                    </div>
-                    <div id="helfer-liste-container"></div>
-                </div>
-            </div>
-
-            <!-- EINSTELLUNGEN -->
-            <div id="tab-einstellungen" class="tab-pane">
-                <div class="inhaber-section">
-                    <h4>Allgemeine Einstellungen & Wechselgeld</h4>
-                    <label for="input-wechselgeld">Start-Wechselgeld in der Kasse (€):</label>
-                    <input type="number" id="input-wechselgeld" step="0.01" onchange="speichereWechselgeld(this.value)">
-                    <div style="margin-top: 20px;">
-                        <button class="btn-action btn-modal-save" onclick="schliesseInhaberBereich()">Einstellungen übernehmen</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal-actions" style="border-top: 2px solid var(--border-color); padding-top: 15px; margin-top: 20px;">
-            <button class="btn-modal-cancel" onclick="schliesseInhaberBereich()">Schließen</button>
-        </div>
-    </div>
-</div>
-
-<!-- HELFER AUSWAHL MODAL -->
-<div class="modal-overlay" id="helfer-auswahl-modal">
-    <div class="modal-card">
-        <h3>🎁 Helfer-Ausgabe auswählen</h3>
-        <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-            <label style="margin-top:0; font-size:12px; color:var(--text-muted);">Schnell-Bon ohne Artikelauswahl drucken:</label>
-            <div style="display: flex; gap: 10px; margin-top: 8px;">
-                <button class="btn-action btn-modal-save" style="background-color:#d97706; flex:1;" onclick="druckeDirektKategorieBon('Getränke')">🍺 Nur Getränke</button>
-                <button class="btn-action btn-modal-save" style="background-color:#16a34a; flex:1;" onclick="druckeDirektKategorieBon('Verzehr')">🍔 Nur Verzehr</button>
-            </div>
-        </div>
-
-        <label style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">Oder Helfer für Warenkorb-Artikel zuweisen:</label>
-        <div id="helfer-auswahl-grid-container" class="helfer-auswahl-grid"></div>
-
-        <div class="modal-actions">
-            <button class="btn-modal-cancel" onclick="schliesseHelferAuswahlModal()">Abbrechen</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    let produkte = ladeUndSynchronisiereProdukte();
-    let helferListe = JSON.parse(localStorage.getItem('kasse_helfer')) || ['Max Mustermann', 'Erika Musterfrau', 'Hans Dampf'];
-    let anfangsbestand = parseFloat(localStorage.getItem('kasse_anfangsbestand')) || 100.00;
-    
-    let warenkorb = [];
-    let tagesTransaktionen = JSON.parse(localStorage.getItem('kasse_tages_transaktionen')) || [];
-    let letzterGedruckterBon = JSON.parse(localStorage.getItem('kasse_letzter_bon')) || null;
-    let istHelferAusgabe = false;
-    let aktuellerHelfer = '';
-    let aktuellerBearbeitungsBon = null;
-
-    function ladeUndSynchronisiereProdukte() {
-        let gespeicherteProdukte = [];
-        try {
-            gespeicherteProdukte = JSON.parse(localStorage.getItem('kasse_produkte')) || [];
-        } catch (e) {
-            gespeicherteProdukte = [];
-        }
-
-        if (!Array.isArray(gespeicherteProdukte)) {
-            return [];
-        }
-        return gespeicherteProdukte;
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        aktualisiereDatum();
-        renderProdukte();
-        document.getElementById('input-wechselgeld').value = anfangsbestand.toFixed(2);
-        setInterval(aktualisiereDatum, 1000);
-    });
-
-    function aktualisiereDatum() {
-        const jetzt = new Date();
-        document.getElementById('bon-datum').innerText = jetzt.toLocaleDateString('de-DE') + ' ' + jetzt.toLocaleTimeString('de-DE');
-    }
-
-    function renderProdukte() {
-        const gridGetraenke = document.getElementById('grid-getraenke');
-        const gridVerzehr = document.getElementById('grid-verzehr');
-        if (!gridGetraenke || !gridVerzehr) return;
-
-        gridGetraenke.innerHTML = '';
-        gridVerzehr.innerHTML = '';
-
-        if (produkte.length === 0) {
-            gridGetraenke.innerHTML = '<div style="grid-column: span 4; color: var(--text-muted); font-size: 13px; padding: 10px 0;">Noch keine Getränke angelegt. Öffnen Sie den Inhaber-Bereich unter „🔒 Inhaber-Bereich“, um Produkte hinzuzufügen.</div>';
-            gridVerzehr.innerHTML = '<div style="grid-column: span 2; color: var(--text-muted); font-size: 13px; padding: 10px 0;">Noch keine Verzehrprodukte angelegt.</div>';
-        }
-
-        produkte.forEach(p => {
-            const wrapper = document.createElement('div');
-            const btn = document.createElement('button');
-            btn.className = 'btn-produkt';
             
-            if (p.bild && p.bild.trim() !== '') {
-                btn.style.backgroundImage = `url('${p.bild}')`;
+            <!-- Game Mode / Tournament Badge -->
+            <button onclick="openSettingsModal()" id="header-mode-badge" class="bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 px-3.5 py-1.5 rounded-xl text-emerald-400 font-extrabold text-sm flex items-center space-x-2 transition cursor-pointer">
+                <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+                <span id="display-mode-name">Klassisch (Best of 3)</span>
+            </button>
+
+            <!-- Match Timer -->
+            <div id="match-timer" class="hidden md:flex bg-slate-800 px-3.5 py-1.5 rounded-xl font-mono text-emerald-400 font-bold text-base items-center border border-slate-700">
+                <i data-lucide="clock" class="w-4 h-4 mr-1.5"></i>
+                <span id="timer-display">00:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <!-- Dynamic Rule / Point Target Badge -->
+            <button id="rule-toggle-btn" onclick="openSettingsModal()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-300 transition flex items-center space-x-1.5">
+                <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
+                <span id="rule-label">Golden Point</span>
+            </button>
+
+            <!-- Leaderboard Button (Americano Mode) -->
+            <button id="leaderboard-btn" onclick="openLeaderboardModal()" title="Rangliste anzeigen" class="hidden px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 rounded-xl text-amber-400 font-extrabold text-xs transition flex items-center space-x-1.5">
+                <i data-lucide="trophy" class="w-4 h-4"></i>
+                <span>Rangliste</span>
+            </button>
+
+            <!-- High Contrast / Daylight Toggle -->
+            <button onclick="toggleHighContrast()" title="Outdoor High-Contrast Modus" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
+                <i data-lucide="sun" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Undo Button -->
+            <button onclick="undoLastAction()" title="Letzten Punkt zurück" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
+                <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Settings / Setup Modal Button -->
+            <button onclick="openSettingsModal()" title="Spieler & Einstellungen" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Fullscreen Toggle -->
+            <button onclick="toggleFullScreen()" title="Vollbild" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
+                <i data-lucide="maximize" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+        <!-- TEAM 1 ZONE -->
+        <div id="team-a-zone" onclick="scorePoint('A')" class="flex-1 bg-gradient-to-br from-blue-950/80 via-slate-900 to-slate-950 border-b md:border-b-0 md:border-r border-slate-800/80 p-6 flex flex-col justify-between cursor-pointer active:brightness-125 transition relative group">
+            
+            <div class="flex justify-between items-start">
+                <div class="flex items-center space-x-3">
+                    <div>
+                        <div id="team-a-names-display" class="text-xl md:text-2xl font-black text-blue-400 uppercase tracking-wide">Spieler 1 & Spieler 2</div>
+                        <div class="text-xs text-slate-400 font-semibold mt-0.5 flex items-center">
+                            <i data-lucide="circle-dot" class="w-3.5 h-3.5 mr-1 text-emerald-400" id="server-indicator-a"></i>
+                            <span id="server-text-a">Aufschlag</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classic Sets Indicators -->
+                <div id="team-a-sets-container" class="flex space-x-1.5 bg-slate-950/60 p-2 rounded-2xl border border-slate-800 shadow-inner">
+                    <div class="text-xs font-bold text-slate-400 self-center mr-1">SÄTZE</div>
+                    <div id="team-a-set-0" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
+                    <div id="team-a-set-1" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
+                    <div id="team-a-set-2" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
+                </div>
+            </div>
+
+            <!-- Main Score Display -->
+            <div class="my-auto py-4 flex items-center justify-around">
+                <div id="team-a-games-wrap" class="text-center">
+                    <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Spiele</div>
+                    <div id="team-a-games" class="text-7xl md:text-9xl font-black text-slate-200 tracking-tighter">0</div>
+                </div>
+
+                <div id="team-a-divider" class="h-24 w-px bg-slate-800/80"></div>
+
+                <div class="text-center">
+                    <div id="team-a-points-label" class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Punkte</div>
+                    <div id="team-a-points" class="text-8xl md:text-[11rem] font-black text-blue-400 tracking-tighter drop-shadow-lg">0</div>
+                </div>
+            </div>
+
+            <div class="text-center text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-blue-400 transition">
+                Tippen, um Punkt für Paar 1 zu geben
+            </div>
+        </div>
+
+        <!-- TEAM 2 ZONE -->
+        <div id="team-b-zone" onclick="scorePoint('B')" class="flex-1 bg-gradient-to-br from-rose-950/80 via-slate-900 to-slate-950 p-6 flex flex-col justify-between cursor-pointer active:brightness-125 transition relative group">
+            
+            <div class="flex justify-between items-start">
+                <div class="flex items-center space-x-3">
+                    <div>
+                        <div id="team-b-names-display" class="text-xl md:text-2xl font-black text-rose-400 uppercase tracking-wide">Spieler 3 & Spieler 4</div>
+                        <div class="text-xs text-slate-400 font-semibold mt-0.5 flex items-center">
+                            <i data-lucide="circle-dot" class="w-3.5 h-3.5 mr-1 text-slate-600" id="server-indicator-b"></i>
+                            <span id="server-text-b"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classic Sets Indicators -->
+                <div id="team-b-sets-container" class="flex space-x-1.5 bg-slate-950/60 p-2 rounded-2xl border border-slate-800 shadow-inner">
+                    <div class="text-xs font-bold text-slate-400 self-center mr-1">SÄTZE</div>
+                    <div id="team-b-set-0" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
+                    <div id="team-b-set-1" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
+                    <div id="team-b-set-2" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
+                </div>
+            </div>
+
+            <!-- Main Score Display -->
+            <div class="my-auto py-4 flex items-center justify-around">
+                <div id="team-b-games-wrap" class="text-center">
+                    <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Spiele</div>
+                    <div id="team-b-games" class="text-7xl md:text-9xl font-black text-slate-200 tracking-tighter">0</div>
+                </div>
+
+                <div id="team-b-divider" class="h-24 w-px bg-slate-800/80"></div>
+
+                <div class="text-center">
+                    <div id="team-b-points-label" class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Punkte</div>
+                    <div id="team-b-points" class="text-8xl md:text-[11rem] font-black text-rose-400 tracking-tighter drop-shadow-lg">0</div>
+                </div>
+            </div>
+
+            <div class="text-center text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-rose-400 transition">
+                Tippen, um Punkt für Paar 2 zu geben
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-900 border-t border-slate-800 px-4 py-2.5 flex items-center justify-between text-xs font-semibold text-slate-400 shrink-0">
+        <div id="match-status-msg" class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="status-text">Match läuft - Satz 1</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button onclick="switchServerManually()" class="hover:text-slate-200 underline">Aufschlag wechseln</button>
+            <button onclick="resetMatchPrompt()" class="text-rose-400 hover:text-rose-300">Match zurücksetzen</button>
+        </div>
+    </footer>
+
+    <div id="settings-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h3 class="text-xl font-black text-slate-100 flex items-center">
+                    <i data-lucide="users" class="w-6 h-6 mr-2.5 text-emerald-400"></i>
+                    Teilnehmer & Spielmodus Konfiguration
+                </h3>
+                <button onclick="closeSettingsModal()" class="p-2 text-slate-400 hover:text-slate-100 rounded-xl bg-slate-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Game Mode Selection -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Spielmodus</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="mode-classic-btn" onclick="setGameMode('classic')" class="p-3 rounded-2xl text-xs font-bold border transition text-center flex flex-col items-center justify-center space-y-1">
+                            <i data-lucide="grid" class="w-5 h-5 text-emerald-400"></i>
+                            <span class="text-slate-100 font-extrabold">Klassisch (Sets & Games)</span>
+                        </button>
+                        <button type="button" id="mode-americano-btn" onclick="setGameMode('americano')" class="p-3 rounded-2xl text-xs font-bold border transition text-center flex flex-col items-center justify-center space-y-1">
+                            <i data-lucide="rotate-cw" class="w-5 h-5 text-amber-400"></i>
+                            <span class="text-slate-100 font-extrabold">Americano / Rotation (5-6 Spieler)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Americano Settings & Roster (Conditional) -->
+                <div id="americano-options" class="hidden bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-bold uppercase text-amber-400">Americano Pool & Rotationsplan</label>
+                        <div class="flex space-x-1">
+                            <button type="button" onclick="setAmericanoPlayerPool(5)" id="pool-5-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300">5 Spieler</button>
+                            <button type="button" onclick="setAmericanoPlayerPool(6)" id="pool-6-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300">6 Spieler</button>
+                        </div>
+                    </div>
+
+                    <!-- Target Points (Fully Editable) -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="block text-[10px] uppercase text-slate-400 font-bold">Zielpunkte pro Runde (Match-Ende)</span>
+                            <span id="target-points-val-label" class="text-xs font-bold text-amber-400">32 Pkt</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 mb-2">
+                            <button type="button" onclick="setAmericanoPoints(16)" class="americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-center">16 Pkt</button>
+                            <button type="button" onclick="setAmericanoPoints(21)" class="americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-center">21 Pkt</button>
+                            <button type="button" onclick="setAmericanoPoints(24)" class="americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-center">24 Pkt</button>
+                            <button type="button" onclick="setAmericanoPoints(32)" class="americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-center">32 Pkt</button>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" id="custom-target-points-input" min="4" max="100" value="32" placeholder="Eigene Punkte" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-amber-400 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <button type="button" onclick="applyCustomTargetPoints()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl transition">Setzen</button>
+                        </div>
+                    </div>
+
+                    <!-- Tournament Rounds Selector -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="block text-[10px] uppercase text-slate-400 font-bold">Runde auswählen / Starten</span>
+                            <span id="current-round-indicator" class="text-xs font-bold text-amber-400">Runde 1 von 5</span>
+                        </div>
+                        <div id="rounds-buttons-container" class="grid grid-cols-5 gap-1.5">
+                            <!-- Dynamically generated round buttons -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classic Settings (Conditional) -->
+                <div id="classic-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Einstand-Regel (40:40)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="modal-rule-golden" onclick="setGoldenPointRule(true)" class="p-2.5 rounded-xl font-bold border text-xs transition text-center">Golden Point</button>
+                            <button id="modal-rule-advantage" onclick="setGoldenPointRule(false)" class="p-2.5 rounded-xl font-bold border text-xs transition text-center">Vorteil</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Sätze zum Sieg</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="modal-sets-3" onclick="setBestOf(3)" class="p-2.5 rounded-xl font-bold border text-xs transition text-center">Best of 3</button>
+                            <button id="modal-sets-1" onclick="setBestOf(1)" class="p-2.5 rounded-xl font-bold border text-xs transition text-center">1 Satz (bis 9)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Participant Names Setup -->
+                <div class="pt-2 border-t border-slate-800 space-y-4">
+                    <div id="classic-names-setup" class="space-y-4">
+                        <div class="bg-blue-950/40 p-4 rounded-2xl border border-blue-900/50 space-y-3">
+                            <label class="block text-xs font-bold uppercase text-blue-400">Paar 1 (Teilnehmer)</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler 1</span>
+                                    <input type="text" id="input-p1-name" value="Max" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-blue-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler 2</span>
+                                    <input type="text" id="input-p2-name" value="Tom" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-blue-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-rose-950/40 p-4 rounded-2xl border border-rose-900/50 space-y-3">
+                            <label class="block text-xs font-bold uppercase text-rose-400">Paar 2 (Teilnehmer)</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler 3</span>
+                                    <input type="text" id="input-p3-name" value="Alex" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-rose-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-rose-500">
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler 4</span>
+                                    <input type="text" id="input-p4-name" value="Lucas" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-rose-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-rose-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Americano 5-6 Players Inputs -->
+                    <div id="americano-roster-setup" class="hidden space-y-3">
+                        <label class="block text-xs font-bold uppercase text-amber-400">Spieler-Namen im Pool</label>
+                        <div id="americano-inputs-list" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <!-- Dynamically generated inputs for 5 or 6 players -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+                <button onclick="resetMatch()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition">
+                    Match zurücksetzen
+                </button>
+                <button onclick="applySettings()" class="px-6 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20">
+                    Übernehmen & Starten
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="leaderboard-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h3 class="text-xl font-black text-slate-100 flex items-center">
+                    <i data-lucide="trophy" class="w-6 h-6 mr-2.5 text-amber-400"></i>
+                    Americano Rangliste (Live)
+                </h3>
+                <button onclick="closeLeaderboardModal()" class="p-2 text-slate-400 hover:text-slate-100 rounded-xl bg-slate-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-xs text-slate-400">Gesammelte Gesamtpunkte aller absolvierten Runden im Americano-Turnier:</p>
+                <div id="leaderboard-list" class="space-y-2">
+                    <!-- Dynamically populated leaderboard rows -->
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                <button onclick="resetAmericanoScores()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition">
+                    Rangliste zurücksetzen
+                </button>
+                <button onclick="closeLeaderboardModal()" class="px-6 py-2 rounded-xl bg-amber-500 text-slate-950 font-extrabold hover:bg-amber-400 transition shadow-lg shadow-amber-500/20">
+                    Zurück zum Match
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="winner-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-lg w-full p-8 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
+                <i data-lucide="trophy" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-3xl font-black text-slate-100 mb-2">MATCH BEENDET!</h2>
+            <p id="winner-announcement" class="text-xl font-bold text-emerald-400 mb-6">Paar 1 gewinnt das Match!</p>
+            
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-6 font-mono text-lg text-slate-300" id="final-score-summary">
+                6:4, 6:2
+            </div>
+
+            <button onclick="handleWinnerModalDismiss()" class="w-full py-4 bg-emerald-500 text-slate-950 font-extrabold rounded-2xl text-lg hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20">
+                Nächste Runde / Konfigurieren
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            gameMode: 'classic', // 'classic' or 'americano'
+            teamA: { p1: "Max", p2: "Tom", points: 0, games: 0, setsWon: [0, 0, 0] },
+            teamB: { p1: "Alex", p2: "Lucas", points: 0, games: 0, setsWon: [0, 0, 0] },
+            currentSet: 0,
+            server: 'A',
+            goldenPoint: true,
+            bestOfSets: 3,
+            americanoTarget: 32,
+            americanoPoolSize: 5,
+            americanoPlayers: ["Spieler 1", "Spieler 2", "Spieler 3", "Spieler 4", "Spieler 5", "Spieler 6"],
+            americanoPlayerScores: { "Spieler 1": 0, "Spieler 2": 0, "Spieler 3": 0, "Spieler 4": 0, "Spieler 5": 0, "Spieler 6": 0 },
+            americanoCurrentRound: 0,
+            history: []
+        };
+
+        let timerSeconds = 0;
+        let timerInterval = null;
+        let highContrastActive = false;
+
+        // Automated Schedules for 5 and 6 players on 1 court
+        const americanoSchedules = {
+            5: [
+                { t1: [0, 1], t2: [2, 3], rest: [4] }, // Runde 1
+                { t1: [4, 0], t2: [1, 2], rest: [3] }, // Runde 2
+                { t1: [3, 4], t2: [0, 1], rest: [2] }, // Runde 3
+                { t1: [2, 3], t2: [4, 0], rest: [1] }, // Runde 4
+                { t1: [1, 2], t2: [3, 4], rest: [0] }  // Runde 5
+            ],
+            6: [
+                { t1: [0, 1], t2: [2, 3], rest: [4, 5] }, // Runde 1
+                { t1: [4, 5], t2: [0, 2], rest: [1, 3] }, // Runde 2
+                { t1: [1, 3], t2: [4, 2], rest: [0, 5] }, // Runde 3
+                { t1: [0, 5], t2: [1, 4], rest: [2, 3] }, // Runde 4
+                { t1: [2, 3], t2: [0, 4], rest: [1, 5] }, // Runde 5
+                { t1: [1, 5], t2: [2, 4], rest: [0, 3] }  // Runde 6
+            ]
+        };
+
+        window.onload = function() {
+            lucide.createIcons();
+            startTimer();
+            updateUI();
+            openSettingsModal();
+        };
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                let mins = Math.floor(timerSeconds / 60);
+                let secs = timerSeconds % 60;
+                document.getElementById('timer-display').innerText = 
+                    (mins < 10 ? '0' + mins : mins) + ':' + (secs < 10 ? '0' + secs : secs);
+            }, 1000);
+        }
+
+        function saveHistory() {
+            state.history.push(JSON.parse(JSON.stringify(state)));
+            if (state.history.length > 30) state.history.shift();
+        }
+
+        function scorePoint(team) {
+            saveHistory();
+
+            if (state.gameMode === 'americano') {
+                if (team === 'A') state.teamA.points++;
+                else state.teamB.points++;
+
+                let totalPts = state.teamA.points + state.teamB.points;
+                if (totalPts % 2 === 0) {
+                    state.server = state.server === 'A' ? 'B' : 'A';
+                }
+
+                if ((state.teamA.points >= state.americanoTarget || state.teamB.points >= state.americanoTarget) && Math.abs(state.teamA.points - state.teamB.points) >= 1) {
+                    recordAmericanoPointsToLeaderboard();
+                    showWinnerModal(state.teamA.points > state.teamB.points ? 'A' : 'B');
+                }
             } else {
-                btn.style.backgroundColor = p.farbe || '#2563eb';
-            }
+                let pA = state.teamA.points;
+                let pB = state.teamB.points;
 
-            btn.onclick = () => fuegeZumWarenkorbHinzu(p);
-            btn.innerHTML = `
-                <div class="btn-produkt-content">
-                    <span class="produkt-title">${p.name}</span>
-                    <span class="produkt-preis-badge">${p.preis.toFixed(2)} €</span>
-                </div>
-            `;
-            wrapper.appendChild(btn);
-
-            if (p.kategorie === 'getraenke') gridGetraenke.appendChild(wrapper);
-            else gridVerzehr.appendChild(wrapper);
-        });
-        renderProdukteVerwaltungTabelle();
-    }
-
-    function fuegeZumWarenkorbHinzu(produkt) {
-        warenkorb.push({ ...produkt, cartId: Date.now() + Math.random() });
-        aktualisiereWarenkorbAnsicht();
-    }
-
-    function entferneArtikelAusWarenkorb(cartId) {
-        warenkorb = warenkorb.filter(item => item.cartId !== cartId);
-        aktualisiereWarenkorbAnsicht();
-    }
-
-    function entferneLetztenArtikel() {
-        if (warenkorb.length > 0) {
-            warenkorb.pop();
-            aktualisiereWarenkorbAnsicht();
-        }
-    }
-
-    function storno() {
-        warenkorb = [];
-        istHelferAusgabe = false;
-        aktuellerHelfer = '';
-        document.getElementById('eigenbedarf-banner').classList.remove('active');
-        document.getElementById('gegeben-geld').value = '';
-        aktualisiereWarenkorbAnsicht();
-    }
-
-    function berechneGesamt() {
-        if (istHelferAusgabe) return 0;
-        return warenkorb.reduce((sum, item) => sum + item.preis, 0);
-    }
-
-    function aktualisiereWarenkorbAnsicht() {
-        const bonArtikelContainer = document.getElementById('bon-artikel');
-        bonArtikelContainer.innerHTML = '';
-
-        warenkorb.forEach((item) => {
-            const zeile = document.createElement('div');
-            zeile.className = 'bon-zeile item-row';
-            zeile.title = 'Klicken zum Entfernen';
-            zeile.onclick = () => entferneArtikelAusWarenkorb(item.cartId);
-            
-            const preisAnzeige = istHelferAusgabe ? '0,00 €' : `${item.preis.toFixed(2)} €`;
-            zeile.innerHTML = `<span>1x ${item.name}</span><span>${preisAnzeige}</span>`;
-            bonArtikelContainer.appendChild(zeile);
-        });
-
-        document.getElementById('summe').innerText = berechneGesamt().toFixed(2);
-        berechneRueckgeld();
-    }
-
-    function setGegeben(betrag) {
-        document.getElementById('gegeben-geld').value = betrag.toFixed(2);
-        berechneRueckgeld();
-    }
-
-    function berechneRueckgeld() {
-        const gesamt = berechneGesamt();
-        const gegebenInput = parseFloat(document.getElementById('gegeben-geld').value) || 0;
-        const rueckgeld = gegebenInput - gesamt;
-
-        if (gegebenInput > 0 && !istHelferAusgabe) {
-            document.getElementById('bon-zahlung-bereich').style.display = 'block';
-            document.getElementById('bon-gegeben').innerText = gegebenInput.toFixed(2);
-            document.getElementById('bon-rueckgeld').innerText = (rueckgeld >= 0 ? rueckgeld : 0).toFixed(2);
-            document.getElementById('rueckgeld-text').innerText = (rueckgeld >= 0 ? rueckgeld : 0).toFixed(2);
-        } else {
-            document.getElementById('bon-zahlung-bereich').style.display = 'none';
-            document.getElementById('rueckgeld-text').innerText = '0,00';
-        }
-    }
-
-    function druckeDirektKategorieBon(kategorieName) {
-        schliesseHelferAuswahlModal();
-        warenkorb = [{ name: kategorieName, preis: 0, kategorie: 'sonstiges', cartId: Date.now() }];
-        istHelferAusgabe = true;
-        document.getElementById('eigenbedarf-banner').innerText = `HELFER-AUSGABE (${kategorieName})`;
-        document.getElementById('eigenbedarf-banner').classList.add('active');
-        aktualisiereWarenkorbAnsicht();
-        bonDrucken();
-    }
-
-    function druckeDirektWertgutschein(zielWert) {
-        let config = {};
-        try {
-            config = JSON.parse(localStorage.getItem('kasse_flexible_stueckelung')) || { 10: '5, 3, 2', 15: '5, 5, 3, 2', 20: '10, 5, 3, 2' };
-        } catch (e) {
-            config = { 10: '5, 3, 2', 15: '5, 5, 3, 2', 20: '10, 5, 3, 2' };
-        }
-
-        const rohWert = config[zielWert] || (zielWert === 10 ? '5, 3, 2' : zielWert === 15 ? '5, 5, 3, 2' : '10, 5, 3, 2');
-        let werteArray = rohWert.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v) && v > 0);
-
-        let positionen = [];
-        werteArray.forEach(w => {
-            positionen.push({ wert: w, text: `${w.toFixed(2)} €`, eingelost: false });
-        });
-
-        if (positionen.length === 0) {
-            positionen = [{ wert: zielWert, text: `${zielWert.toFixed(2)} €`, eingelost: false }];
-        }
-
-        const id = Date.now();
-        const zeitpunkt = new Date().toISOString();
-
-        const wertBonTransaktion = {
-            id: id,
-            zeitpunkt: zeitpunkt,
-            artikel: [{ name: `Wertgutschein ${zielWert.toFixed(2)} €`, preis: zielWert, kategorie: 'wertbon' }],
-            gesamt: zielWert,
-            istHelfer: false,
-            istWertBon: true,
-            positionen: positionen,
-            restwert: zielWert
-        };
-
-        tagesTransaktionen.push(wertBonTransaktion);
-        letzterGedruckterBon = wertBonTransaktion;
-        localStorage.setItem('kasse_tages_transaktionen', JSON.stringify(tagesTransaktionen));
-        localStorage.setItem('kasse_letzter_bon', JSON.stringify(letzterGedruckterBon));
-
-        let posHtml = '';
-        positionen.forEach((p, idx) => {
-            posHtml += `<div style="display:flex; justify-content:space-between; margin:3px 0;"><span>[  ] ${p.text}</span><span>(Pos ${idx+1})</span></div>`;
-        });
-
-        const overlay = document.getElementById('druck-ansicht-overlay');
-        overlay.innerHTML = `
-            <div class="druck-bon-einzel" style="width: 300px; margin: 0 auto; font-family: 'Courier New', Courier, monospace;">
-                <div class="druck-header-art">WERTGUTSCHEIN ${zielWert.toFixed(2)} €</div>
-                <div style="text-align:center;">
-                    <strong>Verein der Hundefreunde Oberboihingen e.V.</strong><br>
-                    Bon-ID: <strong>${id}</strong>
-                </div>
-                <div class="trennlinie"></div>
-                <div><strong>Gesamtwert: ${zielWert.toFixed(2)} €</strong></div>
-                <div style="margin-top: 8px; font-size: 12px; font-weight: bold;">Abstreichbare Positionen:</div>
-                <div style="margin: 6px 0; font-size: 12px;">${posHtml}</div>
-                <div class="trennlinie"></div>
-                <div style="font-size: 11px; text-align: center;">Bitte bei Entnahme einzeln abstreichen.<br>${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE')}</div>
-            </div>
-        `;
-
-        window.print();
-        aktualisiereTagesabschlussVorschau();
-    }
-
-    function renderAdminStueckelung() {
-        let config = {};
-        try {
-            config = JSON.parse(localStorage.getItem('kasse_flexible_stueckelung')) || { 10: '5, 3, 2', 15: '5, 5, 3, 2', 20: '10, 5, 3, 2' };
-        } catch (e) {
-            config = { 10: '5, 3, 2', 15: '5, 5, 3, 2', 20: '10, 5, 3, 2' };
-        }
-
-        const el10 = document.getElementById('config-stueck-10');
-        const el15 = document.getElementById('config-stueck-15');
-        const el20 = document.getElementById('config-stueck-20');
-
-        if (el10) el10.value = config[10] || '5, 3, 2';
-        if (el15) el15.value = config[15] || '5, 5, 3, 2';
-        if (el20) el20.value = config[20] || '10, 5, 3, 2';
-    }
-
-    function saveFlexibleStueckelungConfig() {
-        const config = {
-            10: document.getElementById('config-stueck-10').value.trim(),
-            15: document.getElementById('config-stueck-15').value.trim(),
-            20: document.getElementById('config-stueck-20').value.trim()
-        };
-
-        localStorage.setItem('kasse_flexible_stueckelung', JSON.stringify(config));
-
-        const status = document.getElementById('admin-save-status');
-        if (status) {
-            status.textContent = 'Erfolgreich gespeichert!';
-            setTimeout(() => { status.textContent = ''; }, 2000);
-        }
-    }
-
-    function sucheWertBonEinloesen() {
-        const idInput = document.getElementById('such-bon-id').value.trim();
-        const bon = tagesTransaktionen.find(t => t.id == idInput && t.istWertBon);
-        
-        const container = document.getElementById('wertbon-einloesen-container');
-        if (!bon) {
-            alert('Kein offener Wertbon mit dieser ID gefunden.');
-            container.style.display = 'none';
-            return;
-        }
-
-        aktuellerBearbeitungsBon = bon;
-        container.style.display = 'block';
-        document.getElementById('wb-titel').innerText = `Wertbon ID: ${bon.id}`;
-        document.getElementById('wb-info').innerText = `Gesamtwert: ${bon.gesamt.toFixed(2)} € | Aktueller Restwert: ${bon.restwert.toFixed(2)} €`;
-
-        let listeDiv = document.getElementById('wb-positionen-liste');
-        listeDiv.innerHTML = '<div style="font-weight:bold; margin-bottom:5px;">Positionen auswählen zum Entwerten:</div>';
-        
-        bon.positionen.forEach((p, idx) => {
-            const checkedAttr = p.eingelost ? 'checked disabled' : '';
-            const styleAttr = p.eingelost ? 'text-decoration: line-through; color: #94a3b8;' : '';
-            listeDiv.innerHTML += `
-                <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-weight:normal; ${styleAttr}">
-                    <input type="checkbox" class="wb-pos-checkbox" data-index="${idx}" ${checkedAttr} style="width:auto;">
-                    <span>${p.text} ${p.eingelost ? '<strong>[Eingelöst]</strong>' : ''}</span>
-                </label>
-            `;
-        });
-    }
-
-    function speichereWertbonEinloesung() {
-        if (!aktuellerBearbeitungsBon) return;
-        const checkboxes = document.querySelectorAll('.wb-pos-checkbox');
-        let abgezogenerWert = 0;
-
-        checkboxes.forEach(cb => {
-            if (cb.checked && !cb.disabled) {
-                const idx = parseInt(cb.getAttribute('data-index'));
-                if (!aktuellerBearbeitungsBon.positionen[idx].eingelost) {
-                    aktuellerBearbeitungsBon.positionen[idx].eingelost = true;
-                    abgezogenerWert += aktuellerBearbeitungsBon.positionen[idx].wert;
+                if (team === 'A') {
+                    if (pA < 30) {
+                        state.teamA.points += 15;
+                    } else if (pA === 30) {
+                        state.teamA.points = 40;
+                    } else if (pA === 40) {
+                        if (pB < 40) {
+                            winGame('A');
+                        } else if (pB === 40) {
+                            if (state.goldenPoint) {
+                                winGame('A');
+                            } else {
+                                state.teamA.points = 'AD';
+                                state.teamB.points = 40;
+                            }
+                        }
+                    } else if (pA === 'AD') {
+                        winGame('A');
+                    } else if (pB === 'AD') {
+                        state.teamB.points = 40;
+                    }
+                } else {
+                    if (pB < 30) {
+                        state.teamB.points += 15;
+                    } else if (pB === 30) {
+                        state.teamB.points = 40;
+                    } else if (pB === 40) {
+                        if (pA < 40) {
+                            winGame('B');
+                        } else if (pA === 40) {
+                            if (state.goldenPoint) {
+                                winGame('B');
+                            } else {
+                                state.teamB.points = 'AD';
+                                state.teamA.points = 40;
+                            }
+                        }
+                    } else if (pB === 'AD') {
+                        winGame('B');
+                    } else if (pA === 'AD') {
+                        state.teamA.points = 40;
+                    }
                 }
             }
-        });
 
-        if (abgezogenerWert > 0) {
-            aktuellerBearbeitungsBon.restwert = Math.max(0, aktuellerBearbeitungsBon.restwert - abgezogenerWert);
-            localStorage.setItem('kasse_tages_transaktionen', JSON.stringify(tagesTransaktionen));
-            alert(`Erfolgreich entwertet! ${abgezogenerWert.toFixed(2)} € verrechnet.`);
-            sucheWertBonEinloesen();
-            aktualisiereTagesabschlussVorschau();
-        } else {
-            alert('Keine neuen Positionen ausgewählt.');
-        }
-    }
-
-    function auszahlenRestwertBon() {
-        if (!aktuellerBearbeitungsBon) return;
-        const restwert = aktuellerBearbeitungsBon.restwert;
-        if (restwert <= 0) {
-            alert('Kein Restbetrag vorhanden.');
-            return;
+            triggerFlash(team);
+            updateUI();
         }
 
-        if (confirm(`Restbetrag von ${restwert.toFixed(2)} € bar ausbezahlen?`)) {
-            aktuellerBearbeitungsBon.positionen.forEach(p => p.eingelost = true);
-            aktuellerBearbeitungsBon.restwert = 0;
+        function recordAmericanoPointsToLeaderboard() {
+            // For Americano, each individual player in Team A gets teamA.points, Team B gets teamB.points
+            let schedule = americanoSchedules[state.americanoPoolSize][state.americanoCurrentRound];
+            
+            // To prevent double recording if user clicks after match ended, we check if points were already added for this round or simply assign
+            let p1Name = state.americanoPlayers[schedule.t1[0]];
+            let p2Name = state.americanoPlayers[schedule.t1[1]];
+            let p3Name = state.americanoPlayers[schedule.t2[0]];
+            let p4Name = state.americanoPlayers[schedule.t2[1]];
 
-            tagesTransaktionen.push({
-                id: Date.now(),
-                zeitpunkt: new Date().toISOString(),
-                artikel: [{ name: `Restbetrag-Auszahlung Bon #${aktuellerBearbeitungsBon.id}`, preis: -restwert, kategorie: 'auszahlung' }],
-                gesamt: -restwert,
-                istHelfer: false,
-                istWertBon: false
-            });
-
-            localStorage.setItem('kasse_tages_transaktionen', JSON.stringify(tagesTransaktionen));
-            alert(`Restbetrag ausbezahlt.`);
-            sucheWertBonEinloesen();
-            aktualisiereTagesabschlussVorschau();
-        }
-    }
-
-    function aktualisiereOffeneWertbonsTabelle() {
-        const tab = document.getElementById('offene-wertbons-tabelle');
-        if (!tab) return;
-        tab.innerHTML = `<tr><th>Bon-ID</th><th>Uhrzeit</th><th>Gesamtwert</th><th>Restwert</th><th style="text-align: right;">Aktion</th></tr>`;
-        
-        tagesTransaktionen.filter(t => t.istWertBon).forEach(wb => {
-            let zeit = new Date(wb.zeitpunkt).toLocaleTimeString('de-DE');
-            tab.innerHTML += `
-                <tr>
-                    <td>${wb.id}</td>
-                    <td>${zeit}</td>
-                    <td>${wb.gesamt.toFixed(2)} €</td>
-                    <td style="color: ${wb.restwert > 0 ? 'var(--success)' : 'var(--text-muted)'}; font-weight:bold;">${wb.restwert.toFixed(2)} €</td>
-                    <td style="text-align: right;"><button class="btn-tabelle-aktion btn-tabelle-edit" onclick="schnellLadeBon(${wb.id})">Auswählen</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    function schnellLadeBon(id) {
-        document.getElementById('such-bon-id').value = id;
-        sucheWertBonEinloesen();
-    }
-
-    function bonDrucken() {
-        if (warenkorb.length === 0) {
-            alert('Der Warenkorb ist leer!');
-            return;
+            // We calculate delta or set directly. For simplicity, we update overall scores
+            state.americanoPlayerScores[p1Name] = (state.americanoPlayerScores[p1Name] || 0) + state.teamA.points;
+            state.americanoPlayerScores[p2Name] = (state.americanoPlayerScores[p2Name] || 0) + state.teamA.points;
+            state.americanoPlayerScores[p3Name] = (state.americanoPlayerScores[p3Name] || 0) + state.teamB.points;
+            state.americanoPlayerScores[p4Name] = (state.americanoPlayerScores[p4Name] || 0) + state.teamB.points;
         }
 
-        const overlay = document.getElementById('druck-ansicht-overlay');
-        overlay.innerHTML = '';
-        const anzahlGesamtBons = warenkorb.length;
+        function winGame(team) {
+            state.teamA.points = 0;
+            state.teamB.points = 0;
 
-        warenkorb.forEach((item, index) => {
-            const transaktion = {
-                id: Date.now() + index,
-                zeitpunkt: new Date().toISOString(),
-                artikel: [item],
-                gesamt: istHelferAusgabe ? 0 : item.preis,
-                istHelfer: istHelferAusgabe,
-                helferName: aktuellerHelfer
+            if (team === 'A') state.teamA.games++;
+            else state.teamB.games++;
+
+            let gA = state.teamA.games;
+            let gB = state.teamB.games;
+
+            if ((gA >= 6 && gA - gB >= 2) || gA === 7) {
+                finishSet('A');
+            } else if ((gB >= 6 && gB - gA >= 2) || gB === 7) {
+                finishSet('B');
+            }
+
+            state.server = state.server === 'A' ? 'B' : 'A';
+        }
+
+        function finishSet(team) {
+            if (team === 'A') state.teamA.setsWon[state.currentSet]++;
+            else state.teamB.setsWon[state.currentSet]++;
+
+            let setsNeeded = state.bestOfSets === 3 ? 2 : 1;
+            let totalSetsWonA = state.teamA.setsWon.reduce((a, b) => a + b, 0);
+            let totalSetsWonB = state.teamB.setsWon.reduce((a, b) => a + b, 0);
+
+            if (totalSetsWonA >= setsNeeded || totalSetsWonB >= setsNeeded || state.currentSet >= 2) {
+                showWinnerModal(totalSetsWonA > totalSetsWonB ? 'A' : 'B');
+            } else {
+                state.currentSet++;
+                state.teamA.games = 0;
+                state.teamB.games = 0;
+            }
+        }
+
+        function undoLastAction() {
+            if (state.history.length > 0) {
+                state = state.history.pop();
+                updateUI();
+            }
+        }
+
+        function triggerFlash(team) {
+            const zone = document.getElementById(team === 'A' ? 'team-a-zone' : 'team-b-zone');
+            zone.classList.add('tap-flash');
+            setTimeout(() => zone.classList.remove('tap-flash'), 250);
+        }
+
+        function updateUI() {
+            document.getElementById('team-a-names-display').innerText = `${state.teamA.p1} & ${state.teamA.p2}`;
+            document.getElementById('team-b-names-display').innerText = `${state.teamB.p1} & ${state.teamB.p2}`;
+
+            const leaderboardBtn = document.getElementById('leaderboard-btn');
+
+            if (state.gameMode === 'americano') {
+                leaderboardBtn.classList.remove('hidden');
+                document.getElementById('display-mode-name').innerText = `Americano (Runde ${state.americanoCurrentRound + 1} / ${state.americanoPoolSize})`;
+                document.getElementById('rule-label').innerText = `Ziel: ${state.americanoTarget} Pkt`;
+                
+                document.getElementById('team-a-sets-container').classList.add('hidden');
+                document.getElementById('team-b-sets-container').classList.add('hidden');
+                document.getElementById('team-a-games-wrap').classList.add('hidden');
+                document.getElementById('team-b-games-wrap').classList.add('hidden');
+                document.getElementById('team-a-divider').classList.add('hidden');
+                document.getElementById('team-b-divider').classList.add('hidden');
+
+                document.getElementById('team-a-points-label').innerText = "Rundenpunkte";
+                document.getElementById('team-b-points-label').innerText = "Rundenpunkte";
+
+                let schedule = americanoSchedules[state.americanoPoolSize][state.americanoCurrentRound];
+                let restingNames = schedule.rest.map(idx => state.americanoPlayers[idx]).join(' & ');
+                document.getElementById('status-text').innerText = `Americano Runde ${state.americanoCurrentRound + 1} (Pause: ${restingNames})`;
+            } else {
+                leaderboardBtn.classList.add('hidden');
+                document.getElementById('display-mode-name').innerText = state.bestOfSets === 3 ? "Klassisch (Best of 3)" : "1 Satz (bis 9)";
+                document.getElementById('rule-label').innerText = state.goldenPoint ? "Golden Point" : "Vorteil";
+
+                document.getElementById('team-a-sets-container').classList.remove('hidden');
+                document.getElementById('team-b-sets-container').classList.remove('hidden');
+                document.getElementById('team-a-games-wrap').classList.remove('hidden');
+                document.getElementById('team-b-games-wrap').classList.remove('hidden');
+                document.getElementById('team-a-divider').classList.remove('hidden');
+                document.getElementById('team-b-divider').classList.remove('hidden');
+
+                document.getElementById('team-a-points-label').innerText = "Punkte";
+                document.getElementById('team-b-points-label').innerText = "Punkte";
+
+                for (let i = 0; i < 3; i++) {
+                    document.getElementById(`team-a-set-${i}`).innerText = state.teamA.setsWon[i];
+                    document.getElementById(`team-b-set-${i}`).innerText = state.teamB.setsWon[i];
+                    if (i === state.currentSet) {
+                        document.getElementById(`team-a-set-${i}`).classList.add('border-blue-500', 'text-blue-400');
+                        document.getElementById(`team-b-set-${i}`).classList.add('border-rose-500', 'text-rose-400');
+                    } else {
+                        document.getElementById(`team-a-set-${i}`).classList.remove('border-blue-500', 'text-blue-400');
+                        document.getElementById(`team-b-set-${i}`).classList.remove('border-rose-500', 'text-rose-400');
+                    }
+                }
+
+                document.getElementById('team-a-games').innerText = state.teamA.games;
+                document.getElementById('team-b-games').innerText = state.teamB.games;
+                document.getElementById('status-text').innerText = `Satz ${state.currentSet + 1} läuft`;
+            }
+
+            document.getElementById('team-a-points').innerText = state.teamA.points;
+            document.getElementById('team-b-points').innerText = state.teamB.points;
+
+            if (state.server === 'A') {
+                document.getElementById('server-indicator-a').className = "w-3.5 h-3.5 mr-1 text-emerald-400 fill-emerald-400";
+                document.getElementById('server-indicator-b').className = "w-3.5 h-3.5 mr-1 text-slate-600";
+                document.getElementById('server-text-a').innerText = "Aufschlag";
+                document.getElementById('server-text-b').innerText = "";
+            } else {
+                document.getElementById('server-indicator-b').className = "w-3.5 h-3.5 mr-1 text-emerald-400 fill-emerald-400";
+                document.getElementById('server-indicator-a').className = "w-3.5 h-3.5 mr-1 text-slate-600";
+                document.getElementById('server-text-b').innerText = "Aufschlag";
+                document.getElementById('server-text-a').innerText = "";
+            }
+        }
+
+        function switchServerManually() {
+            state.server = state.server === 'A' ? 'B' : 'A';
+            updateUI();
+        }
+
+        function resetMatchPrompt() {
+            if (confirm("Möchtest du das Match wirklich zurücksetzen?")) {
+                resetMatch();
+            }
+        }
+
+        function resetMatch() {
+            state = {
+                gameMode: state.gameMode,
+                teamA: { p1: state.teamA.p1, p2: state.teamA.p2, points: 0, games: 0, setsWon: [0, 0, 0] },
+                teamB: { p1: state.teamB.p1, p2: state.teamB.p2, points: 0, games: 0, setsWon: [0, 0, 0] },
+                currentSet: 0,
+                server: 'A',
+                goldenPoint: state.goldenPoint,
+                bestOfSets: state.bestOfSets,
+                americanoTarget: state.americanoTarget,
+                americanoPoolSize: state.americanoPoolSize,
+                americanoPlayers: state.americanoPlayers,
+                americanoPlayerScores: state.americanoPlayerScores,
+                americanoCurrentRound: state.americanoCurrentRound,
+                history: []
             };
-            tagesTransaktionen.push(transaktion);
-            letzterGedruckterBon = transaktion;
+            timerSeconds = 0;
+            startTimer();
+            updateUI();
+        }
 
-            const bonDiv = document.createElement('div');
-            bonDiv.className = 'druck-bon-einzel';
-            bonDiv.innerHTML = `
-                <div class="druck-header-art">EINZELBON (${index + 1}/${anzahlGesamtBons})</div>
-                <div style="text-align:center;"><strong>Verein der Hundefreunde Oberboihingen e.V.</strong></div>
-                <div class="trennlinie"></div>
-                <div style="display:flex; justify-content:space-between; margin:6px 0;">
-                    <span>${item.name}</span>
-                    <span>${istHelferAusgabe ? '0,00 €' : item.preis.toFixed(2) + ' €'}</span>
-                </div>
-                <div class="trennlinie"></div>
-                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:15px;">
-                    <span>GESAMT:</span>
-                    <span>${istHelferAusgabe ? '0,00 €' : item.preis.toFixed(2) + ' €'}</span>
-                </div>
-            `;
-            overlay.appendChild(bonDiv);
-        });
-
-        localStorage.setItem('kasse_tages_transaktionen', JSON.stringify(tagesTransaktionen));
-        localStorage.setItem('kasse_letzter_bon', JSON.stringify(letzterGedruckterBon));
-
-        window.print();
-        storno();
-    }
-
-    function oefneInhaberBereich() {
-        aktualisiereTagesabschlussVorschau();
-        aktualisiereOffeneWertbonsTabelle();
-        renderAdminStueckelung();
-        document.getElementById('inhaber-modal').classList.add('active');
-    }
-
-    function schliesseInhaberBereich() {
-        document.getElementById('inhaber-modal').classList.remove('active');
-    }
-
-    function switchTab(tabId, event) {
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        if (event) event.currentTarget.classList.add('active');
-        if (tabId === 'tab-tagesabschluss') aktualisiereTagesabschlussVorschau();
-        if (tabId === 'tab-wertbons') aktualisiereOffeneWertbonsTabelle();
-        if (tabId === 'tab-wertbon-config') renderAdminStueckelung();
-        if (tabId === 'tab-helfer') renderHelferListe();
-    }
-
-    function aktualisiereTagesabschlussVorschau() {
-        let umsatzGetraenke = 0, umsatzVerzehr = 0, gewinnGesamt = 0, helferBonsAnzahl = 0, helferWarenWert = 0;
-        let artikelStatistik = {}, helferStatistik = {};
-
-        tagesTransaktionen.forEach(t => {
-            if (t.istHelfer) {
-                helferBonsAnzahl++;
-                t.artikel.forEach(item => {
-                    helferWarenWert += item.preis;
-                    const hName = t.helferName || 'Allgemein';
-                    if (!helferStatistik[hName]) helferStatistik[hName] = { bons: 0, wert: 0 };
-                    helferStatistik[hName].wert += item.preis;
-                    if (t.helferName) helferStatistik[hName].bons++;
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log("Fullscreen error:", err);
                 });
             } else {
-                t.artikel.forEach(item => {
-                    if (item.kategorie === 'getraenke' || item.kategorie === 'wertbon') umsatzGetraenke += item.preis;
-                    if (item.kategorie === 'verzehr') umsatzVerzehr += item.preis;
-                    if (item.kategorie === 'auszahlung') umsatzGetraenke += item.preis;
-                    
-                    const einkauf = item.einkauf || 0;
-                    if (item.kategorie !== 'auszahlung') gewinnGesamt += (item.preis - einkauf);
-
-                    if (!artikelStatistik[item.name]) artikelStatistik[item.name] = { menge: 0, umsatz: 0 };
-                    artikelStatistik[item.name].menge += 1;
-                    artikelStatistik[item.name].umsatz += item.preis;
-                });
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
             }
-        });
-
-        const umsatzGesamt = umsatzGetraenke + umsatzVerzehr;
-        document.getElementById('v-anfang').innerText = anfangsbestand.toFixed(2) + ' €';
-        document.getElementById('v-umsatz').innerText = umsatzGesamt.toFixed(2) + ' €';
-        document.getElementById('v-umsatz-getraenke').innerText = umsatzGetraenke.toFixed(2) + ' €';
-        document.getElementById('v-umsatz-verzehr').innerText = umsatzVerzehr.toFixed(2) + ' €';
-        document.getElementById('v-gewinn').innerText = gewinnGesamt.toFixed(2) + ' €';
-        document.getElementById('v-anzahl').innerText = tagesTransaktionen.filter(t => !t.istHelfer).length;
-        document.getElementById('v-helfer-anzahl').innerText = helferBonsAnzahl;
-        document.getElementById('v-helfer-wert').innerText = helferWarenWert.toFixed(2) + ' €';
-        document.getElementById('v-soll').innerText = (anfangsbestand + umsatzGesamt).toFixed(2) + ' €';
-
-        const artTabelle = document.getElementById('v-artikel-tabelle');
-        artTabelle.innerHTML = `<tr><th>Produkt</th><th style="text-align: center;">Menge</th><th style="text-align: right;">Umsatz</th></tr>`;
-        for (let [name, data] of Object.entries(artikelStatistik)) {
-            artTabelle.innerHTML += `<tr><td>${name}</td><td style="text-align: center;">${data.menge}</td><td style="text-align: right;">${data.umsatz.toFixed(2)} €</td></tr>`;
         }
 
-        const helferTabelle = document.getElementById('v-helfer-tabelle');
-        helferTabelle.innerHTML = `<tr><th>Helfer</th><th style="text-align: center;">Bons</th><th style="text-align: right;">Wert</th></tr>`;
-        for (let [name, data] of Object.entries(helferStatistik)) {
-            helferTabelle.innerHTML += `<tr><td>${name}</td><td style="text-align: center;">${data.bons}</td><td style="text-align: right;">${data.wert.toFixed(2)} €</td></tr>`;
-        }
-    }
-
-    function speichereProdukt() {
-        const id = document.getElementById('edit-produkt-id').value;
-        const name = document.getElementById('neuer-name').value.trim();
-        const preis = parseFloat(document.getElementById('neuer-preis').value);
-        const einkauf = parseFloat(document.getElementById('neuer-einkaufspreis').value) || 0;
-        const kategorie = document.getElementById('neue-kategorie').value;
-        const farbe = document.getElementById('neue-farbe').value;
-        const bild = document.getElementById('neues-bild').value.trim();
-
-        if (!name || isNaN(preis)) {
-            alert('Bitte Namen und Preis angeben.');
-            return;
+        function toggleHighContrast() {
+            highContrastActive = !highContrastActive;
+            const body = document.body;
+            if (highContrastActive) {
+                body.classList.remove('bg-slate-950');
+                body.classList.add('bg-black');
+                document.getElementById('team-a-zone').style.background = '#000000';
+                document.getElementById('team-b-zone').style.background = '#000000';
+            } else {
+                body.classList.remove('bg-black');
+                body.classList.add('bg-slate-950');
+                document.getElementById('team-a-zone').style.background = '';
+                document.getElementById('team-b-zone').style.background = '';
+            }
         }
 
-        if (id) {
-            const p = produkte.find(item => item.id == id);
-            if (p) { p.name = name; p.preis = preis; p.einkauf = einkauf; p.kategorie = kategorie; p.farbe = farbe; p.bild = bild; }
-        } else {
-            produkte.push({ id: Date.now(), name, preis, einkauf, kategorie, farbe, bild });
+        function openSettingsModal() {
+            document.getElementById('input-p1-name').value = state.teamA.p1;
+            document.getElementById('input-p2-name').value = state.teamA.p2;
+            document.getElementById('input-p3-name').value = state.teamB.p1;
+            document.getElementById('input-p4-name').value = state.teamB.p2;
+            
+            document.getElementById('custom-target-points-input').value = state.americanoTarget;
+            document.getElementById('target-points-val-label').innerText = state.americanoTarget + " Pkt";
+
+            renderAmericanoInputs();
+            renderAmericanoRoundsButtons();
+            updateModalUI();
+            document.getElementById('settings-modal').classList.remove('hidden');
         }
 
-        localStorage.setItem('kasse_produkte', JSON.stringify(produkte));
-        zuruecksetzenProduktFormular();
-        renderProdukte();
-    }
-
-    function bearbeiteProdukt(id) {
-        const p = produkte.find(item => item.id == id);
-        if (p) {
-            document.getElementById('edit-produkt-id').value = p.id;
-            document.getElementById('neuer-name').value = p.name;
-            document.getElementById('neuer-preis').value = p.preis;
-            document.getElementById('neuer-einkaufspreis').value = p.einkauf || '';
-            document.getElementById('neue-kategorie').value = p.kategorie;
-            document.getElementById('neue-farbe').value = p.farbe || '#2563eb';
-            document.getElementById('neues-bild').value = p.bild || '';
-            document.getElementById('btn-produkt-abbrechen').style.display = 'block';
-        }
-    }
-
-    function loescheProdukt(id) {
-        if (confirm('Produkt löschen?')) {
-            produkte = produkte.filter(item => item.id != id);
-            localStorage.setItem('kasse_produkte', JSON.stringify(produkte));
-            renderProdukte();
-        }
-    }
-
-    function zuruecksetzenProduktFormular() {
-        document.getElementById('edit-produkt-id').value = '';
-        document.getElementById('neuer-name').value = '';
-        document.getElementById('neuer-preis').value = '';
-        document.getElementById('neuer-einkaufspreis').value = '';
-        document.getElementById('neues-bild').value = '';
-        document.getElementById('btn-produkt-abbrechen').style.display = 'none';
-    }
-
-    function renderProdukteVerwaltungTabelle() {
-        const tab = document.getElementById('tabelle-produkte-verwaltung');
-        if (!tab) return;
-        tab.innerHTML = `<tr><th>Produkt</th><th>Kat.</th><th>Preis</th><th style="text-align: right;">Aktion</th></tr>`;
-        
-        if (produkte.length === 0) {
-            tab.innerHTML += `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 15px;">Keine Produkte vorhanden.</td></tr>`;
-            return;
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.add('hidden');
         }
 
-        produkte.forEach(p => {
-            tab.innerHTML += `
-                <tr>
-                    <td>${p.name}</td>
-                    <td>${p.kategorie}</td>
-                    <td>${p.preis.toFixed(2)} €</td>
-                    <td style="text-align: right;">
-                        <button class="btn-tabelle-aktion btn-tabelle-edit" onclick="bearbeiteProdukt(${p.id})">Bearb.</button>
-                        <button class="btn-tabelle-aktion btn-tabelle-del" onclick="loescheProdukt(${p.id})">Löschen</button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
-
-    function oefneHelferAuswahlModal() {
-        const container = document.getElementById('helfer-auswahl-grid-container');
-        container.innerHTML = '';
-        helferListe.forEach(h => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-helfer-select';
-            btn.innerText = h;
-            btn.onclick = () => waehleHelferAus(h);
-            container.appendChild(btn);
-        });
-        document.getElementById('helfer-auswahl-modal').classList.add('active');
-    }
-
-    function schliesseHelferAuswahlModal() {
-        document.getElementById('helfer-auswahl-modal').classList.remove('active');
-    }
-
-    function waehleHelferAus(name) {
-        if (warenkorb.length === 0) {
-            alert('Bitte zuerst Artikel in den Warenkorb legen oder Schnell-Button nutzen.');
-            return;
+        function openLeaderboardModal() {
+            renderLeaderboard();
+            document.getElementById('leaderboard-modal').classList.remove('hidden');
         }
-        aktuellerHelfer = name;
-        istHelferAusgabe = true;
-        document.getElementById('eigenbedarf-banner').innerText = `HELFER-AUSGABE: ${name}`;
-        document.getElementById('eigenbedarf-banner').classList.add('active');
-        schliesseHelferAuswahlModal();
-        aktualisiereWarenkorbAnsicht();
-    }
 
-    function fuegeHelferHinzu() {
-        const name = document.getElementById('neuer-helfer-name').value.trim();
-        if (name && !helferListe.includes(name)) {
-            helferListe.push(name);
-            localStorage.setItem('kasse_helfer', JSON.stringify(helferListe));
-            document.getElementById('neuer-helfer-name').value = '';
-            renderHelferListe();
+        function closeLeaderboardModal() {
+            document.getElementById('leaderboard-modal').classList.add('hidden');
         }
-    }
 
-    function loescheHelfer(name) {
-        helferListe = helferListe.filter(h => h !== name);
-        localStorage.setItem('kasse_helfer', JSON.stringify(helferListe));
-        renderHelferListe();
-    }
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-list');
+            container.innerHTML = '';
 
-    function renderHelferListe() {
-        const container = document.getElementById('helfer-liste-container');
-        if (!container) return;
-        container.innerHTML = '';
-        helferListe.forEach(h => {
-            container.innerHTML += `
-                <div class="helfer-liste-item">
-                    <span>${h}</span>
-                    <button class="btn-del-helfer" onclick="loescheHelfer('${h}')">Löschen</button>
-                </div>
-            `;
-        });
-    }
+            // Sort players by accumulated score descending
+            let playersArray = [];
+            let activeCount = state.americanoPoolSize;
+            for (let i = 0; i < activeCount; i++) {
+                let name = state.americanoPlayers[i];
+                let score = state.americanoPlayerScores[name] || 0;
+                playersArray.push({ name, score });
+            }
+            playersArray.sort((a, b) => b.score - a.score);
 
-    function speichereWechselgeld(wert) {
-        anfangsbestand = parseFloat(wert) || 0;
-        localStorage.setItem('kasse_anfangsbestand', anfangsbestand);
-    }
-
-    function speichereGeschaeftsdaten() {}
-
-    function storniereLetztenBon() {
-        if (!letzterGedruckterBon) {
-            alert('Kein letzter Bon vorhanden.');
-            return;
+            playersArray.forEach((p, index) => {
+                let div = document.createElement('div');
+                let rankBadgeBg = index === 0 ? 'bg-amber-500 text-slate-950' : index === 1 ? 'bg-slate-300 text-slate-950' : index === 2 ? 'bg-amber-700 text-slate-100' : 'bg-slate-800 text-slate-400';
+                div.className = "flex items-center justify-between p-3 rounded-2xl bg-slate-950 border border-slate-800";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl font-black text-sm flex items-center justify-center ${rankBadgeBg}">
+                            #${index + 1}
+                        </div>
+                        <span class="font-bold text-slate-200 text-base">${p.name}</span>
+                    </div>
+                    <div class="font-black text-amber-400 text-xl font-mono">${p.score} Pkt</div>
+                `;
+                container.appendChild(div);
+            });
         }
-        if (confirm('Letzten Bon komplett stornieren?')) {
-            tagesTransaktionen = tagesTransaktionen.filter(t => t.id !== letzterGedruckterBon.id);
-            letzterGedruckterBon = null;
-            localStorage.setItem('kasse_tages_transaktionen', JSON.stringify(tagesTransaktionen));
-            localStorage.removeItem('kasse_letzter_bon');
-            aktualisiereTagesabschlussVorschau();
-            alert('Bon storniert.');
+
+        function resetAmericanoScores() {
+            if (confirm("Möchtest du die gesamte Rangliste auf 0 zurücksetzen?")) {
+                let activeCount = state.americanoPoolSize;
+                for (let i = 0; i < activeCount; i++) {
+                    state.americanoPlayerScores[state.americanoPlayers[i]] = 0;
+                }
+                renderLeaderboard();
+            }
         }
-    }
 
-    function starteTagesabschlussProcess() {
-        if (confirm('Tagesabschluss durchführen, CSV-Bericht herunterladen und Daten zurücksetzen?')) {
-            exportriereExcel();
-            tagesTransaktionen = [];
-            letzterGedruckterBon = null;
-            localStorage.removeItem('kasse_tages_transaktionen');
-            localStorage.removeItem('kasse_letzter_bon');
-            schliesseInhaberBereich();
+        function setGameMode(mode) {
+            state.gameMode = mode;
+            updateModalUI();
         }
-    }
 
-    function exportriereExcel() {
-        let umsatzGesamt = 0;
-        tagesTransaktionen.forEach(t => { if (!t.istHelfer) umsatzGesamt += t.gesamt; });
+        function setAmericanoPlayerPool(size) {
+            state.americanoPoolSize = size;
+            state.americanoCurrentRound = 0;
+            loadAmericanoRound(0);
+            renderAmericanoInputs();
+            renderAmericanoRoundsButtons();
+            updateModalUI();
+        }
 
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Kassensbericht - Tagesabschluss\n";
-        csvContent += `Datum;${new Date().toLocaleDateString('de-DE')}\n`;
-        csvContent += `Umsatz Gesamt;${umsatzGesamt.toFixed(2).replace('.', ',')}\n\n`;
-        
-        csvContent += "Bon-ID;Zeitpunkt;Art;Helfer;Gesamtbetrag\n";
-        tagesTransaktionen.forEach(t => {
-            let zeit = new Date(t.zeitpunkt).toLocaleTimeString('de-DE');
-            let art = t.istHelfer ? "Helfer" : (t.istWertBon ? "Wertbon" : "Verkauf");
-            csvContent += `${t.id};${zeit};${art};${t.helferName || "-"};${t.gesamt.toFixed(2).replace('.', ',')}\n`;
-        });
+        function setAmericanoPoints(pts) {
+            state.americanoTarget = pts;
+            document.getElementById('custom-target-points-input').value = pts;
+            document.getElementById('target-points-val-label').innerText = pts + " Pkt";
+            updateModalUI();
+        }
 
-        let link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", `Tagesabschluss_${new Date().toISOString().slice(0,10)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-</script>
+        function applyCustomTargetPoints() {
+            let val = parseInt(document.getElementById('custom-target-points-input').value);
+            if (val && val > 0) {
+                state.americanoTarget = val;
+                document.getElementById('target-points-val-label').innerText = val + " Pkt";
+                updateModalUI();
+            }
+        }
 
+        function setGoldenPointRule(val) {
+            state.goldenPoint = val;
+            updateModalUI();
+        }
+
+        function setBestOf(num) {
+            state.bestOfSets = num;
+            updateModalUI();
+        }
+
+        function renderAmericanoInputs() {
+            const container = document.getElementById('americano-inputs-list');
+            container.innerHTML = '';
+            let count = state.americanoPoolSize;
+            for (let i = 0; i < count; i++) {
+                let div = document.createElement('div');
+                div.innerHTML = `
+                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler ${i + 1}</span>
+                    <input type="text" id="americano-p-${i}" value="${state.americanoPlayers[i] || ('Spieler ' + (i+1))}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-amber-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function renderAmericanoRoundsButtons() {
+            const container = document.getElementById('rounds-buttons-container');
+            container.innerHTML = '';
+            let totalRounds = state.americanoPoolSize;
+            for (let r = 0; r < totalRounds; r++) {
+                let btn = document.createElement('button');
+                btn.type = 'button';
+                btn.innerText = `Runde ${r + 1}`;
+                btn.className = `p-2 rounded-xl text-xs font-bold border transition text-center ${r === state.americanoCurrentRound ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'}`;
+                btn.onclick = () => loadAmericanoRound(r);
+                container.appendChild(btn);
+            }
+            document.getElementById('current-round-indicator').innerText = `Runde ${state.americanoCurrentRound + 1} von ${totalRounds}`;
+        }
+
+        function loadAmericanoRound(roundIdx) {
+            state.americanoCurrentRound = roundIdx;
+            let schedule = americanoSchedules[state.americanoPoolSize][roundIdx];
+            
+            gatherAmericanoNamesFromInputs();
+
+            state.teamA.p1 = state.americanoPlayers[schedule.t1[0]];
+            state.teamA.p2 = state.americanoPlayers[schedule.t1[1]];
+            state.teamB.p1 = state.americanoPlayers[schedule.t2[0]];
+            state.teamB.p2 = state.americanoPlayers[schedule.t2[1]];
+
+            state.teamA.points = 0;
+            state.teamB.points = 0;
+            state.server = 'A';
+
+            renderAmericanoRoundsButtons();
+            updateModalUI();
+        }
+
+        function gatherAmericanoNamesFromInputs() {
+            let count = state.americanoPoolSize;
+            for (let i = 0; i < count; i++) {
+                let input = document.getElementById(`americano-p-${i}`);
+                if (input && input.value.trim()) {
+                    let oldName = state.americanoPlayers[i];
+                    let newName = input.value.trim();
+                    if (oldName !== newName && state.americanoPlayerScores[oldName] !== undefined) {
+                        state.americanoPlayerScores[newName] = state.americanoPlayerScores[oldName];
+                        delete state.americanoPlayerScores[oldName];
+                    }
+                    state.americanoPlayers[i] = newName;
+                    if (state.americanoPlayerScores[newName] === undefined) {
+                        state.americanoPlayerScores[newName] = 0;
+                    }
+                }
+            }
+        }
+
+        function updateModalUI() {
+            const btnClassic = document.getElementById('mode-classic-btn');
+            const btnAmericano = document.getElementById('mode-americano-btn');
+            const americanoOpts = document.getElementById('americano-options');
+            const classicOpts = document.getElementById('classic-options');
+            const classicNamesSetup = document.getElementById('classic-names-setup');
+            const americanoRosterSetup = document.getElementById('americano-roster-setup');
+
+            const btnPool5 = document.getElementById('pool-5-btn');
+            const btnPool6 = document.getElementById('pool-6-btn');
+
+            if (state.americanoPoolSize === 5) {
+                btnPool5.className = "px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 border border-amber-500 text-amber-400";
+                btnPool6.className = "px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300";
+            } else {
+                btnPool6.className = "px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 border border-amber-500 text-amber-400";
+                btnPool5.className = "px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300";
+            }
+
+            if (state.gameMode === 'americano') {
+                btnAmericano.className = "p-3 rounded-2xl text-xs font-bold border border-amber-500 bg-amber-500/20 text-amber-400 text-center flex flex-col items-center justify-center space-y-1";
+                btnClassic.className = "p-3 rounded-2xl text-xs font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center flex flex-col items-center justify-center space-y-1";
+                americanoOpts.classList.remove('hidden');
+                classicOpts.classList.add('hidden');
+                classicNamesSetup.classList.add('hidden');
+                americanoRosterSetup.classList.remove('hidden');
+            } else {
+                btnClassic.className = "p-3 rounded-2xl text-xs font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center flex flex-col items-center justify-center space-y-1";
+                btnAmericano.className = "p-3 rounded-2xl text-xs font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center flex flex-col items-center justify-center space-y-1";
+                americanoOpts.classList.add('hidden');
+                classicOpts.classList.remove('hidden');
+                classicNamesSetup.classList.remove('hidden');
+                americanoRosterSetup.classList.add('hidden');
+            }
+
+            document.querySelectorAll('.americano-pt-btn').forEach(btn => {
+                let pts = parseInt(btn.innerText);
+                if (pts === state.americanoTarget) {
+                    btn.className = "americano-pt-btn p-2 rounded-xl text-xs font-bold border border-amber-500 bg-amber-500/20 text-amber-400 text-center";
+                } else {
+                    btn.className = "americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 text-center";
+                }
+            });
+
+            const btnGolden = document.getElementById('modal-rule-golden');
+            const btnAdv = document.getElementById('modal-rule-advantage');
+            if (state.goldenPoint) {
+                btnGolden.className = "p-2.5 rounded-xl font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center text-xs";
+                btnAdv.className = "p-2.5 rounded-xl font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center text-xs";
+            } else {
+                btnAdv.className = "p-2.5 rounded-xl font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center text-xs";
+                btnGolden.className = "p-2.5 rounded-xl font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center text-xs";
+            }
+
+            const btnSets3 = document.getElementById('modal-sets-3');
+            const btnSets1 = document.getElementById('modal-sets-1');
+            if (state.bestOfSets === 3) {
+                btnSets3.className = "p-2.5 rounded-xl font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center text-xs";
+                btnSets1.className = "p-2.5 rounded-xl font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center text-xs";
+            } else {
+                btnSets1.className = "p-2.5 rounded-xl font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center text-xs";
+                btnSets3.className = "p-2.5 rounded-xl font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center text-xs";
+            }
+        }
+
+        function applySettings() {
+            if (state.gameMode === 'classic') {
+                let p1 = document.getElementById('input-p1-name').value.trim();
+                let p2 = document.getElementById('input-p2-name').value.trim();
+                let p3 = document.getElementById('input-p3-name').value.trim();
+                let p4 = document.getElementById('input-p4-name').value.trim();
+
+                if (p1) state.teamA.p1 = p1;
+                if (p2) state.teamA.p2 = p2;
+                if (p3) state.teamB.p1 = p3;
+                if (p4) state.teamB.p2 = p4;
+            } else {
+                gatherAmericanoNamesFromInputs();
+                loadAmericanoRound(state.americanoCurrentRound);
+            }
+
+            closeSettingsModal();
+            updateUI();
+        }
+
+        function showWinnerModal(winningTeam) {
+            let pairName = winningTeam === 'A' ? `${state.teamA.p1} & ${state.teamA.p2}` : `${state.teamB.p1} & ${state.teamB.p2}`;
+            document.getElementById('winner-announcement').innerText = `${pairName} gewinnt das Match!`;
+            
+            let summary = state.gameMode === 'americano' 
+                ? `Endstand Runde ${state.americanoCurrentRound + 1}: ${state.teamA.points} : ${state.teamB.points} Punkte`
+                : `Satzverlauf: ${state.teamA.setsWon.join(', ')} : ${state.teamB.setsWon.join(', ')}`;
+            
+            document.getElementById('final-score-summary').innerText = summary;
+            document.getElementById('winner-modal').classList.remove('hidden');
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function closeWinnerModal() {
+            document.getElementById('winner-modal').classList.add('hidden');
+        }
+
+        function handleWinnerModalDismiss() {
+            closeWinnerModal();
+            if (state.gameMode === 'americano') {
+                // Automatically advance to next round if available
+                let nextRound = (state.americanoCurrentRound + 1) % state.americanoPoolSize;
+                loadAmericanoRound(nextRound);
+                openLeaderboardModal();
+            } else {
+                resetMatch();
+                openSettingsModal();
+            }
+        }
+    </script>
 </body>
 </html>
