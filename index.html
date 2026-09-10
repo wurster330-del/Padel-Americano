@@ -4,432 +4,435 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Padel Scoreboard & Americano Pro</title>
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         body {
+            font-family: 'Inter', sans-serif;
             user-select: none;
             -webkit-user-select: none;
-            -webkit-touch-callout: none;
             touch-action: manipulation;
-            overscroll-behavior: none;
+            overflow: hidden;
         }
-        .tap-flash {
-            animation: flashPulse 0.25s ease-out;
+        .touch-zone {
+            transition: background-color 0.1s ease, transform 0.05s ease;
         }
-        @keyframes flashPulse {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(0.98); filter: brightness(1.25); }
-            100% { transform: scale(1); filter: brightness(1); }
+        .touch-zone:active {
+            transform: scale(0.995);
         }
     </style>
 </head>
-<body class="h-full bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden select-none">
+<body class="h-full bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
 
-    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between shrink-0 shadow-lg">
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between shrink-0 z-20">
         <div class="flex items-center space-x-3">
-            <div class="bg-emerald-500 text-slate-950 px-3.5 py-1.5 rounded-xl font-black text-lg flex items-center shadow-md">
-                <i data-lucide="activity" class="w-5 h-5 mr-1.5 stroke-[2.5]"></i>
-                PADEL
+            <div class="bg-amber-500 text-slate-950 p-2 rounded-xl font-black text-lg flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <i data-lucide="trophy" class="w-6 h-6"></i>
             </div>
-            
-            <!-- Game Mode / Tournament Badge -->
-            <button onclick="openSettingsModal()" id="header-mode-badge" class="bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 px-3.5 py-1.5 rounded-xl text-emerald-400 font-extrabold text-sm flex items-center space-x-2 transition cursor-pointer">
-                <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
-                <span id="display-mode-name">Klassisch (Best of 3)</span>
-            </button>
-
-            <!-- Match Timer -->
-            <div id="match-timer" class="hidden md:flex bg-slate-800 px-3.5 py-1.5 rounded-xl font-mono text-emerald-400 font-bold text-base items-center border border-slate-700">
-                <i data-lucide="clock" class="w-4 h-4 mr-1.5"></i>
-                <span id="timer-display">00:00</span>
+            <div>
+                <h1 class="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
+                    PADEL ARENA <span id="mode-badge" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full uppercase">Americano</span>
+                </h1>
+                <p class="text-xs text-slate-400 font-medium" id="header-subtitle">Pool: 6 Spieler (Werner, Tobias, Chris, Stefan, David, Marco)</p>
             </div>
         </div>
 
         <div class="flex items-center space-x-2">
-            <!-- Dynamic Rule / Point Target Badge -->
-            <button id="rule-toggle-btn" onclick="openSettingsModal()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-300 transition flex items-center space-x-1.5">
+            <!-- Timer Display -->
+            <div id="timer-display" class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl font-mono text-amber-400 font-bold text-sm sm:text-base flex items-center gap-2">
+                <i data-lucide="timer" class="w-4 h-4 text-amber-500"></i>
+                <span id="timer-text">00:00</span>
+            </div>
+
+            <!-- Apple Watch / Smartwatch Button -->
+            <button onclick="openWatchModal()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition border border-cyan-500/30 shadow-sm" title="Apple Watch Ansicht">
+                <i data-lucide="watch" class="w-4 h-4"></i>
+                <span class="hidden md:inline">Apple Watch</span>
+            </button>
+
+            <!-- WhatsApp / Messages Quick Share Button -->
+            <button onclick="shareViaMessages()" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition border border-emerald-500/30 shadow-sm" title="An Messages / WhatsApp weiterleiten">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span class="hidden md:inline">Link teilen</span>
+            </button>
+
+            <!-- Remote Link / QR Button -->
+            <button onclick="openRemoteModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition border border-slate-700 shadow-sm" title="Externe Fernbedienung">
+                <i data-lucide="smartphone" class="w-4 h-4 text-cyan-400"></i>
+                <span class="hidden md:inline">Fernbedienung</span>
+            </button>
+
+            <!-- Leaderboard Button -->
+            <button onclick="openLeaderboardModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition border border-slate-700 shadow-sm">
                 <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
-                <span id="rule-label">Golden Point</span>
+                <span class="hidden sm:inline">Rangliste</span>
             </button>
 
-            <!-- Leaderboard Button (Americano Mode) -->
-            <button id="leaderboard-btn" onclick="openLeaderboardModal()" title="Rangliste anzeigen" class="hidden px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 rounded-xl text-amber-400 font-extrabold text-xs transition flex items-center space-x-1.5">
-                <i data-lucide="trophy" class="w-4 h-4"></i>
-                <span>Rangliste</span>
-            </button>
-
-            <!-- High Contrast / Daylight Toggle -->
-            <button onclick="toggleHighContrast()" title="Outdoor High-Contrast Modus" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
-                <i data-lucide="sun" class="w-5 h-5"></i>
-            </button>
-
-            <!-- Undo Button -->
-            <button onclick="undoLastAction()" title="Letzten Punkt zurück" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
-                <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-            </button>
-
-            <!-- Settings / Setup Modal Button -->
-            <button onclick="openSettingsModal()" title="Spieler & Einstellungen" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-            </button>
-
-            <!-- Fullscreen Toggle -->
-            <button onclick="toggleFullScreen()" title="Vollbild" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 transition">
-                <i data-lucide="maximize" class="w-5 h-5"></i>
+            <!-- Settings Button -->
+            <button onclick="openSettingsModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-2 rounded-xl font-extrabold text-xs sm:text-sm flex items-center gap-1.5 transition shadow-lg shadow-amber-500/20">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+                <span>Setup</span>
             </button>
         </div>
     </header>
 
-    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+    <main class="flex-1 flex flex-col relative overflow-hidden bg-slate-950">
 
-        <!-- TEAM 1 ZONE -->
-        <div id="team-a-zone" onclick="scorePoint('A')" class="flex-1 bg-gradient-to-br from-blue-950/80 via-slate-900 to-slate-950 border-b md:border-b-0 md:border-r border-slate-800/80 p-6 flex flex-col justify-between cursor-pointer active:brightness-125 transition relative group">
-            
-            <div class="flex justify-between items-start">
-                <div class="flex items-center space-x-3">
-                    <div>
-                        <div id="team-a-names-display" class="text-xl md:text-2xl font-black text-blue-400 uppercase tracking-wide">Spieler 1 & Spieler 2</div>
-                        <div class="text-xs text-slate-400 font-semibold mt-0.5 flex items-center">
-                            <i data-lucide="circle-dot" class="w-3.5 h-3.5 mr-1 text-emerald-400" id="server-indicator-a"></i>
-                            <span id="server-text-a">Aufschlag</span>
-                        </div>
-                    </div>
+        <!-- AMERICANO ROUND BAR -->
+        <div id="americano-controls-bar" class="bg-slate-900/80 border-b border-slate-800 px-4 py-2 flex items-center justify-between shrink-0 backdrop-blur">
+            <div class="flex items-center gap-2 overflow-x-auto py-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">Runde:</span>
+                <div id="round-pills-container" class="flex gap-1.5">
+                    <!-- Dynamically filled rounds -->
                 </div>
-
-                <!-- Classic Sets Indicators -->
-                <div id="team-a-sets-container" class="flex space-x-1.5 bg-slate-950/60 p-2 rounded-2xl border border-slate-800 shadow-inner">
-                    <div class="text-xs font-bold text-slate-400 self-center mr-1">SÄTZE</div>
-                    <div id="team-a-set-0" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
-                    <div id="team-a-set-1" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
-                    <div id="team-a-set-2" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
-                </div>
+                <button onclick="addBonusRound()" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 transition">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Bonus-Runde +
+                </button>
             </div>
-
-            <!-- Main Score Display -->
-            <div class="my-auto py-4 flex items-center justify-around">
-                <div id="team-a-games-wrap" class="text-center">
-                    <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Spiele</div>
-                    <div id="team-a-games" class="text-7xl md:text-9xl font-black text-slate-200 tracking-tighter">0</div>
-                </div>
-
-                <div id="team-a-divider" class="h-24 w-px bg-slate-800/80"></div>
-
-                <div class="text-center">
-                    <div id="team-a-points-label" class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Punkte</div>
-                    <div id="team-a-points" class="text-8xl md:text-[11rem] font-black text-blue-400 tracking-tighter drop-shadow-lg">0</div>
-                </div>
-            </div>
-
-            <div class="text-center text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-blue-400 transition">
-                Tippen, um Punkt für Paar 1 zu geben
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-300 shrink-0 ml-2">
+                <span class="bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">Zielpunkte: <strong id="target-points-label" class="text-amber-400">32</strong></span>
             </div>
         </div>
 
-        <!-- TEAM 2 ZONE -->
-        <div id="team-b-zone" onclick="scorePoint('B')" class="flex-1 bg-gradient-to-br from-rose-950/80 via-slate-900 to-slate-950 p-6 flex flex-col justify-between cursor-pointer active:brightness-125 transition relative group">
-            
-            <div class="flex justify-between items-start">
-                <div class="flex items-center space-x-3">
+        <!-- SPLIT SCOREBOARD (TEAM A / TEAM B) -->
+        <div class="flex-1 grid grid-rows-2 relative overflow-hidden">
+
+            <!-- TEAM A (TOP) -->
+            <div id="team-a-zone" onclick="incrementScore('A')" class="touch-zone bg-slate-900/90 hover:bg-slate-900 border-b border-slate-800 p-6 flex flex-col justify-between relative cursor-pointer select-none group">
+                <div class="flex justify-between items-start">
                     <div>
-                        <div id="team-b-names-display" class="text-xl md:text-2xl font-black text-rose-400 uppercase tracking-wide">Spieler 3 & Spieler 4</div>
-                        <div class="text-xs text-slate-400 font-semibold mt-0.5 flex items-center">
-                            <i data-lucide="circle-dot" class="w-3.5 h-3.5 mr-1 text-slate-600" id="server-indicator-b"></i>
-                            <span id="server-text-b"></span>
-                        </div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-amber-400/90 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">Team 1</span>
+                        <h2 id="team-a-names" class="text-xl sm:text-3xl font-extrabold text-white mt-1.5 tracking-tight drop-shadow">Werner & Tobias</h2>
+                    </div>
+                    <div id="team-a-server" class="hidden bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-3 py-1 rounded-xl text-xs font-bold uppercase flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="disc" class="w-3.5 h-3.5 animate-spin"></i> Aufschlag
                     </div>
                 </div>
 
-                <!-- Classic Sets Indicators -->
-                <div id="team-b-sets-container" class="flex space-x-1.5 bg-slate-950/60 p-2 rounded-2xl border border-slate-800 shadow-inner">
-                    <div class="text-xs font-bold text-slate-400 self-center mr-1">SÄTZE</div>
-                    <div id="team-b-set-0" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
-                    <div id="team-b-set-1" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
-                    <div id="team-b-set-2" class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-lg text-slate-500 border border-slate-800">0</div>
+                <div class="flex items-center justify-center my-auto">
+                    <div class="text-center">
+                        <span id="team-a-points" class="text-7xl sm:text-9xl font-black text-white tracking-tighter drop-shadow-2xl">0</span>
+                        <p class="text-xs sm:text-sm font-semibold text-slate-400 uppercase tracking-widest mt-1">Punkte</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span id="team-a-rest-info" class="font-bold text-amber-400/90">Pause: -</span>
+                    <span class="text-amber-400 font-semibold group-hover:translate-y-0.5 transition-transform flex items-center gap-1">
+                        Tippen zum Erhöhen <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    </span>
                 </div>
             </div>
 
-            <!-- Main Score Display -->
-            <div class="my-auto py-4 flex items-center justify-around">
-                <div id="team-b-games-wrap" class="text-center">
-                    <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Spiele</div>
-                    <div id="team-b-games" class="text-7xl md:text-9xl font-black text-slate-200 tracking-tighter">0</div>
+            <!-- TEAM B (BOTTOM) -->
+            <div id="team-b-zone" onclick="incrementScore('B')" class="touch-zone bg-slate-950 hover:bg-slate-950/80 p-6 flex flex-col justify-between relative cursor-pointer select-none group">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-sky-400/90 bg-sky-500/10 px-2.5 py-1 rounded-md border border-sky-500/20">Team 2</span>
+                        <h2 id="team-b-names" class="text-xl sm:text-3xl font-extrabold text-white mt-1.5 tracking-tight drop-shadow">Chris & Stefan</h2>
+                    </div>
+                    <div id="team-b-server" class="hidden bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-3 py-1 rounded-xl text-xs font-bold uppercase flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="disc" class="w-3.5 h-3.5 animate-spin"></i> Aufschlag
+                    </div>
                 </div>
 
-                <div id="team-b-divider" class="h-24 w-px bg-slate-800/80"></div>
+                <div class="flex items-center justify-center my-auto">
+                    <div class="text-center">
+                        <span id="team-b-points" class="text-7xl sm:text-9xl font-black text-white tracking-tighter drop-shadow-2xl">0</span>
+                        <p class="text-xs sm:text-sm font-semibold text-slate-400 uppercase tracking-widest mt-1">Punkte</p>
+                    </div>
+                </div>
 
-                <div class="text-center">
-                    <div id="team-b-points-label" class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Punkte</div>
-                    <div id="team-b-points" class="text-8xl md:text-[11rem] font-black text-rose-400 tracking-tighter drop-shadow-lg">0</div>
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span id="team-b-sets-won" class="font-bold text-slate-300">Set-Punkte: 0</span>
+                    <span class="text-sky-400 font-semibold group-hover:-translate-y-0.5 transition-transform flex items-center gap-1">
+                        Tippen zum Erhöhen <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    </span>
                 </div>
             </div>
 
-            <div class="text-center text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-rose-400 transition">
-                Tippen, um Punkt für Paar 2 zu geben
-            </div>
         </div>
 
     </main>
 
-    <footer class="bg-slate-900 border-t border-slate-800 px-4 py-2.5 flex items-center justify-between text-xs font-semibold text-slate-400 shrink-0">
-        <div id="match-status-msg" class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span id="status-text">Match läuft - Satz 1</span>
+    <footer class="bg-slate-900 border-t border-slate-800 px-4 py-3 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center gap-2">
+            <button onclick="undoScore()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition border border-slate-700">
+                <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-400"></i> Rückgängig
+            </button>
+            <button onclick="resetCurrentMatch()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition border border-slate-700">
+                <i data-lucide="refresh-cw" class="w-4 h-4 text-rose-400"></i> Match Reset
+            </button>
         </div>
-        <div class="flex items-center space-x-4">
-            <button onclick="switchServerManually()" class="hover:text-slate-200 underline">Aufschlag wechseln</button>
-            <button onclick="resetMatchPrompt()" class="text-rose-400 hover:text-rose-300">Match zurücksetzen</button>
+
+        <div class="flex items-center gap-2">
+            <button onclick="openWatchModal()" class="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
+                <i data-lucide="watch" class="w-4 h-4"></i> Apple Watch Modus
+            </button>
+            <button onclick="toggleFullscreen()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition border border-slate-700">
+                <i data-lucide="maximize" class="w-4 h-4 text-cyan-400"></i> Vollbild
+            </button>
         </div>
     </footer>
 
-    <div id="settings-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-                <h3 class="text-xl font-black text-slate-100 flex items-center">
-                    <i data-lucide="users" class="w-6 h-6 mr-2.5 text-emerald-400"></i>
-                    Teilnehmer & Spielmodus Konfiguration
-                </h3>
-                <button onclick="closeSettingsModal()" class="p-2 text-slate-400 hover:text-slate-100 rounded-xl bg-slate-800 transition">
+                <div class="flex items-center gap-3">
+                    <div class="bg-amber-500/10 text-amber-400 p-2 rounded-xl border border-amber-500/20">
+                        <i data-lucide="settings" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-black text-white">Turnier & Match Setup</h2>
+                </div>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/50">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div class="space-y-4">
-                <!-- Game Mode Selection -->
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Spielmodus</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" id="mode-classic-btn" onclick="setGameMode('classic')" class="p-3 rounded-2xl text-xs font-bold border transition text-center flex flex-col items-center justify-center space-y-1">
-                            <i data-lucide="grid" class="w-5 h-5 text-emerald-400"></i>
-                            <span class="text-slate-100 font-extrabold">Klassisch (Sets & Games)</span>
-                        </button>
-                        <button type="button" id="mode-americano-btn" onclick="setGameMode('americano')" class="p-3 rounded-2xl text-xs font-bold border transition text-center flex flex-col items-center justify-center space-y-1">
-                            <i data-lucide="rotate-cw" class="w-5 h-5 text-amber-400"></i>
-                            <span class="text-slate-100 font-extrabold">Americano / Rotation (5-6 Spieler)</span>
-                        </button>
+            <!-- Mode Selector -->
+            <div class="space-y-3">
+                <label class="block text-xs font-bold uppercase text-amber-400 tracking-wider">Spielmodus</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" onclick="setGameMode('americano')" id="mode-americano-btn" class="p-3 rounded-2xl font-bold text-sm border transition flex items-center justify-center gap-2 bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20">
+                        <i data-lucide="users" class="w-4 h-4"></i> Americano (6 Spieler)
+                    </button>
+                    <button type="button" onclick="setGameMode('classic')" id="mode-classic-btn" class="p-3 rounded-2xl font-bold text-sm border transition flex items-center justify-center gap-2 bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800">
+                        <i data-lucide="play" class="w-4 h-4"></i> Klassik Match
+                    </button>
+                </div>
+            </div>
+
+            <!-- Americano Specific Settings -->
+            <div id="americano-settings-group" class="space-y-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <div class="flex justify-between items-center">
+                    <label class="block text-xs font-bold uppercase text-amber-400">Americano Zielpunkte pro Match</label>
+                    <div class="flex gap-1.5">
+                        <button type="button" onclick="setTargetPoints(16)" id="pts-16" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 hover:border-amber-500 text-slate-300">16</button>
+                        <button type="button" onclick="setTargetPoints(24)" id="pts-24" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 hover:border-amber-500 text-slate-300">24</button>
+                        <button type="button" onclick="setTargetPoints(32)" id="pts-32" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 hover:border-amber-500 text-amber-400 border-amber-500">32</button>
                     </div>
                 </div>
-
-                <!-- Americano Settings & Roster (Conditional) -->
-                <div id="americano-options" class="hidden bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-4">
-                    <div class="flex justify-between items-center">
-                        <label class="block text-xs font-bold uppercase text-amber-400">Americano Pool & Rotationsplan</label>
-                        <div class="flex space-x-1">
-                            <button type="button" onclick="setAmericanoPlayerPool(5)" id="pool-5-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300">5 Spieler</button>
-                            <button type="button" onclick="setAmericanoPlayerPool(6)" id="pool-6-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300">6 Spieler</button>
-                        </div>
-                    </div>
-
-                    <!-- Target Points (Fully Editable) -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="block text-[10px] uppercase text-slate-400 font-bold">Zielpunkte pro Runde (Match-Ende)</span>
-                            <span id="target-points-val-label" class="text-xs font-bold text-amber-400">32 Pkt</span>
-                        </div>
-                        <div class="grid grid-cols-4 gap-2 mb-2">
-                            <button type="button" onclick="setAmericanoPoints(16)" class="americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-center">16 Pkt</button>
-                            <button type="button" onclick="setAmericanoPoints(21)" class="americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-center">21 Pkt</button>
-                            <button type="button" onclick="setAmericanoPoints(24)" class="americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-center">24 Pkt</button>
-                            <button type="button" onclick="setAmericanoPoints(32)" class="americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 transition text-center">32 Pkt</button>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <input type="number" id="custom-target-points-input" min="4" max="100" value="32" placeholder="Eigene Punkte" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-amber-400 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
-                            <button type="button" onclick="applyCustomTargetPoints()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl transition">Setzen</button>
-                        </div>
-                    </div>
-
-                    <!-- Tournament Rounds Selector -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="block text-[10px] uppercase text-slate-400 font-bold">Runde auswählen / Starten</span>
-                            <span id="current-round-indicator" class="text-xs font-bold text-amber-400">Runde 1 von 5</span>
-                        </div>
-                        <div id="rounds-buttons-container" class="grid grid-cols-5 gap-1.5">
-                            <!-- Dynamically generated round buttons -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Classic Settings (Conditional) -->
-                <div id="classic-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Einstand-Regel (40:40)</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button id="modal-rule-golden" onclick="setGoldenPointRule(true)" class="p-2.5 rounded-xl font-bold border text-xs transition text-center">Golden Point</button>
-                            <button id="modal-rule-advantage" onclick="setGoldenPointRule(false)" class="p-2.5 rounded-xl font-bold border text-xs transition text-center">Vorteil</button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Sätze zum Sieg</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button id="modal-sets-3" onclick="setBestOf(3)" class="p-2.5 rounded-xl font-bold border text-xs transition text-center">Best of 3</button>
-                            <button id="modal-sets-1" onclick="setBestOf(1)" class="p-2.5 rounded-xl font-bold border text-xs transition text-center">1 Satz (bis 9)</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Individual Participant Names Setup -->
-                <div class="pt-2 border-t border-slate-800 space-y-4">
-                    <div id="classic-names-setup" class="space-y-4">
-                        <div class="bg-blue-950/40 p-4 rounded-2xl border border-blue-900/50 space-y-3">
-                            <label class="block text-xs font-bold uppercase text-blue-400">Paar 1 (Teilnehmer)</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler 1</span>
-                                    <input type="text" id="input-p1-name" value="Max" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-blue-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler 2</span>
-                                    <input type="text" id="input-p2-name" value="Tom" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-blue-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-rose-950/40 p-4 rounded-2xl border border-rose-900/50 space-y-3">
-                            <label class="block text-xs font-bold uppercase text-rose-400">Paar 2 (Teilnehmer)</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler 3</span>
-                                    <input type="text" id="input-p3-name" value="Alex" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-rose-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-rose-500">
-                                </div>
-                                <div>
-                                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler 4</span>
-                                    <input type="text" id="input-p4-name" value="Lucas" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-rose-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-rose-500">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Americano 5-6 Players Inputs -->
-                    <div id="americano-roster-setup" class="hidden space-y-3">
-                        <label class="block text-xs font-bold uppercase text-amber-400">Spieler-Namen im Pool</label>
-                        <div id="americano-inputs-list" class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            <!-- Dynamically generated inputs for 5 or 6 players -->
-                        </div>
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold uppercase text-slate-400">Fester Spielerpool (6 Spieler)</label>
+                    <div id="player-inputs-list" class="grid grid-cols-2 gap-2">
+                        <!-- Dynamically filled with Werner, Tobias, Chris, Stefan, David, Marco -->
                     </div>
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
-                <button onclick="resetMatch()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition">
-                    Match zurücksetzen
-                </button>
-                <button onclick="applySettings()" class="px-6 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20">
-                    Übernehmen & Starten
+            <!-- Classic Names Setup -->
+            <div id="classic-settings-group" class="space-y-4 bg-slate-950 p-4 rounded-2xl border border-slate-800 hidden">
+                <label class="block text-xs font-bold uppercase text-amber-400">Teilnehmernamen (Klassik)</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Team 1</label>
+                        <input type="text" id="input-classic-team-a" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-amber-500" value="Werner & Tobias">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Team 2</label>
+                        <input type="text" id="input-classic-team-b" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-amber-500" value="Chris & Stefan">
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+                <button onclick="saveSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-6 py-3 rounded-xl font-extrabold text-sm shadow-lg shadow-amber-500/20 transition">
+                    Einstellungen übernehmen
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="leaderboard-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+    <!-- LEADERBOARD MODAL -->
+    <div id="leaderboard-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-                <h3 class="text-xl font-black text-slate-100 flex items-center">
-                    <i data-lucide="trophy" class="w-6 h-6 mr-2.5 text-amber-400"></i>
-                    Americano Rangliste (Live)
-                </h3>
-                <button onclick="closeLeaderboardModal()" class="p-2 text-slate-400 hover:text-slate-100 rounded-xl bg-slate-800 transition">
+                <div class="flex items-center gap-3">
+                    <div class="bg-amber-500/10 text-amber-400 p-2 rounded-xl border border-amber-500/20">
+                        <i data-lucide="award" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-black text-white">Americano Rangliste</h2>
+                </div>
+                <button onclick="closeLeaderboardModal()" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/50">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div class="space-y-3">
-                <p class="text-xs text-slate-400">Gesammelte Gesamtpunkte aller absolvierten Runden im Americano-Turnier:</p>
-                <div id="leaderboard-list" class="space-y-2">
-                    <!-- Dynamically populated leaderboard rows -->
-                </div>
+            <div id="leaderboard-list" class="space-y-3">
+                <!-- Dynamically populated rankings -->
             </div>
 
             <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
-                <button onclick="resetAmericanoScores()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition">
+                <button onclick="resetLeaderboard()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-4 py-2 rounded-xl font-bold text-xs border border-rose-500/30 transition">
                     Rangliste zurücksetzen
                 </button>
-                <button onclick="closeLeaderboardModal()" class="px-6 py-2 rounded-xl bg-amber-500 text-slate-950 font-extrabold hover:bg-amber-400 transition shadow-lg shadow-amber-500/20">
-                    Zurück zum Match
+                <button onclick="closeLeaderboardModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs">
+                    Schließen
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="winner-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-lg w-full p-8 text-center shadow-2xl">
-            <div class="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
-                <i data-lucide="trophy" class="w-10 h-10"></i>
-            </div>
-            <h2 class="text-3xl font-black text-slate-100 mb-2">MATCH BEENDET!</h2>
-            <p id="winner-announcement" class="text-xl font-bold text-emerald-400 mb-6">Paar 1 gewinnt das Match!</p>
-            
-            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-6 font-mono text-lg text-slate-300" id="final-score-summary">
-                6:4, 6:2
+    <!-- REMOTE CONTROL MODAL (EXTERNE FERNBEDIENUNG) -->
+    <div id="remote-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-cyan-500/10 text-cyan-400 p-2 rounded-xl border border-cyan-500/20">
+                        <i data-lucide="smartphone" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-black text-white">Externe Fernbedienung</h2>
+                        <p class="text-xs text-slate-400">Punkte per Smartphone steuern</p>
+                    </div>
+                </div>
+                <button onclick="closeRemoteModal()" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/50">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
 
-            <button onclick="handleWinnerModalDismiss()" class="w-full py-4 bg-emerald-500 text-slate-950 font-extrabold rounded-2xl text-lg hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20">
-                Nächste Runde / Konfigurieren
-            </button>
+            <div class="space-y-4 text-center">
+                <p class="text-xs text-slate-300">
+                    Öffne diesen Link auf deinem Smartphone oder leite ihn direkt weiter, um den Punktestand fernzusteuern:
+                </p>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                    <input type="text" id="remote-link-input" readonly class="bg-transparent text-xs text-cyan-400 font-mono w-full outline-none select-all" value="">
+                    <button onclick="copyRemoteLink()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold shrink-0">Kopieren</button>
+                </div>
+                
+                <!-- Direct Share Action Buttons -->
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="shareViaMessages()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-500/20">
+                        <i data-lucide="message-square" class="w-4 h-4"></i> An Messages
+                    </button>
+                    <button onclick="shareViaWhatsApp()" class="bg-green-600 hover:bg-green-500 text-white py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition shadow-lg shadow-green-600/20">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i> WhatsApp
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="incrementScore('A'); updateRemoteUI();" class="bg-amber-500/20 border border-amber-500/40 text-amber-400 p-4 rounded-2xl font-extrabold text-sm hover:bg-amber-500/30">
+                        +1 Team 1 Punkt
+                    </button>
+                    <button onclick="incrementScore('B'); updateRemoteUI();" class="bg-sky-500/20 border border-sky-500/40 text-sky-400 p-4 rounded-2xl font-extrabold text-sm hover:bg-sky-500/30">
+                        +1 Team 2 Punkt
+                    </button>
+                </div>
+                <button onclick="undoScore(); updateRemoteUI();" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-bold border border-slate-700">
+                    Letzten Punkt Rückgängig
+                </button>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex justify-end">
+                <button onclick="closeRemoteModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs">
+                    Schließen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLE WATCH COMPATIBILITY MODAL -->
+    <div id="watch-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[40px] p-6 shadow-2xl space-y-4 text-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+            
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2 mx-auto">
+                    <div class="bg-cyan-500/20 text-cyan-400 p-2 rounded-xl border border-cyan-500/30">
+                        <i data-lucide="watch" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-base font-black text-white">Apple Watch / iPhone Link</h2>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Falls der QR-Code nicht scannt, kopiere den Link oder teile ihn direkt per Nachricht:
+                </p>
+
+                <!-- QR Code Container with white padding -->
+                <div class="bg-white p-3 rounded-2xl w-40 h-40 mx-auto flex items-center justify-center shadow-lg border border-slate-700">
+                    <img id="watch-qrcode" src="" alt="QR Code" class="w-full h-full object-contain">
+                </div>
+
+                <!-- Direct Copy Field -->
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+                    <input type="text" id="watch-link-input" readonly class="bg-transparent text-[10px] text-cyan-400 font-mono w-full outline-none select-all truncate" value="">
+                    <button onclick="copyWatchLink()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0">Kopieren</button>
+                </div>
+                
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-left space-y-2">
+                    <span class="text-[10px] font-bold text-cyan-400 block">Schnell teilen:</span>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button onclick="shareViaMessages()" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1">
+                            <i data-lucide="message-square" class="w-3 h-3"></i> iMessage
+                        </button>
+                        <button onclick="shareViaWhatsApp()" class="bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/40 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1">
+                            <i data-lucide="message-circle" class="w-3 h-3"></i> WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex justify-center">
+                <button onclick="closeWatchModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-6 py-2 rounded-xl font-bold text-xs">
+                    Schließen
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
+        // Application State
         let state = {
-            gameMode: 'classic', // 'classic' or 'americano'
-            teamA: { p1: "Max", p2: "Tom", points: 0, games: 0, setsWon: [0, 0, 0] },
-            teamB: { p1: "Alex", p2: "Lucas", points: 0, games: 0, setsWon: [0, 0, 0] },
-            currentSet: 0,
-            server: 'A',
-            goldenPoint: true,
-            bestOfSets: 3,
+            gameMode: 'americano',
+            americanoPlayers: ["Werner", "Tobias", "Chris", "Stefan", "David", "Marco"],
+            americanoScores: { "Werner": 0, "Tobias": 0, "Chris": 0, "Stefan": 0, "David": 0, "Marco": 0 },
+            americanoMatchesPlayed: { "Werner": 0, "Tobias": 0, "Chris": 0, "Stefan": 0, "David": 0, "Marco": 0 },
             americanoTarget: 32,
-            americanoPoolSize: 5,
-            americanoPlayers: ["Spieler 1", "Spieler 2", "Spieler 3", "Spieler 4", "Spieler 5", "Spieler 6"],
-            americanoPlayerScores: { "Spieler 1": 0, "Spieler 2": 0, "Spieler 3": 0, "Spieler 4": 0, "Spieler 5": 0, "Spieler 6": 0 },
-            americanoCurrentRound: 0,
+            currentRoundIndex: 0,
+            classicNames: { teamA: "Werner & Tobias", teamB: "Chris & Stefan" },
+            teamA: { points: 0, setsWon: 0 },
+            teamB: { points: 0, setsWon: 0 },
             history: []
         };
 
+        // Base 6 Americano Rounds (Fixed Rotation for 6 players on 1 court)
+        const baseAmericanoSchedules6 = [
+            { t1: [0, 1], t2: [2, 3], rest: [4, 5], label: "Runde 1" },
+            { t1: [4, 5], t2: [0, 2], rest: [1, 3], label: "Runde 2" },
+            { t1: [1, 3], t2: [4, 2], rest: [0, 5], label: "Runde 3" },
+            { t1: [0, 5], t2: [1, 4], rest: [2, 3], label: "Runde 4" },
+            { t1: [2, 3], t2: [0, 4], rest: [1, 5], label: "Runde 5" },
+            { t1: [1, 5], t2: [2, 4], rest: [0, 3], label: "Runde 6" }
+        ];
+
+        let dynamicSchedules = [...baseAmericanoSchedules6];
+
         let timerSeconds = 0;
         let timerInterval = null;
-        let highContrastActive = false;
-
-        // Automated Schedules for 5 and 6 players on 1 court
-        const americanoSchedules = {
-            5: [
-                { t1: [0, 1], t2: [2, 3], rest: [4] }, // Runde 1
-                { t1: [4, 0], t2: [1, 2], rest: [3] }, // Runde 2
-                { t1: [3, 4], t2: [0, 1], rest: [2] }, // Runde 3
-                { t1: [2, 3], t2: [4, 0], rest: [1] }, // Runde 4
-                { t1: [1, 2], t2: [3, 4], rest: [0] }  // Runde 5
-            ],
-            6: [
-                { t1: [0, 1], t2: [2, 3], rest: [4, 5] }, // Runde 1
-                { t1: [4, 5], t2: [0, 2], rest: [1, 3] }, // Runde 2
-                { t1: [1, 3], t2: [4, 2], rest: [0, 5] }, // Runde 3
-                { t1: [0, 5], t2: [1, 4], rest: [2, 3] }, // Runde 4
-                { t1: [2, 3], t2: [0, 4], rest: [1, 5] }, // Runde 5
-                { t1: [1, 5], t2: [2, 4], rest: [0, 3] }  // Runde 6
-            ]
-        };
 
         window.onload = function() {
             lucide.createIcons();
             startTimer();
+            loadRound(0);
+            
+            // Check URL parameters for remote trigger support
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'p1') {
+                incrementScore('A');
+            } else if (urlParams.get('action') === 'p2') {
+                incrementScore('B');
+            } else if (urlParams.get('remote') === '1') {
+                // Automatically open remote control view if opened via remote link
+                setTimeout(() => {
+                    openRemoteModal();
+                }, 300);
+            }
+
             updateUI();
-            openSettingsModal();
         };
 
         function startTimer() {
@@ -438,260 +441,14 @@
                 timerSeconds++;
                 let mins = Math.floor(timerSeconds / 60);
                 let secs = timerSeconds % 60;
-                document.getElementById('timer-display').innerText = 
+                document.getElementById('timer-text').innerText = 
                     (mins < 10 ? '0' + mins : mins) + ':' + (secs < 10 ? '0' + secs : secs);
             }, 1000);
         }
 
-        function saveHistory() {
-            state.history.push(JSON.parse(JSON.stringify(state)));
-            if (state.history.length > 30) state.history.shift();
-        }
-
-        function scorePoint(team) {
-            saveHistory();
-
-            if (state.gameMode === 'americano') {
-                if (team === 'A') state.teamA.points++;
-                else state.teamB.points++;
-
-                let totalPts = state.teamA.points + state.teamB.points;
-                if (totalPts % 2 === 0) {
-                    state.server = state.server === 'A' ? 'B' : 'A';
-                }
-
-                if ((state.teamA.points >= state.americanoTarget || state.teamB.points >= state.americanoTarget) && Math.abs(state.teamA.points - state.teamB.points) >= 1) {
-                    recordAmericanoPointsToLeaderboard();
-                    showWinnerModal(state.teamA.points > state.teamB.points ? 'A' : 'B');
-                }
-            } else {
-                let pA = state.teamA.points;
-                let pB = state.teamB.points;
-
-                if (team === 'A') {
-                    if (pA < 30) {
-                        state.teamA.points += 15;
-                    } else if (pA === 30) {
-                        state.teamA.points = 40;
-                    } else if (pA === 40) {
-                        if (pB < 40) {
-                            winGame('A');
-                        } else if (pB === 40) {
-                            if (state.goldenPoint) {
-                                winGame('A');
-                            } else {
-                                state.teamA.points = 'AD';
-                                state.teamB.points = 40;
-                            }
-                        }
-                    } else if (pA === 'AD') {
-                        winGame('A');
-                    } else if (pB === 'AD') {
-                        state.teamB.points = 40;
-                    }
-                } else {
-                    if (pB < 30) {
-                        state.teamB.points += 15;
-                    } else if (pB === 30) {
-                        state.teamB.points = 40;
-                    } else if (pB === 40) {
-                        if (pA < 40) {
-                            winGame('B');
-                        } else if (pA === 40) {
-                            if (state.goldenPoint) {
-                                winGame('B');
-                            } else {
-                                state.teamB.points = 'AD';
-                                state.teamA.points = 40;
-                            }
-                        }
-                    } else if (pB === 'AD') {
-                        winGame('B');
-                    } else if (pA === 'AD') {
-                        state.teamA.points = 40;
-                    }
-                }
-            }
-
-            triggerFlash(team);
-            updateUI();
-        }
-
-        function recordAmericanoPointsToLeaderboard() {
-            // For Americano, each individual player in Team A gets teamA.points, Team B gets teamB.points
-            let schedule = americanoSchedules[state.americanoPoolSize][state.americanoCurrentRound];
-            
-            // To prevent double recording if user clicks after match ended, we check if points were already added for this round or simply assign
-            let p1Name = state.americanoPlayers[schedule.t1[0]];
-            let p2Name = state.americanoPlayers[schedule.t1[1]];
-            let p3Name = state.americanoPlayers[schedule.t2[0]];
-            let p4Name = state.americanoPlayers[schedule.t2[1]];
-
-            // We calculate delta or set directly. For simplicity, we update overall scores
-            state.americanoPlayerScores[p1Name] = (state.americanoPlayerScores[p1Name] || 0) + state.teamA.points;
-            state.americanoPlayerScores[p2Name] = (state.americanoPlayerScores[p2Name] || 0) + state.teamA.points;
-            state.americanoPlayerScores[p3Name] = (state.americanoPlayerScores[p3Name] || 0) + state.teamB.points;
-            state.americanoPlayerScores[p4Name] = (state.americanoPlayerScores[p4Name] || 0) + state.teamB.points;
-        }
-
-        function winGame(team) {
-            state.teamA.points = 0;
-            state.teamB.points = 0;
-
-            if (team === 'A') state.teamA.games++;
-            else state.teamB.games++;
-
-            let gA = state.teamA.games;
-            let gB = state.teamB.games;
-
-            if ((gA >= 6 && gA - gB >= 2) || gA === 7) {
-                finishSet('A');
-            } else if ((gB >= 6 && gB - gA >= 2) || gB === 7) {
-                finishSet('B');
-            }
-
-            state.server = state.server === 'A' ? 'B' : 'A';
-        }
-
-        function finishSet(team) {
-            if (team === 'A') state.teamA.setsWon[state.currentSet]++;
-            else state.teamB.setsWon[state.currentSet]++;
-
-            let setsNeeded = state.bestOfSets === 3 ? 2 : 1;
-            let totalSetsWonA = state.teamA.setsWon.reduce((a, b) => a + b, 0);
-            let totalSetsWonB = state.teamB.setsWon.reduce((a, b) => a + b, 0);
-
-            if (totalSetsWonA >= setsNeeded || totalSetsWonB >= setsNeeded || state.currentSet >= 2) {
-                showWinnerModal(totalSetsWonA > totalSetsWonB ? 'A' : 'B');
-            } else {
-                state.currentSet++;
-                state.teamA.games = 0;
-                state.teamB.games = 0;
-            }
-        }
-
-        function undoLastAction() {
-            if (state.history.length > 0) {
-                state = state.history.pop();
-                updateUI();
-            }
-        }
-
-        function triggerFlash(team) {
-            const zone = document.getElementById(team === 'A' ? 'team-a-zone' : 'team-b-zone');
-            zone.classList.add('tap-flash');
-            setTimeout(() => zone.classList.remove('tap-flash'), 250);
-        }
-
-        function updateUI() {
-            document.getElementById('team-a-names-display').innerText = `${state.teamA.p1} & ${state.teamA.p2}`;
-            document.getElementById('team-b-names-display').innerText = `${state.teamB.p1} & ${state.teamB.p2}`;
-
-            const leaderboardBtn = document.getElementById('leaderboard-btn');
-
-            if (state.gameMode === 'americano') {
-                leaderboardBtn.classList.remove('hidden');
-                document.getElementById('display-mode-name').innerText = `Americano (Runde ${state.americanoCurrentRound + 1} / ${state.americanoPoolSize})`;
-                document.getElementById('rule-label').innerText = `Ziel: ${state.americanoTarget} Pkt`;
-                
-                document.getElementById('team-a-sets-container').classList.add('hidden');
-                document.getElementById('team-b-sets-container').classList.add('hidden');
-                document.getElementById('team-a-games-wrap').classList.add('hidden');
-                document.getElementById('team-b-games-wrap').classList.add('hidden');
-                document.getElementById('team-a-divider').classList.add('hidden');
-                document.getElementById('team-b-divider').classList.add('hidden');
-
-                document.getElementById('team-a-points-label').innerText = "Rundenpunkte";
-                document.getElementById('team-b-points-label').innerText = "Rundenpunkte";
-
-                let schedule = americanoSchedules[state.americanoPoolSize][state.americanoCurrentRound];
-                let restingNames = schedule.rest.map(idx => state.americanoPlayers[idx]).join(' & ');
-                document.getElementById('status-text').innerText = `Americano Runde ${state.americanoCurrentRound + 1} (Pause: ${restingNames})`;
-            } else {
-                leaderboardBtn.classList.add('hidden');
-                document.getElementById('display-mode-name').innerText = state.bestOfSets === 3 ? "Klassisch (Best of 3)" : "1 Satz (bis 9)";
-                document.getElementById('rule-label').innerText = state.goldenPoint ? "Golden Point" : "Vorteil";
-
-                document.getElementById('team-a-sets-container').classList.remove('hidden');
-                document.getElementById('team-b-sets-container').classList.remove('hidden');
-                document.getElementById('team-a-games-wrap').classList.remove('hidden');
-                document.getElementById('team-b-games-wrap').classList.remove('hidden');
-                document.getElementById('team-a-divider').classList.remove('hidden');
-                document.getElementById('team-b-divider').classList.remove('hidden');
-
-                document.getElementById('team-a-points-label').innerText = "Punkte";
-                document.getElementById('team-b-points-label').innerText = "Punkte";
-
-                for (let i = 0; i < 3; i++) {
-                    document.getElementById(`team-a-set-${i}`).innerText = state.teamA.setsWon[i];
-                    document.getElementById(`team-b-set-${i}`).innerText = state.teamB.setsWon[i];
-                    if (i === state.currentSet) {
-                        document.getElementById(`team-a-set-${i}`).classList.add('border-blue-500', 'text-blue-400');
-                        document.getElementById(`team-b-set-${i}`).classList.add('border-rose-500', 'text-rose-400');
-                    } else {
-                        document.getElementById(`team-a-set-${i}`).classList.remove('border-blue-500', 'text-blue-400');
-                        document.getElementById(`team-b-set-${i}`).classList.remove('border-rose-500', 'text-rose-400');
-                    }
-                }
-
-                document.getElementById('team-a-games').innerText = state.teamA.games;
-                document.getElementById('team-b-games').innerText = state.teamB.games;
-                document.getElementById('status-text').innerText = `Satz ${state.currentSet + 1} läuft`;
-            }
-
-            document.getElementById('team-a-points').innerText = state.teamA.points;
-            document.getElementById('team-b-points').innerText = state.teamB.points;
-
-            if (state.server === 'A') {
-                document.getElementById('server-indicator-a').className = "w-3.5 h-3.5 mr-1 text-emerald-400 fill-emerald-400";
-                document.getElementById('server-indicator-b').className = "w-3.5 h-3.5 mr-1 text-slate-600";
-                document.getElementById('server-text-a').innerText = "Aufschlag";
-                document.getElementById('server-text-b').innerText = "";
-            } else {
-                document.getElementById('server-indicator-b').className = "w-3.5 h-3.5 mr-1 text-emerald-400 fill-emerald-400";
-                document.getElementById('server-indicator-a').className = "w-3.5 h-3.5 mr-1 text-slate-600";
-                document.getElementById('server-text-b').innerText = "Aufschlag";
-                document.getElementById('server-text-a').innerText = "";
-            }
-        }
-
-        function switchServerManually() {
-            state.server = state.server === 'A' ? 'B' : 'A';
-            updateUI();
-        }
-
-        function resetMatchPrompt() {
-            if (confirm("Möchtest du das Match wirklich zurücksetzen?")) {
-                resetMatch();
-            }
-        }
-
-        function resetMatch() {
-            state = {
-                gameMode: state.gameMode,
-                teamA: { p1: state.teamA.p1, p2: state.teamA.p2, points: 0, games: 0, setsWon: [0, 0, 0] },
-                teamB: { p1: state.teamB.p1, p2: state.teamB.p2, points: 0, games: 0, setsWon: [0, 0, 0] },
-                currentSet: 0,
-                server: 'A',
-                goldenPoint: state.goldenPoint,
-                bestOfSets: state.bestOfSets,
-                americanoTarget: state.americanoTarget,
-                americanoPoolSize: state.americanoPoolSize,
-                americanoPlayers: state.americanoPlayers,
-                americanoPlayerScores: state.americanoPlayerScores,
-                americanoCurrentRound: state.americanoCurrentRound,
-                history: []
-            };
-            timerSeconds = 0;
-            startTimer();
-            updateUI();
-        }
-
-        function toggleFullScreen() {
+        function toggleFullscreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log("Fullscreen error:", err);
-                });
+                document.documentElement.requestFullscreen().catch(() => {});
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
@@ -699,43 +456,320 @@
             }
         }
 
-        function toggleHighContrast() {
-            highContrastActive = !highContrastActive;
-            const body = document.body;
-            if (highContrastActive) {
-                body.classList.remove('bg-slate-950');
-                body.classList.add('bg-black');
-                document.getElementById('team-a-zone').style.background = '#000000';
-                document.getElementById('team-b-zone').style.background = '#000000';
-            } else {
-                body.classList.remove('bg-black');
-                body.classList.add('bg-slate-950');
-                document.getElementById('team-a-zone').style.background = '';
-                document.getElementById('team-b-zone').style.background = '';
-            }
+        function addBonusRound() {
+            let nextIndex = dynamicSchedules.length;
+            
+            // Intelligent Fair Rotation: Find the 4 players with the fewest matches played
+            let sortedByMatches = [...state.americanoPlayers].sort((a, b) => {
+                return state.americanoMatchesPlayed[a] - state.americanoMatchesPlayed[b];
+            });
+
+            // Take the 4 players who have played the least
+            let selectedFour = sortedByMatches.slice(0, 4);
+            let restingTwo = sortedByMatches.slice(4, 6);
+
+            let t1 = [state.americanoPlayers.indexOf(selectedFour[0]), state.americanoPlayers.indexOf(selectedFour[1])];
+            let t2 = [state.americanoPlayers.indexOf(selectedFour[2]), state.americanoPlayers.indexOf(selectedFour[3])];
+            let rest = restingTwo.map(p => state.americanoPlayers.indexOf(p));
+
+            dynamicSchedules.push({
+                t1: t1,
+                t2: t2,
+                rest: rest,
+                label: `Bonus ${nextIndex + 1}`
+            });
+
+            loadRound(nextIndex);
+            updateUI();
         }
 
-        function openSettingsModal() {
-            document.getElementById('input-p1-name').value = state.teamA.p1;
-            document.getElementById('input-p2-name').value = state.teamA.p2;
-            document.getElementById('input-p3-name').value = state.teamB.p1;
-            document.getElementById('input-p4-name').value = state.teamB.p2;
+        function loadRound(roundIdx) {
+            if (roundIdx < 0 || roundIdx >= dynamicSchedules.length) return;
+            state.currentRoundIndex = roundIdx;
+            state.teamA.points = 0;
+            state.teamB.points = 0;
+            state.history = [];
             
-            document.getElementById('custom-target-points-input').value = state.americanoTarget;
-            document.getElementById('target-points-val-label').innerText = state.americanoTarget + " Pkt";
+            if (state.gameMode === 'americano') {
+                let sched = dynamicSchedules[roundIdx];
+                let pNames = state.americanoPlayers;
+                state.currentMatchup = {
+                    t1: [pNames[sched.t1[0]], pNames[sched.t1[1]]],
+                    t2: [pNames[sched.t2[0]], pNames[sched.t2[1]]],
+                    rest: sched.rest.map(idx => pNames[idx])
+                };
+            }
+            updateUI();
+        }
 
-            renderAmericanoInputs();
-            renderAmericanoRoundsButtons();
-            updateModalUI();
+        function updateUI() {
+            const modeBadge = document.getElementById('mode-badge');
+            const subtitle = document.getElementById('header-subtitle');
+            const roundBar = document.getElementById('americano-controls-bar');
+
+            if (state.gameMode === 'americano') {
+                modeBadge.innerText = "Americano";
+                subtitle.innerText = `Pool: 6 Spieler | Ziel: ${state.americanoTarget} Pkt`;
+                roundBar.classList.remove('hidden');
+
+                // Render Round Pills
+                let roundHtml = '';
+                dynamicSchedules.forEach((sched, idx) => {
+                    let active = idx === state.currentRoundIndex;
+                    let btnClass = active 
+                        ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20 border-amber-400' 
+                        : 'bg-slate-800 text-slate-300 font-semibold border-slate-700 hover:bg-slate-700';
+                    roundHtml += `<button onclick="loadRound(${idx})" class="px-3 py-1 rounded-lg text-xs border transition shrink-0 ${btnClass}">${sched.label}</button>`;
+                });
+                document.getElementById('round-pills-container').innerHTML = roundHtml;
+
+                // Names & Rest info
+                document.getElementById('team-a-names').innerText = `${state.currentMatchup.t1[0]} & ${state.currentMatchup.t1[1]}`;
+                document.getElementById('team-b-names').innerText = `${state.currentMatchup.t2[0]} & ${state.currentMatchup.t2[1]}`;
+                document.getElementById('team-a-rest-info').innerText = `Pause: ${state.currentMatchup.rest.join(', ')}`;
+            } else {
+                modeBadge.innerText = "Klassik";
+                subtitle.innerText = "Traditioneller Padel-Modus";
+                roundBar.classList.add('hidden');
+
+                document.getElementById('team-a-names').innerText = state.classicNames.teamA;
+                document.getElementById('team-b-names').innerText = state.classicNames.teamB;
+                document.getElementById('team-a-rest-info').innerText = `Set-Punkte: ${state.teamA.setsWon}`;
+            }
+
+            // Points & Sets
+            document.getElementById('team-a-points').innerText = state.teamA.points;
+            document.getElementById('team-b-points').innerText = state.teamB.points;
+            document.getElementById('team-b-sets-won').innerText = `Set-Punkte: ${state.teamB.setsWon}`;
+
+            document.getElementById('target-points-label').innerText = state.americanoTarget;
+            lucide.createIcons();
+        }
+
+        function incrementScore(team) {
+            state.history.push({
+                aPoints: state.teamA.points,
+                bPoints: state.teamB.points,
+                aSets: state.teamA.setsWon,
+                bSets: state.teamB.setsWon
+            });
+
+            if (team === 'A') {
+                state.teamA.points++;
+            } else {
+                state.teamB.points++;
+            }
+
+            // Check if Americano target reached
+            if (state.gameMode === 'americano') {
+                let total = state.teamA.points + state.teamB.points;
+                if (total >= state.americanoTarget && state.teamA.points !== state.teamB.points) {
+                    commitAmericanoPoints();
+                }
+            }
+
+            updateUI();
+        }
+
+        function commitAmericanoPoints() {
+            let t1Players = state.currentMatchup.t1;
+            let t2Players = state.currentMatchup.t2;
+
+            state.americanoScores[t1Players[0]] += state.teamA.points;
+            state.americanoScores[t1Players[1]] += state.teamA.points;
+            state.americanoScores[t2Players[0]] += state.teamB.points;
+            state.americanoScores[t2Players[1]] += state.teamB.points;
+
+            t1Players.forEach(p => state.americanoMatchesPlayed[p]++);
+            t2Players.forEach(p => state.americanoMatchesPlayed[p]++);
+
+            openLeaderboardModal();
+        }
+
+        function undoScore() {
+            if (state.history.length === 0) return;
+            let last = state.history.pop();
+            state.teamA.points = last.aPoints;
+            state.teamB.points = last.bPoints;
+            state.teamA.setsWon = last.aSets;
+            state.teamB.setsWon = last.bSets;
+            updateUI();
+        }
+
+        function resetCurrentMatch() {
+            state.teamA.points = 0;
+            state.teamB.points = 0;
+            state.history = [];
+            updateUI();
+        }
+
+        // Remote Control Modal Management
+        function openRemoteModal() {
+            let baseUrl = window.location.href.split('?')[0];
+            document.getElementById('remote-link-input').value = baseUrl + "?remote=1";
+            document.getElementById('remote-modal').classList.remove('hidden');
+        }
+
+        function closeRemoteModal() {
+            document.getElementById('remote-modal').classList.add('hidden');
+        }
+
+        // Apple Watch Modal Management
+        function openWatchModal() {
+            let currentUrl = window.location.href.split('?')[0] + "?remote=1";
+            document.getElementById('watch-link-input').value = currentUrl;
+            // Using a reliable public QR API with high error correction
+            let qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(currentUrl)}&color=0f172a&bgcolor=ffffff`;
+            document.getElementById('watch-qrcode').src = qrApiUrl;
+            document.getElementById('watch-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeWatchModal() {
+            document.getElementById('watch-modal').classList.add('hidden');
+        }
+
+        function copyWatchLink() {
+            let input = document.getElementById('watch-link-input');
+            input.select();
+            document.execCommand('copy');
+            alert("Link in die Zwischenablage kopiert!");
+        }
+
+        function copyRemoteLink() {
+            let input = document.getElementById('remote-link-input');
+            input.select();
+            document.execCommand('copy');
+            alert("Link in die Zwischenablage kopiert!");
+        }
+
+        function shareViaMessages() {
+            let currentUrl = window.location.href.split('?')[0] + "?remote=1";
+            let messageText = encodeURIComponent("🎾 Padel Live-Score & Fernbedienung: " + currentUrl);
+            window.location.href = `sms:?body=${messageText}`;
+        }
+
+        function shareViaWhatsApp() {
+            let currentUrl = window.location.href.split('?')[0] + "?remote=1";
+            let messageText = encodeURIComponent("🎾 Padel Live-Score & Fernbedienung: " + currentUrl);
+            window.open(`https://wa.me/?text=${messageText}`, '_blank');
+        }
+
+        function updateRemoteUI() {
+            // Visual feedback sync if needed
+        }
+
+        // Modals management
+        function openSettingsModal() {
             document.getElementById('settings-modal').classList.remove('hidden');
+            if (state.gameMode === 'americano') {
+                document.getElementById('americano-settings-group').classList.remove('hidden');
+                document.getElementById('classic-settings-group').classList.add('hidden');
+                
+                let inputsHtml = '';
+                state.americanoPlayers.forEach((p, i) => {
+                    inputsHtml += `
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Spieler ${i+1}</label>
+                            <input type="text" id="input-player-${i}" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-amber-500" value="${p}">
+                        </div>
+                    `;
+                });
+                document.getElementById('player-inputs-list').innerHTML = inputsHtml;
+
+                [16, 24, 32].forEach(val => {
+                    let btn = document.getElementById(`pts-${val}`);
+                    if (val === state.americanoTarget) {
+                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-amber-500 text-amber-400";
+                    } else {
+                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300";
+                    }
+                });
+
+            } else {
+                document.getElementById('americano-settings-group').classList.add('hidden');
+                document.getElementById('classic-settings-group').classList.remove('hidden');
+            }
         }
 
         function closeSettingsModal() {
             document.getElementById('settings-modal').classList.add('hidden');
         }
 
+        function setGameMode(mode) {
+            state.gameMode = mode;
+            if (mode === 'americano') {
+                document.getElementById('mode-americano-btn').className = "p-3 rounded-2xl font-bold text-sm border transition flex items-center justify-center gap-2 bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20";
+                document.getElementById('mode-classic-btn').className = "p-3 rounded-2xl font-bold text-sm border transition flex items-center justify-center gap-2 bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800";
+                document.getElementById('americano-settings-group').classList.remove('hidden');
+                document.getElementById('classic-settings-group').classList.add('hidden');
+            } else {
+                document.getElementById('mode-classic-btn').className = "p-3 rounded-2xl font-bold text-sm border transition flex items-center justify-center gap-2 bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20";
+                document.getElementById('mode-americano-btn').className = "p-3 rounded-2xl font-bold text-sm border transition flex items-center justify-center gap-2 bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800";
+                document.getElementById('classic-settings-group').classList.remove('hidden');
+                document.getElementById('americano-settings-group').classList.add('hidden');
+            }
+        }
+
+        function setTargetPoints(pts) {
+            state.americanoTarget = pts;
+            [16, 24, 32].forEach(val => {
+                let btn = document.getElementById(`pts-${val}`);
+                if (btn) {
+                    if (val === pts) {
+                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-amber-500 text-amber-400";
+                    } else {
+                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300";
+                    }
+                }
+            });
+        }
+
+        function saveSettings() {
+            if (state.gameMode === 'classic') {
+                state.classicNames.teamA = document.getElementById('input-classic-team-a').value || "Team 1";
+                state.classicNames.teamB = document.getElementById('input-classic-team-b').value || "Team 2";
+            } else {
+                let oldPlayers = [...state.americanoPlayers];
+                let newPlayers = [];
+                let newScores = {};
+                let newMatches = {};
+                
+                for (let i = 0; i < 6; i++) {
+                    let pName = document.getElementById(`input-player-${i}`).value || `Spieler ${i+1}`;
+                    newPlayers.push(pName);
+                    newScores[pName] = state.americanoScores[oldPlayers[i]] || 0;
+                    newMatches[pName] = state.americanoMatchesPlayed[oldPlayers[i]] || 0;
+                }
+                state.americanoPlayers = newPlayers;
+                state.americanoScores = newScores;
+                state.americanoMatchesPlayed = newMatches;
+                loadRound(state.currentRoundIndex);
+            }
+            closeSettingsModal();
+            updateUI();
+        }
+
         function openLeaderboardModal() {
-            renderLeaderboard();
+            let listHtml = '';
+            let sorted = [...state.americanoPlayers].sort((a, b) => state.americanoScores[b] - state.americanoScores[a]);
+            
+            sorted.forEach((player, idx) => {
+                let badgeColor = idx === 0 ? 'bg-amber-500 text-slate-950 font-black' : (idx === 1 ? 'bg-slate-300 text-slate-950 font-bold' : (idx === 2 ? 'bg-amber-700 text-white font-bold' : 'bg-slate-800 text-slate-300'));
+                listHtml += `
+                    <div class="flex items-center justify-between bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-xl flex items-center justify-center text-xs ${badgeColor}">${idx + 1}</span>
+                            <div>
+                                <span class="font-extrabold text-white text-base block">${player}</span>
+                                <span class="text-[10px] text-slate-400">Gespielte Matches: ${state.americanoMatchesPlayed[player]}</span>
+                            </div>
+                        </div>
+                        <span class="font-black text-amber-400 text-lg">${state.americanoScores[player]} <span class="text-xs text-slate-400 font-normal">Pkt</span></span>
+                    </div>
+                `;
+            });
+            document.getElementById('leaderboard-list').innerHTML = listHtml;
             document.getElementById('leaderboard-modal').classList.remove('hidden');
         }
 
@@ -743,267 +777,12 @@
             document.getElementById('leaderboard-modal').classList.add('hidden');
         }
 
-        function renderLeaderboard() {
-            const container = document.getElementById('leaderboard-list');
-            container.innerHTML = '';
-
-            // Sort players by accumulated score descending
-            let playersArray = [];
-            let activeCount = state.americanoPoolSize;
-            for (let i = 0; i < activeCount; i++) {
-                let name = state.americanoPlayers[i];
-                let score = state.americanoPlayerScores[name] || 0;
-                playersArray.push({ name, score });
-            }
-            playersArray.sort((a, b) => b.score - a.score);
-
-            playersArray.forEach((p, index) => {
-                let div = document.createElement('div');
-                let rankBadgeBg = index === 0 ? 'bg-amber-500 text-slate-950' : index === 1 ? 'bg-slate-300 text-slate-950' : index === 2 ? 'bg-amber-700 text-slate-100' : 'bg-slate-800 text-slate-400';
-                div.className = "flex items-center justify-between p-3 rounded-2xl bg-slate-950 border border-slate-800";
-                div.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-xl font-black text-sm flex items-center justify-center ${rankBadgeBg}">
-                            #${index + 1}
-                        </div>
-                        <span class="font-bold text-slate-200 text-base">${p.name}</span>
-                    </div>
-                    <div class="font-black text-amber-400 text-xl font-mono">${p.score} Pkt</div>
-                `;
-                container.appendChild(div);
+        function resetLeaderboard() {
+            state.americanoPlayers.forEach(p => {
+                state.americanoScores[p] = 0;
+                state.americanoMatchesPlayed[p] = 0;
             });
-        }
-
-        function resetAmericanoScores() {
-            if (confirm("Möchtest du die gesamte Rangliste auf 0 zurücksetzen?")) {
-                let activeCount = state.americanoPoolSize;
-                for (let i = 0; i < activeCount; i++) {
-                    state.americanoPlayerScores[state.americanoPlayers[i]] = 0;
-                }
-                renderLeaderboard();
-            }
-        }
-
-        function setGameMode(mode) {
-            state.gameMode = mode;
-            updateModalUI();
-        }
-
-        function setAmericanoPlayerPool(size) {
-            state.americanoPoolSize = size;
-            state.americanoCurrentRound = 0;
-            loadAmericanoRound(0);
-            renderAmericanoInputs();
-            renderAmericanoRoundsButtons();
-            updateModalUI();
-        }
-
-        function setAmericanoPoints(pts) {
-            state.americanoTarget = pts;
-            document.getElementById('custom-target-points-input').value = pts;
-            document.getElementById('target-points-val-label').innerText = pts + " Pkt";
-            updateModalUI();
-        }
-
-        function applyCustomTargetPoints() {
-            let val = parseInt(document.getElementById('custom-target-points-input').value);
-            if (val && val > 0) {
-                state.americanoTarget = val;
-                document.getElementById('target-points-val-label').innerText = val + " Pkt";
-                updateModalUI();
-            }
-        }
-
-        function setGoldenPointRule(val) {
-            state.goldenPoint = val;
-            updateModalUI();
-        }
-
-        function setBestOf(num) {
-            state.bestOfSets = num;
-            updateModalUI();
-        }
-
-        function renderAmericanoInputs() {
-            const container = document.getElementById('americano-inputs-list');
-            container.innerHTML = '';
-            let count = state.americanoPoolSize;
-            for (let i = 0; i < count; i++) {
-                let div = document.createElement('div');
-                div.innerHTML = `
-                    <span class="block text-[10px] uppercase text-slate-400 font-bold mb-1">Spieler ${i + 1}</span>
-                    <input type="text" id="americano-p-${i}" value="${state.americanoPlayers[i] || ('Spieler ' + (i+1))}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-amber-400 font-extrabold focus:outline-none focus:ring-2 focus:ring-amber-500">
-                `;
-                container.appendChild(div);
-            }
-        }
-
-        function renderAmericanoRoundsButtons() {
-            const container = document.getElementById('rounds-buttons-container');
-            container.innerHTML = '';
-            let totalRounds = state.americanoPoolSize;
-            for (let r = 0; r < totalRounds; r++) {
-                let btn = document.createElement('button');
-                btn.type = 'button';
-                btn.innerText = `Runde ${r + 1}`;
-                btn.className = `p-2 rounded-xl text-xs font-bold border transition text-center ${r === state.americanoCurrentRound ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'}`;
-                btn.onclick = () => loadAmericanoRound(r);
-                container.appendChild(btn);
-            }
-            document.getElementById('current-round-indicator').innerText = `Runde ${state.americanoCurrentRound + 1} von ${totalRounds}`;
-        }
-
-        function loadAmericanoRound(roundIdx) {
-            state.americanoCurrentRound = roundIdx;
-            let schedule = americanoSchedules[state.americanoPoolSize][roundIdx];
-            
-            gatherAmericanoNamesFromInputs();
-
-            state.teamA.p1 = state.americanoPlayers[schedule.t1[0]];
-            state.teamA.p2 = state.americanoPlayers[schedule.t1[1]];
-            state.teamB.p1 = state.americanoPlayers[schedule.t2[0]];
-            state.teamB.p2 = state.americanoPlayers[schedule.t2[1]];
-
-            state.teamA.points = 0;
-            state.teamB.points = 0;
-            state.server = 'A';
-
-            renderAmericanoRoundsButtons();
-            updateModalUI();
-        }
-
-        function gatherAmericanoNamesFromInputs() {
-            let count = state.americanoPoolSize;
-            for (let i = 0; i < count; i++) {
-                let input = document.getElementById(`americano-p-${i}`);
-                if (input && input.value.trim()) {
-                    let oldName = state.americanoPlayers[i];
-                    let newName = input.value.trim();
-                    if (oldName !== newName && state.americanoPlayerScores[oldName] !== undefined) {
-                        state.americanoPlayerScores[newName] = state.americanoPlayerScores[oldName];
-                        delete state.americanoPlayerScores[oldName];
-                    }
-                    state.americanoPlayers[i] = newName;
-                    if (state.americanoPlayerScores[newName] === undefined) {
-                        state.americanoPlayerScores[newName] = 0;
-                    }
-                }
-            }
-        }
-
-        function updateModalUI() {
-            const btnClassic = document.getElementById('mode-classic-btn');
-            const btnAmericano = document.getElementById('mode-americano-btn');
-            const americanoOpts = document.getElementById('americano-options');
-            const classicOpts = document.getElementById('classic-options');
-            const classicNamesSetup = document.getElementById('classic-names-setup');
-            const americanoRosterSetup = document.getElementById('americano-roster-setup');
-
-            const btnPool5 = document.getElementById('pool-5-btn');
-            const btnPool6 = document.getElementById('pool-6-btn');
-
-            if (state.americanoPoolSize === 5) {
-                btnPool5.className = "px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 border border-amber-500 text-amber-400";
-                btnPool6.className = "px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300";
-            } else {
-                btnPool6.className = "px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 border border-amber-500 text-amber-400";
-                btnPool5.className = "px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300";
-            }
-
-            if (state.gameMode === 'americano') {
-                btnAmericano.className = "p-3 rounded-2xl text-xs font-bold border border-amber-500 bg-amber-500/20 text-amber-400 text-center flex flex-col items-center justify-center space-y-1";
-                btnClassic.className = "p-3 rounded-2xl text-xs font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center flex flex-col items-center justify-center space-y-1";
-                americanoOpts.classList.remove('hidden');
-                classicOpts.classList.add('hidden');
-                classicNamesSetup.classList.add('hidden');
-                americanoRosterSetup.classList.remove('hidden');
-            } else {
-                btnClassic.className = "p-3 rounded-2xl text-xs font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center flex flex-col items-center justify-center space-y-1";
-                btnAmericano.className = "p-3 rounded-2xl text-xs font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center flex flex-col items-center justify-center space-y-1";
-                americanoOpts.classList.add('hidden');
-                classicOpts.classList.remove('hidden');
-                classicNamesSetup.classList.remove('hidden');
-                americanoRosterSetup.classList.add('hidden');
-            }
-
-            document.querySelectorAll('.americano-pt-btn').forEach(btn => {
-                let pts = parseInt(btn.innerText);
-                if (pts === state.americanoTarget) {
-                    btn.className = "americano-pt-btn p-2 rounded-xl text-xs font-bold border border-amber-500 bg-amber-500/20 text-amber-400 text-center";
-                } else {
-                    btn.className = "americano-pt-btn p-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 text-center";
-                }
-            });
-
-            const btnGolden = document.getElementById('modal-rule-golden');
-            const btnAdv = document.getElementById('modal-rule-advantage');
-            if (state.goldenPoint) {
-                btnGolden.className = "p-2.5 rounded-xl font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center text-xs";
-                btnAdv.className = "p-2.5 rounded-xl font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center text-xs";
-            } else {
-                btnAdv.className = "p-2.5 rounded-xl font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center text-xs";
-                btnGolden.className = "p-2.5 rounded-xl font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center text-xs";
-            }
-
-            const btnSets3 = document.getElementById('modal-sets-3');
-            const btnSets1 = document.getElementById('modal-sets-1');
-            if (state.bestOfSets === 3) {
-                btnSets3.className = "p-2.5 rounded-xl font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center text-xs";
-                btnSets1.className = "p-2.5 rounded-xl font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center text-xs";
-            } else {
-                btnSets1.className = "p-2.5 rounded-xl font-bold border border-emerald-500 bg-emerald-500/20 text-emerald-400 text-center text-xs";
-                btnSets3.className = "p-2.5 rounded-xl font-bold border border-slate-700 bg-slate-800 text-slate-300 text-center text-xs";
-            }
-        }
-
-        function applySettings() {
-            if (state.gameMode === 'classic') {
-                let p1 = document.getElementById('input-p1-name').value.trim();
-                let p2 = document.getElementById('input-p2-name').value.trim();
-                let p3 = document.getElementById('input-p3-name').value.trim();
-                let p4 = document.getElementById('input-p4-name').value.trim();
-
-                if (p1) state.teamA.p1 = p1;
-                if (p2) state.teamA.p2 = p2;
-                if (p3) state.teamB.p1 = p3;
-                if (p4) state.teamB.p2 = p4;
-            } else {
-                gatherAmericanoNamesFromInputs();
-                loadAmericanoRound(state.americanoCurrentRound);
-            }
-
-            closeSettingsModal();
-            updateUI();
-        }
-
-        function showWinnerModal(winningTeam) {
-            let pairName = winningTeam === 'A' ? `${state.teamA.p1} & ${state.teamA.p2}` : `${state.teamB.p1} & ${state.teamB.p2}`;
-            document.getElementById('winner-announcement').innerText = `${pairName} gewinnt das Match!`;
-            
-            let summary = state.gameMode === 'americano' 
-                ? `Endstand Runde ${state.americanoCurrentRound + 1}: ${state.teamA.points} : ${state.teamB.points} Punkte`
-                : `Satzverlauf: ${state.teamA.setsWon.join(', ')} : ${state.teamB.setsWon.join(', ')}`;
-            
-            document.getElementById('final-score-summary').innerText = summary;
-            document.getElementById('winner-modal').classList.remove('hidden');
-            if (timerInterval) clearInterval(timerInterval);
-        }
-
-        function closeWinnerModal() {
-            document.getElementById('winner-modal').classList.add('hidden');
-        }
-
-        function handleWinnerModalDismiss() {
-            closeWinnerModal();
-            if (state.gameMode === 'americano') {
-                // Automatically advance to next round if available
-                let nextRound = (state.americanoCurrentRound + 1) % state.americanoPoolSize;
-                loadAmericanoRound(nextRound);
-                openLeaderboardModal();
-            } else {
-                resetMatch();
-                openSettingsModal();
-            }
+            openLeaderboardModal();
         }
     </script>
 </body>
