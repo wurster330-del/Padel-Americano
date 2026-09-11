@@ -1,1 +1,834 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Padel Arena Pro - Scoreboard & Remote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        padel: {
+                            green: '#10b981',
+                            dark: '#090d16',
+                            card: '#131c2e',
+                            border: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .touch-zone {
+            transition: transform 0.08s ease, background-color 0.15s ease;
+        }
+        .touch-zone:active {
+            transform: scale(0.97);
+        }
+        ::-webkit-scrollbar {
+            height: 4px;
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
 
+    <header id="main-header" class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-slate-950 font-black text-xl">
+                    <i data-lucide="trophy" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white">Padel Arena Pro</h1>
+                        <span id="mode-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Americano</span>
+                    </div>
+                    <p id="header-subtitle" class="text-xs text-slate-400 font-medium">Pool: 6 Spieler (Werner, Tobias, Chris, Stefan, David, Marco)</p>
+                </div>
+            </div>
+
+            <!-- Top Actions -->
+            <div class="flex items-center gap-2">
+                <button onclick="toggleHighContrast()" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 transition" title="High Contrast Outdoor Mode">
+                    <i data-lucide="sun" class="w-4 h-4"></i>
+                </button>
+                <button onclick="openRemoteModal()" class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20 transition flex items-center gap-1.5 text-xs font-bold" title="Fernbedienungs-Optionen">
+                    <i data-lucide="smartphone" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Fernbedienung & Klicker</span>
+                </button>
+                <button onclick="openSettings()" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 transition" title="Einstellungen & Spieler">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="americano-controls-bar" class="bg-slate-900/60 border-b border-slate-800/80 px-4 py-2.5">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-3 overflow-x-auto py-1">
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-400"></i> Runden:
+                </span>
+            </div>
+            <div id="round-pills-container" class="flex items-center gap-2 overflow-x-auto">
+                <!-- Dynamically populated round buttons -->
+            </div>
+            <button onclick="addBonusRound()" class="shrink-0 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-sm">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Fair Bonus-Runde
+            </button>
+        </div>
+    </div>
+
+    <main id="main-arena-view" class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col justify-between gap-4">
+        
+        <!-- Timer & Match Status Bar -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex items-center justify-between shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-2">
+                    <i data-lucide="timer" class="w-4 h-4 text-amber-400"></i>
+                    <span id="match-timer" class="font-mono font-bold text-sm text-white">00:00</span>
+                </div>
+                <button onclick="toggleTimer()" id="timer-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 transition">
+                    Start
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="undoScore()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-1">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Rückgängig
+                </button>
+                <button onclick="resetMatchPoints()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+                    Satz Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Scoreboard Grid (Team 1 vs Team 2) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+            
+            <!-- TEAM 1 (PAIR A) -->
+            <div class="touch-zone bg-gradient-to-b from-amber-500/10 to-slate-900 border-2 border-amber-500/30 hover:border-amber-500/60 rounded-3xl p-6 flex flex-col justify-between shadow-xl cursor-pointer relative overflow-hidden group" onclick="incrementScore('A')">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-full pointer-events-none"></div>
+                
+                <div class="flex justify-between items-start">
+                    <span class="px-3 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black uppercase tracking-wider">
+                        Team 1
+                    </span>
+                    <span id="team-a-rest-info" class="text-xs text-slate-400 font-medium">Pause: -</span>
+                </div>
+
+                <div class="my-6 text-center">
+                    <h2 id="team-a-names" class="text-2xl sm:text-3xl font-black text-white tracking-tight mb-1">Werner & Tobias</h2>
+                    <p class="text-xs text-amber-400/80 font-bold uppercase tracking-widest">Tippen zum Punkt hinzufügen (+1)</p>
+                </div>
+
+                <div class="flex items-center justify-center gap-4">
+                    <div class="text-8xl sm:text-9xl font-black text-white tracking-tighter" id="team-a-points">0</div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs text-slate-400 font-semibold">
+                    <span>Gesamt-Score (Ziel: <span id="target-points-label">32</span> Pkt)</span>
+                    <button onclick="event.stopPropagation(); decrementScore('A')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+                        <i data-lucide="minus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TEAM 2 (PAIR B) -->
+            <div class="touch-zone bg-gradient-to-b from-sky-500/10 to-slate-900 border-2 border-sky-500/30 hover:border-sky-500/60 rounded-3xl p-6 flex flex-col justify-between shadow-xl cursor-pointer relative overflow-hidden group" onclick="incrementScore('B')">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-bl-full pointer-events-none"></div>
+                
+                <div class="flex justify-between items-start">
+                    <span class="px-3 py-1 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs font-black uppercase tracking-wider">
+                        Team 2
+                    </span>
+                    <span id="team-b-rest-info" class="text-xs text-slate-400 font-medium">Pause: -</span>
+                </div>
+
+                <div class="my-6 text-center">
+                    <h2 id="team-b-names" class="text-2xl sm:text-3xl font-black text-white tracking-tight mb-1">Chris & Stefan</h2>
+                    <p class="text-xs text-sky-400/80 font-bold uppercase tracking-widest">Tippen zum Punkt hinzufügen (+1)</p>
+                </div>
+
+                <div class="flex items-center justify-center gap-4">
+                    <div class="text-8xl sm:text-9xl font-black text-white tracking-tighter" id="team-b-points">0</div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs text-slate-400 font-semibold">
+                    <span>Gesamt-Score</span>
+                    <button onclick="event.stopPropagation(); decrementScore('B')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+                        <i data-lucide="minus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- LIVE LEADERBOARD (RANGLISTE) -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 shadow-lg">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+                <h3 class="font-extrabold text-sm uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                    <i data-lucide="award" class="w-4 h-4"></i> Live Rangliste (Americano 6 Spieler)
+                </h3>
+                <span class="text-xs text-slate-400 font-medium">Aktualisiert automatisch</span>
+            </div>
+            <div id="leaderboard-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                <!-- Dynamically generated player ranking cards -->
+            </div>
+        </div>
+
+    </main>
+
+    <div id="watch-remote-standalone" class="fixed inset-0 bg-slate-950 z-50 hidden flex-col p-4 justify-between select-none">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <span class="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-1">
+                <i data-lucide="smartphone" class="w-4 h-4"></i> Fernbedienung (Aktiv verbunden)
+            </span>
+            <button onclick="closeWatchRemoteView()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition">Zurück zum iPad-Scoreboard</button>
+        </div>
+
+        <!-- Remote Touch Grid -->
+        <div class="flex-1 grid grid-rows-2 gap-3 my-3">
+            <!-- Team 1 Remote Button -->
+            <button onclick="incrementScore('A');" class="touch-zone bg-amber-500/25 active:bg-amber-500/50 border-2 border-amber-500/60 rounded-3xl p-4 flex flex-col justify-center items-center text-center cursor-pointer shadow-xl">
+                <span class="text-xs uppercase font-extrabold text-amber-300 truncate w-full" id="watch-team-a-name">Team 1</span>
+                <span class="text-7xl sm:text-8xl font-black text-white my-1" id="watch-team-a-pts">0</span>
+                <span class="text-xs font-bold text-amber-300 bg-amber-500/30 px-4 py-1 rounded-full">+1 Punkt für Team 1 hinzufügen</span>
+            </button>
+
+            <!-- Team 2 Remote Button -->
+            <button onclick="incrementScore('B');" class="touch-zone bg-sky-500/25 active:bg-sky-500/50 border-2 border-sky-500/60 rounded-3xl p-4 flex flex-col justify-center items-center text-center cursor-pointer shadow-xl">
+                <span class="text-xs uppercase font-extrabold text-sky-300 truncate w-full" id="watch-team-b-name">Team 2</span>
+                <span class="text-7xl sm:text-8xl font-black text-white my-1" id="watch-team-b-pts">0</span>
+                <span class="text-xs font-bold text-sky-300 bg-sky-500/30 px-4 py-1 rounded-full">+1 Punkt für Team 2 hinzufügen</span>
+            </button>
+        </div>
+
+        <div class="flex gap-3 pt-2 border-t border-slate-800">
+            <button onclick="undoScore();" class="flex-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 py-3.5 rounded-2xl text-xs font-bold transition">
+                Rückgängig (-1)
+            </button>
+            <button onclick="resetMatchPoints();" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 px-6 py-3.5 rounded-2xl text-xs font-bold transition">
+                Satz Reset
+            </button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-black text-lg text-white flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-emerald-400"></i> Turnier Einstellungen
+                </h3>
+                <button onclick="closeSettings()" class="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Spielmodus</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setGameMode('americano')" id="mode-americano-btn" class="py-2.5 px-4 rounded-xl text-xs font-bold border transition bg-emerald-500 text-slate-950 border-emerald-400">
+                            Americano (6 Spieler)
+                        </button>
+                        <button onclick="setGameMode('classic')" id="mode-classic-btn" class="py-2.5 px-4 rounded-xl text-xs font-bold border transition bg-slate-800 text-slate-300 border-slate-700">
+                            Klassik Match
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Zielpunkte pro Runde</label>
+                    <select id="target-points-select" onchange="changeTargetPoints(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-emerald-500">
+                        <option value="16">16 Punkte</option>
+                        <option value="24">24 Punkte</option>
+                        <option value="32" selected>32 Punkte (Standard)</option>
+                        <option value="40">40 Punkte</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Teilnehmer (Fest fixiert)</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" readonly value="Werner" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-400">
+                        <input type="text" readonly value="Tobias" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-400">
+                        <input type="text" readonly value="Chris" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-400">
+                        <input type="text" readonly value="Stefan" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-400">
+                        <input type="text" readonly value="David" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-400">
+                        <input type="text" readonly value="Marco" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-400">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-slate-800">
+                <button onclick="resetTournamentData()" class="flex-1 bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20 py-3 rounded-2xl text-xs font-bold transition">
+                    Turnier Reset
+                </button>
+                <button onclick="closeSettings()" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3 rounded-2xl text-xs font-bold transition">
+                    Speichern & Schließen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="remote-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 text-left max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-black text-base text-white flex items-center gap-2">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-cyan-400"></i> Fernbedienung & Bluetooth-Klicker
+                </h3>
+                <button onclick="closeRemoteModal()" class="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="py-1 flex flex-col gap-4">
+                <!-- Option 1: Smartphone / iPhone Remote Link -->
+                <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 w-full">
+                    <h4 class="font-bold text-sm text-cyan-400 mb-1 flex items-center gap-2">
+                        <i data-lucide="smartphone" class="w-4 h-4"></i> 1. Smartphone in der Hosentasche als Remote
+                    </h4>
+                    <p class="text-xs text-slate-400 mb-3">Öffne diesen Link auf einem beliebigen Smartphone am Platz (synchronisiert sekundendünn mit dem iPad):</p>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="watch-link-input" readonly class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 font-mono select-all">
+                        <button onclick="copyWatchLink()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-3 py-2 rounded-xl text-xs font-bold shrink-0 transition">
+                            Kopieren
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openDirectRemoteModeOnThisDevice()" class="flex-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 py-2.5 rounded-xl text-xs font-bold transition">
+                            Auf diesem Gerät als Remote öffnen
+                        </button>
+                        <button onclick="shareViaWhatsApp()" class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                            <i data-lucide="share-2" class="w-4 h-4"></i> WhatsApp
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Option 2: Bluetooth Presentation Clicker (Amazon) -->
+                <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 w-full">
+                    <div class="flex justify-between items-start mb-1">
+                        <h4 class="font-bold text-sm text-amber-400 flex items-center gap-2">
+                            <i data-lucide="bluetooth" class="w-4 h-4"></i> 2. Bluetooth-Präsentationsklicker (z.B. von Amazon)
+                        </h4>
+                        <a href="https://www.amazon.de/s?k=Bluetooth+Pr%C3%A4sentationsklicker" target="_blank" class="text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-2 py-1 rounded-lg border border-amber-500/30 font-bold flex items-center gap-1 transition">
+                            <i data-lucide="external-link" class="w-3 h-3"></i> Bei Amazon ansehen
+                        </a>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-2">Ja! Du kannst günstige Bluetooth-Präsentationsklicker (meist unter 10–15 € bei Amazon) oder Bluetooth-Medienkanten via Bluetooth mit deinem iPad Air/Pro koppeln. Sie funktionieren sofort perfekt aus der Hosentasche:</p>
+                    <ul class="text-xs text-slate-300 space-y-1 bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <li>• <strong class="text-white">Pfeil-Rechts / Leertaste / Lauter (+):</strong> +1 Punkt für Team 1</li>
+                        <li>• <strong class="text-white">Pfeil-Links / Leiser (-):</strong> +1 Punkt für Team 2</li>
+                        <li>• <strong class="text-white">R-Taste:</strong> Letzten Punkt rückgängig machen</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button onclick="closeRemoteModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-2xl text-xs font-bold transition">
+                Schließen
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global State (Fixed 6 Players: Werner, Tobias, Chris, Stefan, David, Marco)
+        let state = {
+            gameMode: 'americano',
+            americanoTarget: 32,
+            players: ["Werner", "Tobias", "Chris", "Stefan", "David", "Marco"],
+            currentRoundIndex: 0,
+            roundPointsRecorded: {},
+            matchHistory: [],
+            teamA: { points: 0 },
+            teamB: { points: 0 },
+            classicNames: { teamA: "Team A", teamB: "Team B" },
+            timerSeconds: 0,
+            timerRunning: false,
+            highContrast: false
+        };
+
+        let timerInterval = null;
+        let roundsSchedule = [];
+
+        // Generate Americano 6-player schedule (Fair initial 6 rounds)
+        function generateAmericanoSchedule() {
+            roundsSchedule = [
+                { label: "Runde 1", t1: [state.players[0], state.players[1]], t2: [state.players[2], state.players[3]], rest: [state.players[4], state.players[5]] },
+                { label: "Runde 2", t1: [state.players[4], state.players[5]], t2: [state.players[0], state.players[2]], rest: [state.players[1], state.players[3]] },
+                { label: "Runde 3", t1: [state.players[1], state.players[3]], t2: [state.players[4], state.players[2]], rest: [state.players[0], state.players[5]] },
+                { label: "Runde 4", t1: [state.players[0], state.players[5]], t2: [state.players[1], state.players[4]], rest: [state.players[2], state.players[3]] },
+                { label: "Runde 5", t1: [state.players[2], state.players[3]], t2: [state.players[0], state.players[4]], rest: [state.players[1], state.players[5]] },
+                { label: "Runde 6", t1: [state.players[1], state.players[5]], t2: [state.players[2], state.players[4]], rest: [state.players[0], state.players[3]] }
+            ];
+        }
+
+        // Fair Bonus Rounds: prioritize players who played least
+        function addBonusRound() {
+            saveCurrentRoundScore();
+
+            let playCounts = {};
+            state.players.forEach(p => playCounts[p] = 0);
+            roundsSchedule.forEach(r => {
+                r.t1.forEach(p => { if(playCounts[p] !== undefined) playCounts[p]++; });
+                r.t2.forEach(p => { if(playCounts[p] !== undefined) playCounts[p]++; });
+            });
+
+            let sortedByRest = [...state.players].sort((a, b) => playCounts[a] - playCounts[b]);
+            
+            let newRound = {
+                label: `Runde ${roundsSchedule.length + 1}`,
+                t1: [sortedByRest[0], sortedByRest[1]],
+                t2: [sortedByRest[2], sortedByRest[3]],
+                rest: [sortedByRest[4], sortedByRest[5]]
+            };
+
+            roundsSchedule.push(newRound);
+            loadRound(roundsSchedule.length - 1);
+        }
+
+        function saveCurrentRoundScore() {
+            state.roundPointsRecorded[state.currentRoundIndex] = {
+                teamA: state.teamA.points,
+                teamB: state.teamB.points
+            };
+        }
+
+        function loadRound(index) {
+            if (index < 0 || index >= roundsSchedule.length) return;
+            saveCurrentRoundScore();
+            state.currentRoundIndex = index;
+            
+            let recorded = state.roundPointsRecorded[index];
+            if (recorded) {
+                state.teamA.points = recorded.teamA;
+                state.teamB.points = recorded.teamB;
+            } else {
+                state.teamA.points = 0;
+                state.teamB.points = 0;
+            }
+            state.matchHistory = [];
+            updateUI();
+        }
+
+        function getCurrentMatchup() {
+            if (roundsSchedule.length === 0) generateAmericanoSchedule();
+            return roundsSchedule[state.currentRoundIndex] || roundsSchedule[0];
+        }
+
+        function incrementScore(team) {
+            state.matchHistory.push({
+                teamA: state.teamA.points,
+                teamB: state.teamB.points
+            });
+
+            if (team === 'A') {
+                if (state.teamA.points + state.teamB.points < state.americanoTarget || state.gameMode === 'classic') {
+                    state.teamA.points++;
+                }
+            } else {
+                if (state.teamA.points + state.teamB.points < state.americanoTarget || state.gameMode === 'classic') {
+                    state.teamB.points++;
+                }
+            }
+            saveCurrentRoundScore();
+            updateUI();
+            
+            try {
+                localStorage.setItem('padel_live_state', JSON.stringify({
+                    teamA: state.teamA.points,
+                    teamB: state.teamB.points,
+                    round: state.currentRoundIndex,
+                    time: Date.now()
+                }));
+            } catch(e) {}
+        }
+
+        function decrementScore(team) {
+            if (team === 'A' && state.teamA.points > 0) {
+                state.teamA.points--;
+            } else if (team === 'B' && state.teamB.points > 0) {
+                state.teamB.points--;
+            }
+            saveCurrentRoundScore();
+            updateUI();
+            
+            try {
+                localStorage.setItem('padel_live_state', JSON.stringify({
+                    teamA: state.teamA.points,
+                    teamB: state.teamB.points,
+                    round: state.currentRoundIndex,
+                    time: Date.now()
+                }));
+            } catch(e) {}
+        }
+
+        function undoScore() {
+            if (state.matchHistory.length > 0) {
+                let lastState = state.matchHistory.pop();
+                state.teamA.points = lastState.teamA;
+                state.teamB.points = lastState.teamB;
+                saveCurrentRoundScore();
+                updateUI();
+                
+                try {
+                    localStorage.setItem('padel_live_state', JSON.stringify({
+                        teamA: state.teamA.points,
+                        teamB: state.teamB.points,
+                        round: state.currentRoundIndex,
+                        time: Date.now()
+                    }));
+                } catch(e) {}
+            }
+        }
+
+        function resetMatchPoints() {
+            state.matchHistory.push({ teamA: state.teamA.points, teamB: state.teamB.points });
+            state.teamA.points = 0;
+            state.teamB.points = 0;
+            saveCurrentRoundScore();
+            updateUI();
+            
+            try {
+                localStorage.setItem('padel_live_state', JSON.stringify({
+                    teamA: state.teamA.points,
+                    teamB: state.teamB.points,
+                    round: state.currentRoundIndex,
+                    time: Date.now()
+                }));
+            } catch(e) {}
+        }
+
+        function calculatePlayerLeaderboard() {
+            let playerPoints = {};
+            state.players.forEach(p => playerPoints[p] = 0);
+
+            roundsSchedule.forEach((sched, idx) => {
+                let rec = state.roundPointsRecorded[idx];
+                if (rec) {
+                    let ptsA = rec.teamA;
+                    let ptsB = rec.teamB;
+                    sched.t1.forEach(p => { playerPoints[p] += ptsA; });
+                    sched.t2.forEach(p => { playerPoints[p] += ptsB; });
+                }
+            });
+
+            let ranking = state.players.map(p => ({ name: p, points: playerPoints[p] }));
+            ranking.sort((a, b) => b.points - a.points);
+            return ranking;
+        }
+
+        function updateUI() {
+            const modeBadge = document.getElementById('mode-badge');
+            const subtitle = document.getElementById('header-subtitle');
+            const roundBar = document.getElementById('americano-controls-bar');
+
+            let matchup = getCurrentMatchup();
+
+            if (state.gameMode === 'americano') {
+                if (modeBadge) modeBadge.innerText = "Americano";
+                if (subtitle) subtitle.innerText = `Pool: 6 Spieler | Ziel: ${state.americanoTarget} Pkt`;
+                if (roundBar) roundBar.classList.remove('hidden');
+
+                let roundHtml = '';
+                roundsSchedule.forEach((sched, idx) => {
+                    let active = idx === state.currentRoundIndex;
+                    let btnClass = active 
+                        ? 'bg-emerald-500 text-slate-950 font-black shadow-md shadow-emerald-500/20 border-emerald-400' 
+                        : 'bg-slate-800 text-slate-300 font-semibold border-slate-700 hover:bg-slate-700';
+                    roundHtml += `<button onclick="loadRound(${idx})" class="px-3 py-1 rounded-xl text-xs border transition shrink-0 ${btnClass}">${sched.label}</button>`;
+                });
+                let pillContainer = document.getElementById('round-pills-container');
+                if (pillContainer) pillContainer.innerHTML = roundHtml;
+
+                let t1Names = document.getElementById('team-a-names');
+                let t2Names = document.getElementById('team-b-names');
+                let t1Rest = document.getElementById('team-a-rest-info');
+                let t2Rest = document.getElementById('team-b-rest-info');
+                if (t1Names) t1Names.innerText = `${matchup.t1[0]} & ${matchup.t1[1]}`;
+                if (t2Names) t2Names.innerText = `${matchup.t2[0]} & ${matchup.t2[1]}`;
+                if (t1Rest) t1Rest.innerText = `Pause: ${matchup.rest.join(', ')}`;
+                if (t2Rest) t2Rest.innerText = `Ziel: ${state.americanoTarget} Pkt`;
+            } else {
+                if (modeBadge) modeBadge.innerText = "Klassik";
+                if (subtitle) subtitle.innerText = "Traditioneller Padel-Modus";
+                if (roundBar) roundBar.classList.add('hidden');
+
+                let t1Names = document.getElementById('team-a-names');
+                let t2Names = document.getElementById('team-b-names');
+                let t1Rest = document.getElementById('team-a-rest-info');
+                let t2Rest = document.getElementById('team-b-rest-info');
+                if (t1Names) t1Names.innerText = state.classicNames.teamA;
+                if (t2Names) t2Names.innerText = state.classicNames.teamB;
+                if (t1Rest) t1Rest.innerText = `Gewinner-Modus`;
+                if (t2Rest) t2Rest.innerText = `Offen`;
+            }
+
+            let t1Pts = document.getElementById('team-a-points');
+            let t2Pts = document.getElementById('team-b-points');
+            let targetLbl = document.getElementById('target-points-label');
+            if (t1Pts) t1Pts.innerText = state.teamA.points;
+            if (t2Pts) t2Pts.innerText = state.teamB.points;
+            if (targetLbl) targetLbl.innerText = state.americanoTarget;
+
+            // Update remote view names & points
+            let watchT1Name = document.getElementById('watch-team-a-name');
+            let watchT2Name = document.getElementById('watch-team-b-name');
+            let watchT1Pts = document.getElementById('watch-team-a-pts');
+            let watchT2Pts = document.getElementById('watch-team-b-pts');
+            if (watchT1Name) watchT1Name.innerText = state.gameMode === 'americano' ? `${matchup.t1[0]} & ${matchup.t1[1]}` : state.classicNames.teamA;
+            if (watchT2Name) watchT2Name.innerText = state.gameMode === 'americano' ? `${matchup.t2[0]} & ${matchup.t2[1]}` : state.classicNames.teamB;
+            if (watchT1Pts) watchT1Pts.innerText = state.teamA.points;
+            if (watchT2Pts) watchT2Pts.innerText = state.teamB.points;
+
+            renderLeaderboard();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function renderLeaderboard() {
+            let container = document.getElementById('leaderboard-container');
+            if (!container) return;
+            let ranking = calculatePlayerLeaderboard();
+            let html = '';
+            
+            ranking.forEach((item, idx) => {
+                html += `
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">#${idx+1} ${item.name}</span>
+                        <span class="text-sm font-black text-emerald-400 mt-1">${item.points} Pkt</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleTimer() {
+            state.timerRunning = !state.timerRunning;
+            let btn = document.getElementById('timer-toggle-btn');
+            if (state.timerRunning) {
+                if (btn) {
+                    btn.innerText = "Pause";
+                    btn.className = "bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-bold transition";
+                }
+                timerInterval = setInterval(() => {
+                    state.timerSeconds++;
+                    let mins = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
+                    let secs = (state.timerSeconds % 60).toString().padStart(2, '0');
+                    let timerEl = document.getElementById('match-timer');
+                    if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+                }, 1000);
+            } else {
+                if (btn) {
+                    btn.innerText = "Start";
+                    btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 transition";
+                }
+                clearInterval(timerInterval);
+            }
+        }
+
+        function openSettings() {
+            let modal = document.getElementById('settings-modal');
+            if (modal) modal.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeSettings() {
+            let modal = document.getElementById('settings-modal');
+            if (modal) modal.classList.add('hidden');
+            updateUI();
+        }
+
+        function setGameMode(mode) {
+            state.gameMode = mode;
+            let modAm = document.getElementById('mode-americano-btn');
+            let modCl = document.getElementById('mode-classic-btn');
+            if (mode === 'americano') {
+                if (modAm) modAm.className = "py-2.5 px-4 rounded-xl text-xs font-bold border transition bg-emerald-500 text-slate-950 border-emerald-400";
+                if (modCl) modCl.className = "py-2.5 px-4 rounded-xl text-xs font-bold border transition bg-slate-800 text-slate-300 border-slate-700";
+            } else {
+                if (modCl) modCl.className = "py-2.5 px-4 rounded-xl text-xs font-bold border transition bg-emerald-500 text-slate-950 border-emerald-400";
+                if (modAm) modAm.className = "py-2.5 px-4 rounded-xl text-xs font-bold border transition bg-slate-800 text-slate-300 border-slate-700";
+            }
+            updateUI();
+        }
+
+        function changeTargetPoints(val) {
+            state.americanoTarget = parseInt(val);
+            updateUI();
+        }
+
+        function resetTournamentData() {
+            state.teamA.points = 0;
+            state.teamB.points = 0;
+            state.matchHistory = [];
+            state.roundPointsRecorded = {};
+            state.timerSeconds = 0;
+            state.timerRunning = false;
+            clearInterval(timerInterval);
+            let timerEl = document.getElementById('match-timer');
+            if (timerEl) timerEl.innerText = "00:00";
+            generateAmericanoSchedule();
+            loadRound(0);
+            closeSettings();
+        }
+
+        function toggleHighContrast() {
+            state.highContrast = !state.highContrast;
+            if (state.highContrast) {
+                document.body.classList.remove('bg-slate-950');
+                document.body.classList.add('bg-black');
+            } else {
+                document.body.classList.remove('bg-black');
+                document.body.classList.add('bg-slate-950');
+            }
+        }
+
+        function openRemoteModal() {
+            let currentUrl = window.location.href.split('?')[0] + "?remote=1";
+            let linkInput = document.getElementById('watch-link-input');
+            if (linkInput) linkInput.value = currentUrl;
+            let modal = document.getElementById('remote-modal');
+            if (modal) modal.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeRemoteModal() {
+            let modal = document.getElementById('remote-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function openDirectRemoteModeOnThisDevice() {
+            closeRemoteModal();
+            const remoteEl = document.getElementById('watch-remote-standalone');
+            if (remoteEl) {
+                remoteEl.classList.remove('hidden');
+                remoteEl.classList.add('flex');
+            }
+        }
+
+        function closeWatchRemoteView() {
+            const remoteEl = document.getElementById('watch-remote-standalone');
+            if (remoteEl) {
+                remoteEl.classList.remove('flex');
+                remoteEl.classList.add('hidden');
+            }
+        }
+
+        function copyWatchLink() {
+            let input = document.getElementById('watch-link-input');
+            if (!input) return;
+            input.select();
+            input.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                alert("Link kopiert!");
+            } catch (err) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(input.value).then(() => {
+                        alert("Link kopiert!");
+                    });
+                }
+            }
+        }
+
+        function shareViaWhatsApp() {
+            let input = document.getElementById('watch-link-input');
+            let url = input ? input.value : window.location.href;
+            let text = encodeURIComponent("Padel Fernbedienung: " + url);
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        // Bluetooth clicker and keyboard shortcuts support
+        window.addEventListener('keydown', (e) => {
+            // Ignore if typing in an input field
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+            if (e.code === 'ArrowRight' || e.code === 'Space' || e.key === '+' || e.key === 'p') {
+                e.preventDefault();
+                incrementScore('A');
+            } else if (e.code === 'ArrowLeft' || e.key === '-' || e.key === 'o') {
+                e.preventDefault();
+                incrementScore('B');
+            } else if (e.code === 'KeyR' || e.key === 'r') {
+                e.preventDefault();
+                undoScore();
+            }
+        });
+
+        // Listen for live updates across devices
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'padel_live_state') {
+                try {
+                    let data = JSON.parse(e.newValue);
+                    if (data) {
+                        state.teamA.points = data.teamA;
+                        state.teamB.points = data.teamB;
+                        if (data.round !== undefined && data.round !== state.currentRoundIndex) {
+                            state.currentRoundIndex = data.round;
+                        }
+                        updateUI();
+                    }
+                } catch(err) {}
+            }
+        });
+
+        window.onload = function() {
+            generateAmericanoSchedule();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('remote') === '1' || urlParams.get('watch') === '1') {
+                const remoteEl = document.getElementById('watch-remote-standalone');
+                const headerEl = document.getElementById('main-header');
+                const controlsEl = document.getElementById('americano-controls-bar');
+                const mainViewEl = document.getElementById('main-arena-view');
+                
+                if (remoteEl) {
+                    remoteEl.classList.remove('hidden');
+                    remoteEl.classList.add('flex');
+                }
+                if (headerEl) headerEl.style.display = 'none';
+                if (controlsEl) controlsEl.style.display = 'none';
+                if (mainViewEl) mainViewEl.style.display = 'none';
+            }
+
+            setInterval(() => {
+                try {
+                    let saved = localStorage.getItem('padel_live_state');
+                    if (saved) {
+                        let data = JSON.parse(saved);
+                        if (data && (data.teamA !== state.teamA.points || data.teamB !== state.teamB.points)) {
+                            state.teamA.points = data.teamA;
+                            state.teamB.points = data.teamB;
+                            updateUI();
+                        }
+                    }
+                } catch(err){}
+            }, 300);
+
+            updateUI();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
