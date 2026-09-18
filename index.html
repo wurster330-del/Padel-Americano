@@ -19,8 +19,8 @@
                     🎾
                 </div>
                 <div>
-                    <h1 class="font-extrabold text-lg tracking-tight text-white">Padel Americano Rotator</h1>
-                    <p class="text-xs text-slate-400">Americano-Zählweise (Ziel: 31) &bull; Feste Namen: Stefan, Marco, Tobias, Chris, David, Werner</p>
+                    <h1 class="font-extrabold text-lg tracking-tight text-white">Padel Match Manager</h1>
+                    <p class="text-xs text-slate-400">Americano & Klassisch (Beste aus 3 Sätzen) &bull; Stefan, Marco, Tobias, Chris, David, Werner</p>
                 </div>
             </div>
             <div id="nav-status" class="text-xs px-3 py-1.5 rounded-full bg-slate-700/60 border border-slate-600/50 font-medium text-emerald-400 flex items-center gap-1.5">
@@ -36,10 +36,31 @@
         <div id="view-setup" class="space-y-6">
             <div class="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-6 shadow-xl backdrop-blur">
                 <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                    <span>👥</span> Americano-Modus & Spieler konfigurieren
+                    <span>👥</span> Spielmodus & Spieler konfigurieren
                 </h2>
-                <p class="text-sm text-slate-400 mb-6">Im <strong>Americano-Modus</strong> spielt jeder mit jedem und gegen jeden. Jedes Match wird bis zu einer Summe von 31 Punkten gespielt. Jeder gewonnene Punkt zählt direkt für die persönliche Einzel-Rangliste!</p>
+                <p class="text-sm text-slate-400 mb-6">Wähle zwischen dem <strong>Americano-Modus</strong> (Ziel: 31 Punkte, Jeder gegen Jeden) oder dem <strong>Klassischen Padel-System</strong> (Best of 3 Sätze, Games bis 6 bzw. Tiebreak bei 6:6).</p>
                 
+                <!-- Game Mode Selector -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Spielmodus auswählen</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="game-mode-buttons">
+                        <button onclick="setGameMode('americano')" data-mode="americano" class="p-4 rounded-xl font-bold border transition-all text-left bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-sm">
+                            <div class="text-base font-extrabold flex items-center justify-between">
+                                <span>⚡ Americano-Modus</span>
+                                <span class="text-xs bg-emerald-500 text-slate-950 px-2 py-0.5 rounded">Punkte bis 31</span>
+                            </div>
+                            <p class="text-xs text-slate-300 mt-1 font-normal">Jeder mit jedem & gegen jeden. Jeder gewonnene Punkt zählt für die Rangliste.</p>
+                        </button>
+                        <button onclick="setGameMode('classic')" data-mode="classic" class="p-4 rounded-xl font-bold border transition-all text-left bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700">
+                            <div class="text-base font-extrabold flex items-center justify-between">
+                                <span>🏆 Klassisches Padel (Sätze)</span>
+                                <span class="text-xs bg-slate-700 text-slate-200 px-2 py-0.5 rounded border border-slate-600">Best of 3</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1 font-normal">Spiele bis 6 Games (bei 6:6 Tiebreak bis 7). Gewinne 2 Sätze zum Matchgewinn.</p>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <!-- Player Count Selector -->
                     <div>
@@ -52,15 +73,24 @@
                         <p class="text-xs text-slate-400 mt-2" id="rotation-info-text">4 Spieler: 120 Min. Gesamtzeit &bull; ca. 6 Runden (je 18 Min.)</p>
                     </div>
 
-                    <!-- Target Points & Total Duration -->
+                    <!-- Target Points / Settings Info -->
                     <div class="space-y-4">
-                        <div>
+                        <div id="setup-americano-settings">
                             <label class="block text-sm font-semibold text-slate-300 mb-2">Ziel-Summe pro Match (Americano)</label>
                             <div class="flex items-center gap-3">
                                 <input type="number" id="target-points" value="31" readonly class="bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-emerald-400 font-bold text-lg w-full focus:outline-none cursor-not-allowed">
                                 <div class="text-xs text-slate-400 whitespace-nowrap">Punkte Gesamt</div>
                             </div>
                             <p class="text-xs text-slate-500 mt-1">Die Punktsumme beider Teams beträgt exakt 31 Punkte.</p>
+                        </div>
+
+                        <div id="setup-classic-settings" class="hidden">
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">Satz- & Game-Regeln (Klassisch)</label>
+                            <div class="bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-emerald-400 font-medium text-xs space-y-1">
+                                <div>• Gewinne <strong>2 Sätze</strong> zum Matchgewinn (Best of 3)</div>
+                                <div>• Satz wird bei <strong>6 Games</strong> gewonnen (Min. 2 Vorsprung, z.B. 6:4)</div>
+                                <div>• Bei 6:6 entscheidet der <strong>Tiebreak</strong> (bis 7 Punkte)</div>
+                            </div>
                         </div>
                         
                         <div class="bg-slate-900/60 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
@@ -76,7 +106,7 @@
                 <!-- Player Name Inputs -->
                 <div class="mb-6">
                     <div class="flex items-center justify-between mb-3">
-                        <label class="block text-sm font-semibold text-slate-300">Spielernamen (Fix installiert & anpassbar)</label>
+                        <label class="block text-sm font-semibold text-slate-300">Spielernamen (Fix: Stefan, Marco, Tobias, Chris, David, Werner)</label>
                         <button onclick="shufflePlayerOrder()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-lg border border-slate-600 transition flex items-center gap-1.5">
                             <span>🔀</span> Reihenfolge mischen
                         </button>
@@ -93,7 +123,7 @@
                 </div>
 
                 <button onclick="startTournament()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 text-base">
-                    <span>🚀</span> Padel Americano-Turnier starten
+                    <span>🚀</span> Padel-Turnier starten
                 </button>
             </div>
         </div>
@@ -132,19 +162,19 @@
             <div class="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-6 shadow-xl backdrop-blur">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <span>🏆</span> Americano Live-Gesamtrangliste
+                        <span>🏆</span> <span id="standings-title-text">Americano Live-Gesamtrangliste</span>
                     </h3>
                     <span class="text-xs text-slate-400">Inklusive Anzahl gespielter Matches & Pausen</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-700 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            <tr id="standings-table-header" class="border-b border-slate-700 text-xs font-bold text-slate-400 uppercase tracking-wider">
                                 <th class="py-3 px-4">Rang & Spieler</th>
                                 <th class="py-3 px-3 text-center">Gespielt (Spiele)</th>
                                 <th class="py-3 px-3 text-center">Pausen</th>
                                 <th class="py-3 px-3 text-center">Siege</th>
-                                <th class="py-3 px-4 text-right">Gesamt-Punkte (Americano)</th>
+                                <th class="py-3 px-4 text-right">Gesamt-Punkte</th>
                             </tr>
                         </thead>
                         <tbody id="standings-table-body" class="divide-y divide-slate-700/50 text-sm">
@@ -180,11 +210,12 @@
     </div>
 
     <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        Padel Americano Rotations-Manager &bull; Feste Spieler: Stefan, Marco, Tobias, Chris, David, Werner &bull; 18 Min. Runden
+        Padel Match Manager &bull; Stefan, Marco, Tobias, Chris, David, Werner &bull; Americano & Klassisch (Best of 3 Sätze)
     </footer>
 
     <script>
         let state = {
+            gameMode: 'americano', // 'americano' or 'classic'
             playerCount: 4,
             targetPoints: 31,
             totalGameTimeMinutes: 120,
@@ -238,7 +269,7 @@
             if (state.matchDayHistory.length > 0) {
                 const last = state.matchDayHistory[state.matchDayHistory.length - 1];
                 box.classList.remove('hidden');
-                textEl.innerHTML = `Datum: <strong>${last.date}</strong> &bull; Runden: ${last.roundsCount} &bull; Pausierende in Runde 1: <strong class="text-amber-400">${last.restingFirstRoundNames}</strong>`;
+                textEl.innerHTML = `Datum: <strong>${last.date}</strong> &bull; Modus: <strong>${last.mode === 'americano' ? 'Americano' : 'Klassisch (Best of 3)'}</strong> &bull; Runden: ${last.roundsCount} &bull; Pausierende in Runde 1: <strong class="text-amber-400">${last.restingFirstRoundNames}</strong>`;
             } else {
                 box.classList.add('hidden');
             }
@@ -250,6 +281,26 @@
             const defaultList = state.defaultNames[state.playerCount] || state.fixedNamesPool;
             return defaultList[id] || `Spieler ${id + 1}`;
         }
+
+        window.setGameMode = function(mode) {
+            state.gameMode = mode;
+            const americanoBtn = document.querySelector('[data-mode="americano"]');
+            const classicBtn = document.querySelector('[data-mode="classic"]');
+            const americanoSettings = document.getElementById('setup-americano-settings');
+            const classicSettings = document.getElementById('setup-classic-settings');
+
+            if (mode === 'americano') {
+                americanoBtn.className = "p-4 rounded-xl font-bold border transition-all text-left bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-sm";
+                classicBtn.className = "p-4 rounded-xl font-bold border transition-all text-left bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700";
+                americanoSettings.classList.remove('hidden');
+                classicSettings.classList.add('hidden');
+            } else {
+                classicBtn.className = "p-4 rounded-xl font-bold border transition-all text-left bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-sm";
+                americanoBtn.className = "p-4 rounded-xl font-bold border transition-all text-left bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700";
+                classicSettings.classList.remove('hidden');
+                americanoSettings.classList.add('hidden');
+            }
+        };
 
         window.setPlayerCount = function(count) {
             state.playerCount = count;
@@ -330,7 +381,9 @@
                     matchesPlayed: 0,
                     rests: 0,
                     wins: 0,
-                    totalPoints: 0,
+                    totalPoints: 0, // Used for Americano points or Classic matches won
+                    setsWon: 0,     // For Classic mode
+                    setsLost: 0,    // For Classic mode
                     partners: {}
                 });
             }
@@ -343,6 +396,30 @@
 
             document.getElementById('view-setup').classList.add('hidden');
             document.getElementById('view-dashboard').classList.remove('hidden');
+            
+            const badge = document.getElementById('session-summary-badge');
+            if (state.gameMode === 'americano') {
+                badge.textContent = "Americano Modus Aktiv (Ziel: 31 Pkt)";
+                document.getElementById('standings-title-text').textContent = "Americano Live-Gesamtrangliste";
+                document.getElementById('standings-table-header').innerHTML = `
+                    <th class="py-3 px-4">Rang & Spieler</th>
+                    <th class="py-3 px-3 text-center">Gespielt (Spiele)</th>
+                    <th class="py-3 px-3 text-center">Pausen</th>
+                    <th class="py-3 px-3 text-center">Siege</th>
+                    <th class="py-3 px-4 text-right">Gesamt-Punkte</th>
+                `;
+            } else {
+                badge.textContent = "Klassisches Padel (Best of 3 Sätze)";
+                document.getElementById('standings-title-text').textContent = "Klassische Live-Rangliste (Match- & Satz-Bilanz)";
+                document.getElementById('standings-table-header').innerHTML = `
+                    <th class="py-3 px-4">Rang & Spieler</th>
+                    <th class="py-3 px-3 text-center">Gespielt (Spiele)</th>
+                    <th class="py-3 px-3 text-center">Pausen</th>
+                    <th class="py-3 px-3 text-center">Match-Siege</th>
+                    <th class="py-3 px-4 text-right">Sätze (Gew : Verl)</th>
+                `;
+            }
+
             document.getElementById('nav-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Turnier Läuft</span>';
 
             startRoundTimer();
@@ -352,12 +429,11 @@
         function generateNextRound() {
             let playerIds = state.players.map(p => p.id);
 
-            // Sort players primarily by number of rests (ascending), then by matches played (ascending), then randomly
             playerIds.sort((a, b) => {
                 const pa = state.players.find(x => x.id === a);
                 const pb = state.players.find(x => x.id === b);
                 if (pa.rests !== pb.rests) {
-                    return pa.rests - pb.rests; // Fewer rests comes first (gets prioritized to play)
+                    return pa.rests - pb.rests; 
                 }
                 if (pa.matchesPlayed !== pb.matchesPlayed) {
                     return pa.matchesPlayed - pb.matchesPlayed;
@@ -365,7 +441,6 @@
                 return Math.random() - 0.5;
             });
 
-            // Group players by their exact rest count to ensure fair round-robin rotation
             let restGroups = {};
             playerIds.forEach(id => {
                 const p = state.players.find(x => x.id === id);
@@ -377,7 +452,6 @@
             let sortedGroupedIds = [];
             Object.keys(restGroups).sort((a,b) => Number(a) - Number(b)).forEach(rKey => {
                 let g = restGroups[rKey];
-                // Shuffle within the same rest group for variety
                 for (let i = g.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [g[i], g[j]] = [g[j], g[i]];
@@ -391,25 +465,18 @@
             if (state.playerCount === 4) {
                 playingIds = [...sortedGroupedIds];
             } else if (state.playerCount === 5) {
-                // To ensure everyone takes turns resting, take from the front of sortedGroupedIds (those with fewest rests) or rotate
-                // In 5 players, 1 rests. The one with fewest rests should rest if everyone else has played more, 
-                // but to prevent the exact same person resting every time when rests are tied, we pick from those with the minimum rests.
                 let minRest = state.players[0].rests;
                 let minRestPlayers = sortedGroupedIds.filter(id => state.players.find(x => x.id === id).rests === minRest);
-                
-                // If multiple have the same minimum rests, pick one randomly among them to avoid repeating the exact same person!
                 const restingCandidateIndex = Math.floor(Math.random() * minRestPlayers.length);
                 const chosenRestId = minRestPlayers[restingCandidateIndex];
 
                 restingIds = [chosenRestId];
                 playingIds = sortedGroupedIds.filter(id => id !== chosenRestId);
             } else if (state.playerCount === 6) {
-                // 2 rest. Find those with minimum rests.
                 let minRest = Math.min(...state.players.map(p => p.rests));
                 let minRestPlayers = sortedGroupedIds.filter(id => state.players.find(x => x.id === id).rests === minRest);
 
                 if (minRestPlayers.length >= 2) {
-                    // Pick 2 randomly from the minimum rest group
                     for (let i = minRestPlayers.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [minRestPlayers[i], minRestPlayers[j]] = [minRestPlayers[j], minRestPlayers[i]];
@@ -423,7 +490,6 @@
                 playingIds = sortedGroupedIds.filter(id => !restingIds.includes(id));
             }
 
-            // Shuffle playing IDs so partnerships and opponents vary every round
             for (let i = playingIds.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [playingIds[i], playingIds[j]] = [playingIds[j], playingIds[i]];
@@ -432,14 +498,31 @@
             const teamA = [playingIds[0], playingIds[1]];
             const teamB = [playingIds[2], playingIds[3]];
 
-            state.activeMatches = [{
-                round: state.currentRound,
-                teamA: teamA,
-                teamB: teamB,
-                scoreA: 0,
-                scoreB: 0,
-                restingIds: restingIds
-            }];
+            if (state.gameMode === 'americano') {
+                state.activeMatches = [{
+                    round: state.currentRound,
+                    teamA: teamA,
+                    teamB: teamB,
+                    scoreA: 0,
+                    scoreB: 0,
+                    restingIds: restingIds
+                }];
+            } else {
+                // Classic match: Best of 3 sets. Each set is tracked. 
+                // E.g. set1A, set1B, set2A, set2B, set3A, set3B (if needed)
+                state.activeMatches = [{
+                    round: state.currentRound,
+                    teamA: teamA,
+                    teamB: teamB,
+                    sets: [
+                        { gamesA: 0, gamesB: 0 },
+                        { gamesA: 0, gamesB: 0 },
+                        { gamesA: 0, gamesB: 0 }
+                    ],
+                    activeSetIndex: 0,
+                    restingIds: restingIds
+                }];
+            }
 
             state.timerSecondsRemaining = state.roundDurationMinutes * 60;
         }
@@ -492,7 +575,7 @@
             const totalRoundsBudget = Math.floor(state.totalGameTimeMinutes / matchMin);
             const timeBadge = document.getElementById('dashboard-total-time');
             if (timeBadge) {
-                timeBadge.textContent = `Runde ${state.currentRound} von ca. ${totalRoundsBudget} | Verbleibend: ~${remainingMin} Min (Budget: ${state.totalGameTimeMinutes} Min)`;
+                timeBadge.textContent = `Runde ${state.currentRound} von ca. ${totalRoundsBudget} | Verbleibend: ~${remainingMin} Min`;
             }
 
             const container = document.getElementById('active-match-container');
@@ -505,84 +588,129 @@
                     ? match.restingIds.map(id => getPlayerName(id)).join(', ') 
                     : 'Keine (alle spielen)';
 
-                const currentSum = match.scoreA + match.scoreB;
-                const isValidSum = currentSum <= state.targetPoints;
-
                 const initialMins = Math.floor(state.timerSecondsRemaining / 60);
                 const initialSecs = state.timerSecondsRemaining % 60;
                 const timerStr = `${initialMins.toString().padStart(2, '0')}:${initialSecs.toString().padStart(2, '0')}`;
 
                 const div = document.createElement('div');
                 div.className = "bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-2xl relative overflow-hidden";
-                div.innerHTML = `
-                    <div class="absolute top-0 right-0 bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-bl-xl border-l border-b border-emerald-500/20 flex items-center gap-3">
-                        <span>⏱️ Runde: <span id="round-timer-display" class="font-mono font-bold">${timerStr}</span></span>
-                        <button onclick="toggleRoundTimer()" id="timer-toggle-btn" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-600 text-white rounded text-[10px] font-semibold transition">⏸️ Pausieren</button>
-                    </div>
-                    <div class="mb-4">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Americano Arena &bull; Ziel-Summe: 31 Punkte</span>
-                        <h3 class="text-lg font-black text-white">Runde ${state.currentRound} Match (18 Min.)</h3>
-                    </div>
+                
+                if (state.gameMode === 'americano') {
+                    const currentSum = match.scoreA + match.scoreB;
+                    const isValidSum = currentSum <= state.targetPoints;
 
-                    <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center mb-6">
-                        <!-- Team A -->
-                        <div class="md:col-span-5 bg-slate-900/60 border border-slate-700/80 rounded-xl p-4 text-center">
-                            <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest block mb-1">Team A</span>
-                            <div class="text-base font-bold text-white mb-3">${teamANames}</div>
-                            
-                            <div class="flex items-center justify-center gap-1.5 mb-3 flex-wrap">
-                                <button onclick="adjustScore(${index}, 'A', -1)" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition">-1</button>
-                                <button onclick="adjustScore(${index}, 'A', 1)" class="w-10 h-9 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-sm border border-emerald-500/40 transition">+1</button>
-                                <button onclick="adjustScore(${index}, 'A', 5)" class="w-10 h-9 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-sm border border-emerald-500/40 transition">+5</button>
-                                <button onclick="setQuickScore(${index}, 'A', 15)" class="w-11 h-9 rounded-lg bg-emerald-600/40 hover:bg-emerald-600/60 text-white font-bold text-xs border border-emerald-500 transition">15 Pkt</button>
+                    div.innerHTML = `
+                        <div class="absolute top-0 right-0 bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-bl-xl border-l border-b border-emerald-500/20 flex items-center gap-3">
+                            <span>⏱️ Runde: <span id="round-timer-display" class="font-mono font-bold">${timerStr}</span></span>
+                            <button onclick="toggleRoundTimer()" id="timer-toggle-btn" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-600 text-white rounded text-[10px] font-semibold transition">⏸️ Pausieren</button>
+                        </div>
+                        <div class="mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Americano Arena &bull; Ziel-Summe: 31 Punkte</span>
+                            <h3 class="text-lg font-black text-white">Runde ${state.currentRound} Match (18 Min.)</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center mb-6">
+                            <div class="md:col-span-5 bg-slate-900/60 border border-slate-700/80 rounded-xl p-4 text-center">
+                                <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest block mb-1">Team A</span>
+                                <div class="text-base font-bold text-white mb-3">${teamANames}</div>
+                                <div class="flex items-center justify-center gap-1.5 mb-3 flex-wrap">
+                                    <button onclick="adjustScore(${index}, 'A', -1)" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition">-1</button>
+                                    <button onclick="adjustScore(${index}, 'A', 1)" class="w-10 h-9 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-sm border border-emerald-500/40 transition">+1</button>
+                                    <button onclick="adjustScore(${index}, 'A', 5)" class="w-10 h-9 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-sm border border-emerald-500/40 transition">+5</button>
+                                    <button onclick="setQuickScore(${index}, 'A', 15)" class="w-11 h-9 rounded-lg bg-emerald-600/40 hover:bg-emerald-600/60 text-white font-bold text-xs border border-emerald-500 transition">15 Pkt</button>
+                                </div>
+                                <div class="flex items-center justify-center gap-3">
+                                    <input type="number" id="score-a-${index}" value="${match.scoreA}" oninput="updateScoreInput(${index}, 'A', this.value)" class="w-24 bg-slate-950 border border-slate-700 text-center font-black text-3xl text-white rounded-xl py-2 focus:outline-none focus:border-emerald-500">
+                                </div>
                             </div>
 
-                            <div class="flex items-center justify-center gap-3">
-                                <input type="number" id="score-a-${index}" value="${match.scoreA}" oninput="updateScoreInput(${index}, 'A', this.value)" class="w-24 bg-slate-950 border border-slate-700 text-center font-black text-3xl text-white rounded-xl py-2 focus:outline-none focus:border-emerald-500">
+                            <div class="md:col-span-1 flex items-center justify-center">
+                                <div class="w-10 h-10 rounded-full bg-slate-700/80 text-slate-300 font-black text-xs flex items-center justify-center border border-slate-600 shadow">VS</div>
+                            </div>
+
+                            <div class="md:col-span-5 bg-slate-900/60 border border-slate-700/80 rounded-xl p-4 text-center">
+                                <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest block mb-1">Team B</span>
+                                <div class="text-base font-bold text-white mb-3">${teamBNames}</div>
+                                <div class="flex items-center justify-center gap-1.5 mb-3 flex-wrap">
+                                    <button onclick="adjustScore(${index}, 'B', -1)" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition">-1</button>
+                                    <button onclick="adjustScore(${index}, 'B', 1)" class="w-10 h-9 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-bold text-sm border border-indigo-500/40 transition">+1</button>
+                                    <button onclick="adjustScore(${index}, 'B', 5)" class="w-10 h-9 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-bold text-sm border border-indigo-500/40 transition">+5</button>
+                                    <button onclick="setQuickScore(${index}, 'B', 15)" class="w-11 h-9 rounded-lg bg-indigo-600/40 hover:bg-indigo-600/60 text-white font-bold text-xs border border-indigo-500 transition">15 Pkt</button>
+                                </div>
+                                <div class="flex items-center justify-center gap-1.5 mb-3">
+                                    <input type="number" id="score-b-${index}" value="${match.scoreB}" oninput="updateScoreInput(${index}, 'B', this.value)" class="w-24 bg-slate-950 border border-slate-700 text-center font-black text-3xl text-white rounded-xl py-2 focus:outline-none focus:border-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/60 border ${isValidSum ? 'border-slate-800' : 'border-rose-500/60'} rounded-xl p-3.5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-400 font-medium">Aktuelle Punktsumme (Max. 31):</span>
+                                <span class="font-black text-sm ${isValidSum ? 'text-emerald-400' : 'text-rose-400'}">${currentSum} / ${state.targetPoints} Punkte</span>
+                            </div>
+                            <div class="text-slate-400">Pausieren: <span class="font-bold text-amber-400">${restingNames}</span></div>
+                        </div>
+
+                        <div class="flex justify-end gap-3">
+                            <button onclick="finishMatch(${index})" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 text-sm">
+                                <span>✅</span> Match beenden & Nächste Runde starten
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    // Classic mode markup (Best of 3 sets, up to 6/7 games)
+                    let setsHTML = '';
+                    match.sets.forEach((setObj, setIdx) => {
+                        setsHTML += `
+                            <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-3 text-center">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Satz ${setIdx + 1}</span>
+                                <div class="flex items-center justify-center gap-2">
+                                    <input type="number" id="set-${setIdx}-a-${index}" value="${setObj.gamesA}" min="0" max="7" oninput="updateClassicGame(${index}, ${setIdx}, 'A', this.value)" class="w-14 bg-slate-950 border border-slate-700 text-center font-black text-xl text-emerald-400 rounded-lg py-1 focus:outline-none">
+                                    <span class="text-slate-500 font-bold">:</span>
+                                    <input type="number" id="set-${setIdx}-b-${index}" value="${setObj.gamesB}" min="0" max="7" oninput="updateClassicGame(${index}, ${setIdx}, 'B', this.value)" class="w-14 bg-slate-950 border border-slate-700 text-center font-black text-xl text-indigo-400 rounded-lg py-1 focus:outline-none">
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    div.innerHTML = `
+                        <div class="absolute top-0 right-0 bg-emerald-500/10 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-bl-xl border-l border-b border-emerald-500/20 flex items-center gap-3">
+                            <span>⏱️ Runde: <span id="round-timer-display" class="font-mono font-bold">${timerStr}</span></span>
+                            <button onclick="toggleRoundTimer()" id="timer-toggle-btn" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-600 text-white rounded text-[10px] font-semibold transition">⏸️ Pausieren</button>
+                        </div>
+                        <div class="mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Klassisches Padel &bull; Best of 3 Sätze (bis 6 Games, Tiebreak bei 6:6)</span>
+                            <h3 class="text-lg font-black text-white">Runde ${state.currentRound} Match (18 Min.)</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="bg-slate-900/50 border border-slate-700/80 rounded-xl p-3 text-center">
+                                <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest block mb-1">Team A</span>
+                                <div class="text-base font-bold text-white">${teamANames}</div>
+                            </div>
+                            <div class="bg-slate-900/50 border border-slate-700/80 rounded-xl p-3 text-center">
+                                <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest block mb-1">Team B</span>
+                                <div class="text-base font-bold text-white">${teamBNames}</div>
                             </div>
                         </div>
 
-                        <!-- VS Badge -->
-                        <div class="md:col-span-1 flex items-center justify-center">
-                            <div class="w-10 h-10 rounded-full bg-slate-700/80 text-slate-300 font-black text-xs flex items-center justify-center border border-slate-600 shadow">
-                                VS
-                            </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                            ${setsHTML}
                         </div>
 
-                        <!-- Team B -->
-                        <div class="md:col-span-5 bg-slate-900/60 border border-slate-700/80 rounded-xl p-4 text-center">
-                            <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest block mb-1">Team B</span>
-                            <div class="text-base font-bold text-white mb-3">${teamBNames}</div>
-
-                            <div class="flex items-center justify-center gap-1.5 mb-3 flex-wrap">
-                                <button onclick="adjustScore(${index}, 'B', -1)" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition">-1</button>
-                                <button onclick="adjustScore(${index}, 'B', 1)" class="w-10 h-9 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-bold text-sm border border-indigo-500/40 transition">+1</button>
-                                <button onclick="adjustScore(${index}, 'B', 5)" class="w-10 h-9 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-bold text-sm border border-indigo-500/40 transition">+5</button>
-                                <button onclick="setQuickScore(${index}, 'B', 15)" class="w-11 h-9 rounded-lg bg-indigo-600/40 hover:bg-indigo-600/60 text-white font-bold text-xs border border-indigo-500 transition">15 Pkt</button>
-                            </div>
-
-                            <div class="flex items-center justify-center gap-1.5 mb-3">
-                                <input type="number" id="score-b-${index}" value="${match.scoreB}" oninput="updateScoreInput(${index}, 'B', this.value)" class="w-24 bg-slate-950 border border-slate-700 text-center font-black text-3xl text-white rounded-xl py-2 focus:outline-none focus:border-indigo-500">
-                            </div>
+                        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 mb-6 flex items-center justify-between text-xs">
+                            <div class="text-slate-400">Regelhinweis: Satz wird bei 6 Games gewonnen (z.B. 6:4) oder bei 6:6 im Tiebreak (7:6).</div>
+                            <div class="text-slate-400">Pausieren: <span class="font-bold text-amber-400">${restingNames}</span></div>
                         </div>
-                    </div>
 
-                    <div class="bg-slate-900/60 border ${isValidSum ? 'border-slate-800' : 'border-rose-500/60'} rounded-xl p-3.5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
-                        <div class="flex items-center gap-2">
-                            <span class="text-slate-400 font-medium">Aktuelle Punktsumme (Max. 31):</span>
-                            <span class="font-black text-sm ${isValidSum ? 'text-emerald-400' : 'text-rose-400'}">${currentSum} / ${state.targetPoints} Punkte</span>
+                        <div class="flex justify-end gap-3">
+                            <button onclick="finishMatch(${index})" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 text-sm">
+                                <span>✅</span> Match beenden & Nächste Runde starten
+                            </button>
                         </div>
-                        <div class="text-slate-400">
-                            Pausieren: <span class="font-bold text-amber-400">${restingNames}</span>
-                        </div>
-                    </div>
+                    `;
+                }
 
-                    <div class="flex justify-end gap-3">
-                        <button onclick="finishMatch(${index})" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 text-sm">
-                            <span>✅</span> Match beenden & Nächste Runde starten
-                        </button>
-                    </div>
-                `;
                 container.appendChild(div);
             });
 
@@ -665,61 +793,126 @@
             renderDashboard();
         };
 
+        window.updateClassicGame = function(matchIndex, setIdx, team, val) {
+            const parsed = parseInt(val);
+            const match = state.activeMatches[matchIndex];
+            if (isNaN(parsed) || parsed < 0 || parsed > 7) return;
+
+            if (team === 'A') {
+                match.sets[setIdx].gamesA = parsed;
+            } else {
+                match.sets[setIdx].gamesB = parsed;
+            }
+        };
+
         window.finishMatch = function(matchIndex) {
             const match = state.activeMatches[matchIndex];
             
-            const totalSum = match.scoreA + match.scoreB;
-            if (totalSum > state.targetPoints) {
-                showModal("Americano-Regel", `Die Gesamtsumme beider Teams darf 31 nicht übersteigen! Aktuelle Summe ist ${totalSum}.`);
-                return;
-            }
-
-            const teamAWon = match.scoreA > match.scoreB;
-
-            if (match.teamA.length === 2) {
-                recordPartner(match.teamA[0], match.teamA[1]);
-            }
-            if (match.teamB.length === 2) {
-                recordPartner(match.teamB[0], match.teamB[1]);
-            }
-
-            const pointsPerPlayerA = match.scoreA; 
-            const pointsPerPlayerB = match.scoreB; 
-
-            match.teamA.forEach(id => {
-                const p = state.players.find(x => x.id === id);
-                if (p) {
-                    p.matchesPlayed++;
-                    if (teamAWon) p.wins++;
-                    p.totalPoints += pointsPerPlayerA;
+            if (state.gameMode === 'americano') {
+                const totalSum = match.scoreA + match.scoreB;
+                if (totalSum > state.targetPoints) {
+                    showModal("Americano-Regel", `Die Gesamtsumme beider Teams darf 31 nicht übersteigen! Aktuelle Summe ist ${totalSum}.`);
+                    return;
                 }
-            });
 
-            match.teamB.forEach(id => {
-                const p = state.players.find(x => x.id === id);
-                if (p) {
-                    p.matchesPlayed++;
-                    if (!teamAWon) p.wins++;
-                    p.totalPoints += pointsPerPlayerB;
+                const teamAWon = match.scoreA > match.scoreB;
+                if (match.teamA.length === 2) recordPartner(match.teamA[0], match.teamA[1]);
+                if (match.teamB.length === 2) recordPartner(match.teamB[0], match.teamB[1]);
+
+                const pointsPerPlayerA = match.scoreA; 
+                const pointsPerPlayerB = match.scoreB; 
+
+                match.teamA.forEach(id => {
+                    const p = state.players.find(x => x.id === id);
+                    if (p) {
+                        p.matchesPlayed++;
+                        if (teamAWon) p.wins++;
+                        p.totalPoints += pointsPerPlayerA;
+                    }
+                });
+
+                match.teamB.forEach(id => {
+                    const p = state.players.find(x => x.id === id);
+                    if (p) {
+                        p.matchesPlayed++;
+                        if (!teamAWon) p.wins++;
+                        p.totalPoints += pointsPerPlayerB;
+                    }
+                });
+
+                match.restingIds.forEach(id => {
+                    const p = state.players.find(x => x.id === id);
+                    if (p) p.rests++;
+                });
+
+                state.matches.unshift({
+                    round: state.currentRound,
+                    mode: 'americano',
+                    teamA: match.teamA,
+                    teamB: match.teamB,
+                    scoreA: match.scoreA,
+                    scoreB: match.scoreB,
+                    winner: teamAWon ? 'Team A' : 'Team B',
+                    restingIds: match.restingIds
+                });
+            } else {
+                // Classic mode processing
+                let setsWonA = 0;
+                let setsWonB = 0;
+                let detailedSets = [];
+
+                match.sets.forEach((s) => {
+                    detailedSets.push({ gA: s.gamesA, gB: s.gamesB });
+                    if (s.gamesA > s.gamesB) setsWonA++;
+                    else if (s.gamesB > s.gamesA) setsWonB++;
+                });
+
+                if (setsWonA === 0 && setsWonB === 0) {
+                    showModal("Fehler", "Bitte tragen Sie mindestens das Ergebnis eines Satzes ein.");
+                    return;
                 }
-            });
 
-            match.restingIds.forEach(id => {
-                const p = state.players.find(x => x.id === id);
-                if (p) {
-                    p.rests++;
-                }
-            });
+                const teamAWonMatch = setsWonA > setsWonB;
+                if (match.teamA.length === 2) recordPartner(match.teamA[0], match.teamA[1]);
+                if (match.teamB.length === 2) recordPartner(match.teamB[0], match.teamB[1]);
 
-            state.matches.unshift({
-                round: state.currentRound,
-                teamA: match.teamA,
-                teamB: match.teamB,
-                scoreA: match.scoreA,
-                scoreB: match.scoreB,
-                winner: teamAWon ? 'Team A' : 'Team B',
-                restingIds: match.restingIds
-            });
+                match.teamA.forEach(id => {
+                    const p = state.players.find(x => x.id === id);
+                    if (p) {
+                        p.matchesPlayed++;
+                        if (teamAWonMatch) p.wins++;
+                        p.setsWon += setsWonA;
+                        p.setsLost += setsWonB;
+                    }
+                });
+
+                match.teamB.forEach(id => {
+                    const p = state.players.find(x => x.id === id);
+                    if (p) {
+                        p.matchesPlayed++;
+                        if (!teamAWonMatch) p.wins++;
+                        p.setsWon += setsWonB;
+                        p.setsLost += setsWonA;
+                    }
+                });
+
+                match.restingIds.forEach(id => {
+                    const p = state.players.find(x => x.id === id);
+                    if (p) p.rests++;
+                });
+
+                state.matches.unshift({
+                    round: state.currentRound,
+                    mode: 'classic',
+                    teamA: match.teamA,
+                    teamB: match.teamB,
+                    sets: detailedSets,
+                    setsWonA: setsWonA,
+                    setsWonB: setsWonB,
+                    winner: teamAWonMatch ? 'Team A' : 'Team B',
+                    restingIds: match.restingIds
+                });
+            }
 
             state.currentRound++;
             generateNextRound();
@@ -734,36 +927,69 @@
         }
 
         function renderStandings() {
-            const sorted = [...state.players].sort((a, b) => {
-                if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-                if (b.wins !== a.wins) return b.wins - a.wins;
-                return a.rests - b.rests;
-            });
-
             const tbody = document.getElementById('standings-table-body');
             tbody.innerHTML = '';
 
-            sorted.forEach((p, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-700/30 transition-colors";
-                
-                let rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center">${idx + 1}</span>`;
-                if (idx === 0) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-500 text-slate-950 text-xs font-extrabold flex items-center justify-center shadow">1</span>`;
-                if (idx === 1) rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-300 text-slate-950 text-xs font-extrabold flex items-center justify-center shadow">2</span>`;
-                if (idx === 2) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-700 text-white text-xs font-extrabold flex items-center justify-center shadow">3</span>`;
+            if (state.gameMode === 'americano') {
+                const sorted = [...state.players].sort((a, b) => {
+                    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+                    if (b.wins !== a.wins) return b.wins - a.wins;
+                    return a.rests - b.rests;
+                });
 
-                tr.innerHTML = `
-                    <td class="py-3 px-4 flex items-center gap-3">
-                        ${rankBadge}
-                        <span class="font-bold text-white">${p.name}</span>
-                    </td>
-                    <td class="py-3 px-3 text-center text-slate-200 font-bold bg-slate-800/40 rounded">${p.matchesPlayed}</td>
-                    <td class="py-3 px-3 text-center text-amber-400 font-bold">${p.rests}</td>
-                    <td class="py-3 px-3 text-center text-emerald-400 font-bold">${p.wins}</td>
-                    <td class="py-3 px-4 text-right font-black text-emerald-400 text-base">${p.totalPoints} Pkt</td>
-                `;
-                tbody.appendChild(tr);
-            });
+                sorted.forEach((p, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-700/30 transition-colors";
+                    
+                    let rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center">${idx + 1}</span>`;
+                    if (idx === 0) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-500 text-slate-950 text-xs font-extrabold flex items-center justify-center shadow">1</span>`;
+                    if (idx === 1) rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-300 text-slate-950 text-xs font-extrabold flex items-center justify-center shadow">2</span>`;
+                    if (idx === 2) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-700 text-white text-xs font-extrabold flex items-center justify-center shadow">3</span>`;
+
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 flex items-center gap-3">
+                            ${rankBadge}
+                            <span class="font-bold text-white">${p.name}</span>
+                        </td>
+                        <td class="py-3 px-3 text-center text-slate-200 font-bold bg-slate-800/40 rounded">${p.matchesPlayed}</td>
+                        <td class="py-3 px-3 text-center text-amber-400 font-bold">${p.rests}</td>
+                        <td class="py-3 px-3 text-center text-emerald-400 font-bold">${p.wins}</td>
+                        <td class="py-3 px-4 text-right font-black text-emerald-400 text-base">${p.totalPoints} Pkt</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                // Classic mode sorting: Match wins first, then set difference, then sets won
+                const sorted = [...state.players].sort((a, b) => {
+                    if (b.wins !== a.wins) return b.wins - a.wins;
+                    const diffA = a.setsWon - a.setsLost;
+                    const diffB = b.setsWon - b.setsLost;
+                    if (diffB !== diffA) return diffB - diffA;
+                    return b.setsWon - a.setsWon;
+                });
+
+                sorted.forEach((p, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-700/30 transition-colors";
+                    
+                    let rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center">${idx + 1}</span>`;
+                    if (idx === 0) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-500 text-slate-950 text-xs font-extrabold flex items-center justify-center shadow">1</span>`;
+                    if (idx === 1) rankBadge = `<span class="w-6 h-6 rounded-full bg-slate-300 text-slate-950 text-xs font-extrabold flex items-center justify-center shadow">2</span>`;
+                    if (idx === 2) rankBadge = `<span class="w-6 h-6 rounded-full bg-amber-700 text-white text-xs font-extrabold flex items-center justify-center shadow">3</span>`;
+
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 flex items-center gap-3">
+                            ${rankBadge}
+                            <span class="font-bold text-white">${p.name}</span>
+                        </td>
+                        <td class="py-3 px-3 text-center text-slate-200 font-bold bg-slate-800/40 rounded">${p.matchesPlayed}</td>
+                        <td class="py-3 px-3 text-center text-amber-400 font-bold">${p.rests}</td>
+                        <td class="py-3 px-3 text-center text-emerald-400 font-bold">${p.wins}</td>
+                        <td class="py-3 px-4 text-right font-black text-emerald-400 text-base">${p.setsWon} : ${p.setsLost}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
         }
 
         function renderHistory() {
@@ -779,22 +1005,29 @@
                 const teamBNames = m.teamB.map(id => getPlayerName(id)).join(' & ');
                 const restingNames = m.restingIds.length > 0 ? m.restingIds.map(id => getPlayerName(id)).join(', ') : 'Keine';
 
+                let scoreDisplay = '';
+                if (m.mode === 'americano') {
+                    scoreDisplay = `${m.scoreA} : ${m.scoreB}`;
+                } else {
+                    scoreDisplay = m.sets.map(s => `${s.gA}:${s.gB}`).join(', ');
+                }
+
                 const div = document.createElement('div');
                 div.className = "bg-slate-900/50 border border-slate-700/60 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm";
                 div.innerHTML = `
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                            <span class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-bold text-xs">Runde ${m.round}</span>
+                            <span class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-bold text-xs">Runde ${m.round} (${m.mode === 'americano' ? 'Americano' : 'Klassisch'})</span>
                             <span class="text-xs text-slate-400">Pause: <span class="text-amber-400 font-medium">${restingNames}</span></span>
                         </div>
                         <div class="text-white font-medium">
                             <span class="${m.winner === 'Team A' ? 'text-emerald-400 font-bold' : ''}">${teamANames}</span> 
-                            <span class="mx-2 px-2 py-0.5 bg-slate-800 rounded font-mono font-bold">${m.scoreA} : ${m.scoreB}</span> 
+                            <span class="mx-2 px-2 py-0.5 bg-slate-800 rounded font-mono font-bold">${scoreDisplay}</span> 
                             <span class="${m.winner === 'Team B' ? 'text-emerald-400 font-bold' : ''}">${teamBNames}</span>
                         </div>
                     </div>
                     <div class="text-xs font-bold px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-                        ${m.winner} gewinnt Satz
+                        ${m.winner} gewinnt
                     </div>
                 `;
                 container.appendChild(div);
@@ -815,6 +1048,7 @@
 
             const record = {
                 date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                mode: state.gameMode,
                 roundsCount: state.matches.length,
                 restingFirstRoundNames: restingFirstRoundNames
             };
@@ -827,7 +1061,7 @@
         };
 
         window.resetTournamentModal = function() {
-            showConfirmModal("Turnier neu starten?", "Möchtest du das Americano-Turnier wirklich zurücksetzen? Bisherige Ergebnisse gehen verloren.", () => {
+            showConfirmModal("Turnier neu starten?", "Möchtest du das Turnier wirklich zurücksetzen? Bisherige Ergebnisse gehen verloren.", () => {
                 stopRoundTimer();
                 document.getElementById('view-dashboard').classList.add('hidden');
                 document.getElementById('view-setup').classList.remove('hidden');
