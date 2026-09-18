@@ -20,7 +20,7 @@
                 </div>
                 <div>
                     <h1 class="font-extrabold text-lg tracking-tight text-white">Padel Americano Rotator</h1>
-                    <p class="text-xs text-slate-400">Americano-Zählweise (Jeder Punkt zählt! Ziel: 31)</p>
+                    <p class="text-xs text-slate-400">Americano-Zählweise (Ziel: 31) &bull; Fixe Namen: Stefan, Marco, Tobias, Chris, David, Werner</p>
                 </div>
             </div>
             <div id="nav-status" class="text-xs px-3 py-1.5 rounded-full bg-slate-700/60 border border-slate-600/50 font-medium text-emerald-400 flex items-center gap-1.5">
@@ -37,7 +37,7 @@
                 <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
                     <span>👥</span> Americano-Modus & Spieler konfigurieren
                 </h2>
-                <p class="text-sm text-slate-400 mb-6">Im <strong>Americano-Modus</strong> spielt jeder mit jedem und gegen jeden. Jedes Match wird exakt bis zu einer Summe von 31 Punkten gespielt (z. B. 16:15 oder 20:11). Jeder gewonnene Punkt zählt direkt für die persönliche Einzel-Rangliste!</p>
+                <p class="text-sm text-slate-400 mb-6">Im <strong>Americano-Modus</strong> spielt jeder mit jedem und gegen jeden. Jedes Match wird bis zu einer Summe von 31 Punkten gespielt. Jeder gewonnene Punkt zählt direkt für die persönliche Einzel-Rangliste!</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <!-- Player Count Selector -->
@@ -48,7 +48,7 @@
                             <button onclick="setPlayerCount(5)" data-count="5" class="py-3 px-4 rounded-xl font-bold border transition-all flex items-center justify-center gap-1 text-sm bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700">5 Spieler</button>
                             <button onclick="setPlayerCount(6)" data-count="6" class="py-3 px-4 rounded-xl font-bold border transition-all flex items-center justify-center gap-1 text-sm bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700">6 Spieler</button>
                         </div>
-                        <p class="text-xs text-slate-400 mt-2" id="rotation-info-text">4 Spieler: Alle spielen jede Runde in wechselnden Teams gegeneinander.</p>
+                        <p class="text-xs text-slate-400 mt-2" id="rotation-info-text">4 Spieler: 120 Min. Gesamtzeit &bull; ca. 6 Runden (je 18 Min.)</p>
                     </div>
 
                     <!-- Target Points & Total Duration -->
@@ -59,7 +59,7 @@
                                 <input type="number" id="target-points" value="31" readonly class="bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-emerald-400 font-bold text-lg w-full focus:outline-none cursor-not-allowed">
                                 <div class="text-xs text-slate-400 whitespace-nowrap">Punkte Gesamt</div>
                             </div>
-                            <p class="text-xs text-slate-500 mt-1">Beim Americano endet das Match exakt bei 31 Punkten (Summe Team A + Team B = 31).</p>
+                            <p class="text-xs text-slate-500 mt-1">Die Punktsumme beider Teams beträgt exakt 31 Punkte.</p>
                         </div>
                         
                         <div class="bg-slate-900/60 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
@@ -74,10 +74,21 @@
 
                 <!-- Player Name Inputs -->
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold text-slate-300 mb-3">Spielernamen (jederzeit änderbar)</label>
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm font-semibold text-slate-300">Spielernamen (Fix installiert & anpassbar)</label>
+                        <button onclick="shufflePlayerOrder()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-lg border border-slate-600 transition flex items-center gap-1.5">
+                            <span>🔀</span> Reihenfolge mischen
+                        </button>
+                    </div>
                     <div id="player-inputs-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         <!-- Dynamically populated -->
                     </div>
+                </div>
+
+                <!-- Last Match Day Info Box -->
+                <div id="setup-last-day-history" class="mb-6 bg-slate-900/50 border border-slate-700/60 rounded-xl p-4 text-xs text-slate-300 hidden">
+                    <span class="font-bold text-amber-400 block mb-1">📅 Letzter Spieltag Historie:</span>
+                    <p id="setup-last-day-text">Keine vorherigen Spieltage gespeichert.</p>
                 </div>
 
                 <button onclick="startTournament()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 text-base">
@@ -104,8 +115,8 @@
                     <button onclick="resetTournamentModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-xs font-semibold transition border border-slate-600">
                         🔄 Neu starten / Einstellungen
                     </button>
-                    <button onclick="openAddPlayerModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-500/20">
-                        ➕ Spieler hinzufügen
+                    <button onclick="endMatchDayAndSave()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-emerald-500/20">
+                        💾 Spieltag abschließen & speichern
                     </button>
                 </div>
             </div>
@@ -121,14 +132,14 @@
                     <h3 class="text-lg font-bold text-white flex items-center gap-2">
                         <span>🏆</span> Americano Live-Gesamtrangliste
                     </h3>
-                    <span class="text-xs text-slate-400">Sortiert nach gesammelten Einzelpunkten</span>
+                    <span class="text-xs text-slate-400">Inklusive Anzahl gespielter Matches & Pausen</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-700 text-xs font-bold text-slate-400 uppercase tracking-wider">
                                 <th class="py-3 px-4">Rang & Spieler</th>
-                                <th class="py-3 px-3 text-center">Spiele</th>
+                                <th class="py-3 px-3 text-center">Gespielt (Spiele)</th>
                                 <th class="py-3 px-3 text-center">Pausen</th>
                                 <th class="py-3 px-3 text-center">Siege</th>
                                 <th class="py-3 px-4 text-right">Gesamt-Punkte (Americano)</th>
@@ -165,20 +176,8 @@
         </div>
     </div>
 
-    <div id="add-player-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-white">Spieler hinzufügen</h3>
-            <p class="text-sm text-slate-300">Gib den Namen des neuen Spielers ein. Er wird ab der nächsten Runde in die Rotation aufgenommen.</p>
-            <input type="text" id="new-player-name-input" placeholder="Spielername" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-indigo-500">
-            <div class="flex justify-end gap-3 pt-2">
-                <button onclick="closeAddPlayerModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-sm font-semibold transition">Abbrechen</button>
-                <button onclick="confirmAddPlayer()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition shadow">Hinzufügen</button>
-            </div>
-        </div>
-    </div>
-
     <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        Padel Americano Rotations-Manager &bull; Exakte Punktsumme 31 &bull; Jeder Punkt zählt für jeden Spieler
+        Padel Americano Rotations-Manager &bull; Feste Spieler: Stefan, Marco, Tobias, Chris, David, Werner &bull; 18 Min. Runden
     </footer>
 
     <script>
@@ -187,31 +186,66 @@
             targetPoints: 31,
             totalGameTimeMinutes: 120,
             elapsedMinutes: 0,
-            roundDurationMinutes: 18, // Fixed 18 minutes per round
+            roundDurationMinutes: 18,
             timerSecondsRemaining: 18 * 60,
             timerInterval: null,
             timerRunning: false,
+            // Fixed permanent player names pool
+            fixedNamesPool: ["Stefan", "Marco", "Tobias", "Chris", "David", "Werner"],
             defaultNames: {
-                4: ["Spieler 1", "Spieler 2", "Spieler 3", "Spieler 4"],
-                5: ["Spieler 1", "Spieler 2", "Spieler 3", "Spieler 4", "Spieler 5"],
-                6: ["Spieler 1", "Spieler 2", "Spieler 3", "Spieler 4", "Spieler 5", "Spieler 6"]
+                4: ["Stefan", "Marco", "Tobias", "Chris"],
+                5: ["Stefan", "Marco", "Tobias", "Chris", "David"],
+                6: ["Stefan", "Marco", "Tobias", "Chris", "David", "Werner"]
             },
             players: [], 
             currentRound: 1,
             matches: [], 
-            activeMatches: []
+            activeMatches: [],
+            matchDayHistory: []
         };
 
         window.onload = function() {
+            loadHistoryFromStorage();
             renderPlayerInputs();
             updateTotalTimeDisplay();
+            checkLastDayDisplay();
         };
 
-        // Helper function to get a player's name by their ID safely
+        function loadHistoryFromStorage() {
+            try {
+                const saved = localStorage.getItem('padel_match_day_history');
+                if (saved) {
+                    state.matchDayHistory = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error("Could not load history", e);
+            }
+        }
+
+        function saveHistoryToStorage() {
+            try {
+                localStorage.setItem('padel_match_day_history', JSON.stringify(state.matchDayHistory));
+            } catch (e) {
+                console.error("Could not save history", e);
+            }
+        }
+
+        function checkLastDayDisplay() {
+            const box = document.getElementById('setup-last-day-history');
+            const textEl = document.getElementById('setup-last-day-text');
+            if (state.matchDayHistory.length > 0) {
+                const last = state.matchDayHistory[state.matchDayHistory.length - 1];
+                box.classList.remove('hidden');
+                textEl.innerHTML = `Datum: <strong>${last.date}</strong> &bull; Runden: ${last.roundsCount} &bull; Erster Spieler in Runde 1: <strong class="text-emerald-400">${last.firstPlayerName}</strong>`;
+            } else {
+                box.classList.add('hidden');
+            }
+        }
+
         function getPlayerName(id) {
             const p = state.players.find(x => x.id === id);
             if (p) return p.name;
-            const defaultList = state.defaultNames[state.playerCount];
+            const defaultList = state.defaultNames[state.playerCount] || state.fixedNamesPool;
             return defaultList[id] || `Spieler ${id + 1}`;
         }
 
@@ -233,11 +267,11 @@
             const infoText = document.getElementById('rotation-info-text');
             const totalRounds = Math.floor(state.totalGameTimeMinutes / state.roundDurationMinutes);
             if (count === 4) {
-                infoText.textContent = `4 Spieler: Alle spielen jede Runde. (${state.totalGameTimeMinutes} Min. = ca. ${totalRounds} Runden à 18 Min.)`;
+                infoText.textContent = `4 Spieler: 120 Min. Gesamtzeit &bull; ca. ${totalRounds} Runden (je 18 Min.)`;
             } else if (count === 5) {
-                infoText.textContent = `5 Spieler: 4 spielen, 1 pausiert abwechselnd. (${state.totalGameTimeMinutes} Min. = ca. ${totalRounds} Runden à 18 Min.)`;
+                infoText.textContent = `5 Spieler: 180 Min. Gesamtzeit &bull; ca. ${totalRounds} Runden (je 18 Min.)`;
             } else if (count === 6) {
-                infoText.textContent = `6 Spieler: 4 spielen, 2 pausieren abwechselnd fair. (${state.totalGameTimeMinutes} Min. = ca. ${totalRounds} Runden à 18 Min.)`;
+                infoText.textContent = `6 Spieler: 180 Min. Gesamtzeit &bull; ca. ${totalRounds} Runden (je 18 Min.)`;
             }
 
             renderPlayerInputs();
@@ -253,19 +287,36 @@
         function renderPlayerInputs() {
             const container = document.getElementById('player-inputs-grid');
             container.innerHTML = '';
-            const defaultList = state.defaultNames[state.playerCount];
+            const defaultList = state.defaultNames[state.playerCount] || state.fixedNamesPool;
 
             for (let i = 0; i < state.playerCount; i++) {
                 const div = document.createElement('div');
                 div.className = "flex items-center gap-2";
                 div.innerHTML = `
                     <span class="w-7 h-7 rounded-lg bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">P${i+1}</span>
-                    <input type="text" id="player-input-${i}" value="${defaultList[i] || 'Spieler ' + (i+1)}" 
+                    <input type="text" id="player-input-${i}" value="${defaultList[i] || state.fixedNamesPool[i] || 'Spieler ' + (i+1)}" 
                         class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium text-sm focus:outline-none focus:border-emerald-500 transition-colors">
                 `;
                 container.appendChild(div);
             }
         }
+
+        window.shufflePlayerOrder = function() {
+            const inputs = [];
+            for (let i = 0; i < state.playerCount; i++) {
+                const input = document.getElementById(`player-input-${i}`);
+                if (input) inputs.value = input.value.trim();
+            }
+            // Shuffle
+            for (let i = inputs.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [inputs[i], inputs[j]] = [inputs[j], inputs[i]];
+            }
+            for (let i = 0; i < state.playerCount; i++) {
+                const input = document.getElementById(`player-input-${i}`);
+                if (input) input.value = inputs;
+            }
+        };
 
         window.startTournament = function() {
             state.targetPoints = 31;
@@ -275,7 +326,8 @@
             state.players = [];
             for (let i = 0; i < state.playerCount; i++) {
                 const input = document.getElementById(`player-input-${i}`);
-                const name = input && input.value.trim() !== '' ? input.value.trim() : `Spieler ${i+1}`;
+                const defaultList = state.defaultNames[state.playerCount] || state.fixedNamesPool;
+                const name = input && input.value.trim() !== '' ? input.value.trim() : (defaultList[i] || `Spieler ${i+1}`);
                 state.players.push({
                     id: i,
                     name: name,
@@ -298,7 +350,6 @@
         };
 
         function generateNextRound() {
-            // Stop existing timer if running
             stopRoundTimer();
             state.timerSecondsRemaining = state.roundDurationMinutes * 60;
 
@@ -353,8 +404,8 @@
                 id: state.currentRound,
                 teamA: bestPairing.teamA,
                 teamB: bestPairing.teamB,
-                scoreA: 0, // Reset counter to 0 for new round
-                scoreB: 0, // Reset counter to 0 for new round
+                scoreA: 0,
+                scoreB: 0,
                 restingIds: restingIds
             }];
 
@@ -523,10 +574,10 @@
 
             if (team === 'A') {
                 newA = Math.max(0, Math.min(state.targetPoints, match.scoreA + delta));
-                newB = state.targetPoints - newA; // Auto-calculate Team B so sum equals 31
+                newB = state.targetPoints - newA;
             } else {
                 newB = Math.max(0, Math.min(state.targetPoints, match.scoreB + delta));
-                newA = state.targetPoints - newB; // Auto-calculate Team A so sum equals 31
+                newA = state.targetPoints - newB;
             }
 
             match.scoreA = newA;
@@ -537,7 +588,7 @@
             if (inputA) inputA.value = match.scoreA;
             if (inputB) inputB.value = match.scoreB;
             
-            renderDashboard(); // refresh sum indicator
+            renderDashboard();
         };
 
         window.updateScoreInput = function(matchIndex, team, val) {
@@ -550,10 +601,10 @@
 
             if (team === 'A') {
                 newA = Math.min(state.targetPoints, parsed);
-                newB = state.targetPoints - newA; // Automatically set the other team's points
+                newB = state.targetPoints - newA;
             } else {
                 newB = Math.min(state.targetPoints, parsed);
-                newA = state.targetPoints - newB; // Automatically set the other team's points
+                newA = state.targetPoints - newB;
             }
 
             match.scoreA = newA;
@@ -579,12 +630,10 @@
             const teamAWon = match.scoreA > match.scoreB;
 
             if (match.teamA.length === 2) {
-                const [p1, p2] = match.teamA;
-                recordPartner(p1, p2);
+                recordPartner(match.teamA, match.teamA[1]);
             }
             if (match.teamB.length === 2) {
-                const [p3, p4] = match.teamB;
-                recordPartner(p3, p4);
+                recordPartner(match.teamB, match.teamB[1]);
             }
 
             const pointsPerPlayerA = match.scoreA; 
@@ -660,7 +709,7 @@
                         ${rankBadge}
                         <span class="font-bold text-white">${p.name}</span>
                     </td>
-                    <td class="py-3 px-3 text-center text-slate-300 font-medium">${p.matchesPlayed}</td>
+                    <td class="py-3 px-3 text-center text-slate-200 font-bold bg-slate-800/40 rounded">${p.matchesPlayed}</td>
                     <td class="py-3 px-3 text-center text-amber-400 font-bold">${p.rests}</td>
                     <td class="py-3 px-3 text-center text-emerald-400 font-bold">${p.wins}</td>
                     <td class="py-3 px-4 text-right font-black text-emerald-400 text-base">${p.totalPoints} Pkt</td>
@@ -704,38 +753,27 @@
             });
         }
 
-        window.openAddPlayerModal = function() {
-            document.getElementById('new-player-name-input').value = '';
-            document.getElementById('add-player-modal').classList.remove('hidden');
-        };
-
-        window.closeAddPlayerModal = function() {
-            document.getElementById('add-player-modal').classList.add('hidden');
-        };
-
-        window.confirmAddPlayer = function() {
-            const input = document.getElementById('new-player-name-input');
-            const name = input.value.trim();
-            if (!name) {
-                showModal("Fehler", "Bitte gib einen gültigen Namen ein.");
+        window.endMatchDayAndSave = function() {
+            if (state.matches.length === 0) {
+                showModal("Hinweis", "Es wurden noch keine Matches in diesem Spieltag beendet.");
                 return;
             }
 
-            const newId = state.players.length > 0 ? Math.max(...state.players.map(p => p.id)) + 1 : 0;
-            state.players.push({
-                id: newId,
-                name: name,
-                matchesPlayed: 0,
-                wins: 0,
-                rests: 0,
-                totalPoints: 0,
-                partners: {}
-            });
+            const firstRoundMatch = state.matches[state.matches.length - 1]; // First played round is at the end of array
+            const firstPlayerId = firstRoundMatch.teamA[0];
+            const firstPlayerName = getPlayerName(firstPlayerId);
 
-            state.playerCount++;
-            closeAddPlayerModal();
-            showModal("Spieler hinzugefügt", `${name} nimmt ab der nächsten Runde am Americano-Turnier teil!`);
-            renderStandings();
+            const record = {
+                date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                roundsCount: state.matches.length,
+                firstPlayerName: firstPlayerName
+            };
+
+            state.matchDayHistory.push(record);
+            saveHistoryToStorage();
+            checkLastDayDisplay();
+
+            showModal("Spieltag gespeichert! 💾", `Der Spieltag wurde erfolgreich gesichert. Der erste Spieler in Runde 1 war: ${firstPlayerName}.`);
         };
 
         window.resetTournamentModal = function() {
@@ -744,6 +782,7 @@
                 document.getElementById('view-dashboard').classList.add('hidden');
                 document.getElementById('view-setup').classList.remove('hidden');
                 document.getElementById('nav-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Setup-Modus</span>';
+                checkLastDayDisplay();
             });
         };
 
