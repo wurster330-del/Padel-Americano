@@ -20,7 +20,7 @@
                 </div>
                 <div>
                     <h1 class="font-extrabold text-lg tracking-tight text-white">Padel Americano Rotator</h1>
-                    <p class="text-xs text-slate-400">Americano-Zählweise (Ziel: 31) &bull; Fixe Namen: Stefan, Marco, Tobias, Chris, David, Werner</p>
+                    <p class="text-xs text-slate-400">Americano-Zählweise (Ziel: 31) &bull; Feste Namen: Stefan, Marco, Tobias, Chris, David, Werner</p>
                 </div>
             </div>
             <div id="nav-status" class="text-xs px-3 py-1.5 rounded-full bg-slate-700/60 border border-slate-600/50 font-medium text-emerald-400 flex items-center gap-1.5">
@@ -32,6 +32,7 @@
 
     <main class="max-w-5xl mx-auto px-4 py-6 w-full flex-grow">
 
+        <!-- SETUP VIEW -->
         <div id="view-setup" class="space-y-6">
             <div class="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-6 shadow-xl backdrop-blur">
                 <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
@@ -97,6 +98,7 @@
             </div>
         </div>
 
+        <!-- DASHBOARD VIEW -->
         <div id="view-dashboard" class="hidden space-y-6">
             
             <!-- Top Controls & Session Info -->
@@ -166,6 +168,7 @@
 
     </main>
 
+    <!-- Modal Dialog -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <h3 id="modal-title" class="text-lg font-bold text-white">Hinweis</h3>
@@ -190,7 +193,6 @@
             timerSecondsRemaining: 18 * 60,
             timerInterval: null,
             timerRunning: false,
-            // Fixed permanent player names pool
             fixedNamesPool: ["Stefan", "Marco", "Tobias", "Chris", "David", "Werner"],
             defaultNames: {
                 4: ["Stefan", "Marco", "Tobias", "Chris"],
@@ -236,7 +238,7 @@
             if (state.matchDayHistory.length > 0) {
                 const last = state.matchDayHistory[state.matchDayHistory.length - 1];
                 box.classList.remove('hidden');
-                textEl.innerHTML = `Datum: <strong>${last.date}</strong> &bull; Runden: ${last.roundsCount} &bull; Erster Spieler in Runde 1: <strong class="text-emerald-400">${last.firstPlayerName}</strong>`;
+                textEl.innerHTML = `Datum: <strong>${last.date}</strong> &bull; Runden: ${last.roundsCount} &bull; Pausierende in Runde 1: <strong class="text-amber-400">${last.restingFirstRoundNames}</strong>`;
             } else {
                 box.classList.add('hidden');
             }
@@ -302,38 +304,32 @@
         }
 
         window.shufflePlayerOrder = function() {
-            const inputs = [];
+            const currentNames = [];
             for (let i = 0; i < state.playerCount; i++) {
                 const input = document.getElementById(`player-input-${i}`);
-                if (input) inputs.value = input.value.trim();
+                if (input) currentNames.push(input.value.trim());
             }
-            // Shuffle
-            for (let i = inputs.length - 1; i > 0; i--) {
+            for (let i = currentNames.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [inputs[i], inputs[j]] = [inputs[j], inputs[i]];
+                [currentNames[i], currentNames[j]] = [currentNames[j], currentNames[i]];
             }
             for (let i = 0; i < state.playerCount; i++) {
                 const input = document.getElementById(`player-input-${i}`);
-                if (input) input.value = inputs;
+                if (input) input.value = currentNames[i];
             }
         };
 
         window.startTournament = function() {
-            state.targetPoints = 31;
-            state.elapsedMinutes = 0;
-            state.roundDurationMinutes = 18;
-
             state.players = [];
             for (let i = 0; i < state.playerCount; i++) {
                 const input = document.getElementById(`player-input-${i}`);
-                const defaultList = state.defaultNames[state.playerCount] || state.fixedNamesPool;
-                const name = input && input.value.trim() !== '' ? input.value.trim() : (defaultList[i] || `Spieler ${i+1}`);
+                const name = input ? input.value.trim() || `Spieler ${i+1}` : `Spieler ${i+1}`;
                 state.players.push({
                     id: i,
                     name: name,
                     matchesPlayed: 0,
-                    wins: 0,
                     rests: 0,
+                    wins: 0,
                     totalPoints: 0,
                     partners: {}
                 });
@@ -341,88 +337,120 @@
 
             state.currentRound = 1;
             state.matches = [];
+            state.activeMatches = [];
+
+            generateNextRound();
 
             document.getElementById('view-setup').classList.add('hidden');
             document.getElementById('view-dashboard').classList.remove('hidden');
-            document.getElementById('nav-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Americano Aktiv</span>';
+            document.getElementById('nav-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Turnier Läuft</span>';
 
-            generateNextRound();
+            startRoundTimer();
+            renderDashboard();
         };
 
         function generateNextRound() {
-            stopRoundTimer();
-            state.timerSecondsRemaining = state.roundDurationMinutes * 60;
+            let playerIds = state.players.map(p => p.id);
 
-            for (let i = 0; i < state.players.length; i++) {
-                const input = document.getElementById(`player-input-${i}`);
-                if (input && input.value.trim() !== '') {
-                    state.players[i].name = input.value.trim();
+            // Sort players primarily by number of rests (ascending), then by matches played (ascending), then randomly
+            playerIds.sort((a, b) => {
+                const pa = state.players.find(x => x.id === a);
+                const pb = state.players.find(x => x.id === b);
+                if (pa.rests !== pb.rests) {
+                    return pa.rests - pb.rests; // Fewer rests comes first (gets prioritized to play)
                 }
-            }
+                if (pa.matchesPlayed !== pb.matchesPlayed) {
+                    return pa.matchesPlayed - pb.matchesPlayed;
+                }
+                return Math.random() - 0.5;
+            });
+
+            // Group players by their exact rest count to ensure fair round-robin rotation
+            let restGroups = {};
+            playerIds.forEach(id => {
+                const p = state.players.find(x => x.id === id);
+                const rCount = p.rests;
+                if (!restGroups[rCount]) restGroups[rCount] = [];
+                restGroups[rCount].push(id);
+            });
+
+            let sortedGroupedIds = [];
+            Object.keys(restGroups).sort((a,b) => Number(a) - Number(b)).forEach(rKey => {
+                let g = restGroups[rKey];
+                // Shuffle within the same rest group for variety
+                for (let i = g.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [g[i], g[j]] = [g[j], g[i]];
+                }
+                sortedGroupedIds.push(...g);
+            });
 
             let restingIds = [];
-            let activePool = [...state.players];
+            let playingIds = [];
 
-            if (state.playerCount === 5) {
-                activePool.sort((a, b) => {
-                    if (a.rests !== b.rests) return a.rests - b.rests;
-                    if (a.matchesPlayed !== b.matchesPlayed) return a.matchesPlayed - b.matchesPlayed;
-                    return Math.random() - 0.5;
-                });
-                restingIds = [activePool[0].id];
-                activePool = activePool.slice(1);
-            } else if (state.playerCount >= 6) {
-                activePool.sort((a, b) => {
-                    if (a.rests !== b.rests) return a.rests - b.rests;
-                    if (a.matchesPlayed !== b.matchesPlayed) return a.matchesPlayed - b.matchesPlayed;
-                    return Math.random() - 0.5;
-                });
-                restingIds = [activePool[0].id, activePool[1].id];
-                activePool = activePool.slice(2);
-            }
-
-            activePool.sort(() => Math.random() - 0.5);
-
-            let bestPairing = null;
-            let minRepeatScore = Infinity;
-
-            for (let attempt = 0; attempt < 10; attempt++) {
-                activePool.sort(() => Math.random() - 0.5);
-                const p1 = activePool[0], p2 = activePool[1], p3 = activePool[2], p4 = activePool[3];
+            if (state.playerCount === 4) {
+                playingIds = [...sortedGroupedIds];
+            } else if (state.playerCount === 5) {
+                // To ensure everyone takes turns resting, take from the front of sortedGroupedIds (those with fewest rests) or rotate
+                // In 5 players, 1 rests. The one with fewest rests should rest if everyone else has played more, 
+                // but to prevent the exact same person resting every time when rests are tied, we pick from those with the minimum rests.
+                let minRest = state.players[0].rests;
+                let minRestPlayers = sortedGroupedIds.filter(id => state.players.find(x => x.id === id).rests === minRest);
                 
-                const repeat1 = (p1.partners[p2.id] || 0) + (p3.partners[p4.id] || 0);
-                if (repeat1 < minRepeatScore) {
-                    minRepeatScore = repeat1;
-                    bestPairing = {
-                        teamA: [p1.id, p2.id],
-                        teamB: [p3.id, p4.id]
-                    };
+                // If multiple have the same minimum rests, pick one randomly among them to avoid repeating the exact same person!
+                const restingCandidateIndex = Math.floor(Math.random() * minRestPlayers.length);
+                const chosenRestId = minRestPlayers[restingCandidateIndex];
+
+                restingIds = [chosenRestId];
+                playingIds = sortedGroupedIds.filter(id => id !== chosenRestId);
+            } else if (state.playerCount === 6) {
+                // 2 rest. Find those with minimum rests.
+                let minRest = Math.min(...state.players.map(p => p.rests));
+                let minRestPlayers = sortedGroupedIds.filter(id => state.players.find(x => x.id === id).rests === minRest);
+
+                if (minRestPlayers.length >= 2) {
+                    // Pick 2 randomly from the minimum rest group
+                    for (let i = minRestPlayers.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [minRestPlayers[i], minRestPlayers[j]] = [minRestPlayers[j], minRestPlayers[i]];
+                    }
+                    restingIds = [minRestPlayers[0], minRestPlayers[1]];
+                } else {
+                    restingIds = [minRestPlayers[0]];
+                    let remaining = sortedGroupedIds.filter(id => !restingIds.includes(id));
+                    restingIds.push(remaining[0]);
                 }
+                playingIds = sortedGroupedIds.filter(id => !restingIds.includes(id));
             }
+
+            // Shuffle playing IDs so partnerships and opponents vary every round
+            for (let i = playingIds.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [playingIds[i], playingIds[j]] = [playingIds[j], playingIds[i]];
+            }
+
+            const teamA = [playingIds[0], playingIds[1]];
+            const teamB = [playingIds[2], playingIds[3]];
 
             state.activeMatches = [{
-                id: state.currentRound,
-                teamA: bestPairing.teamA,
-                teamB: bestPairing.teamB,
+                round: state.currentRound,
+                teamA: teamA,
+                teamB: teamB,
                 scoreA: 0,
                 scoreB: 0,
                 restingIds: restingIds
             }];
 
-            renderDashboard();
-            startRoundTimer();
+            state.timerSecondsRemaining = state.roundDurationMinutes * 60;
         }
 
         function startRoundTimer() {
-            if (state.timerInterval) clearInterval(state.timerInterval);
+            stopRoundTimer();
             state.timerRunning = true;
             state.timerInterval = setInterval(() => {
                 if (state.timerSecondsRemaining > 0) {
                     state.timerSecondsRemaining--;
                     updateTimerDisplay();
-                } else {
-                    stopRoundTimer();
-                    showModal("Zeit abgelaufen! ⏱️", "Die 18 Minuten Spielzeit für diese Runde sind um! Bitte Punktestand eintragen und Runde beenden.");
                 }
             }, 1000);
         }
@@ -450,16 +478,9 @@
         function updateTimerDisplay() {
             const mins = Math.floor(state.timerSecondsRemaining / 60);
             const secs = state.timerSecondsRemaining % 60;
-            const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            const str = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             const el = document.getElementById('round-timer-display');
-            if (el) {
-                el.textContent = timeStr;
-                if (state.timerSecondsRemaining <= 120) {
-                    el.className = "text-sm font-black text-rose-400 animate-pulse font-mono";
-                } else {
-                    el.className = "text-sm font-black text-amber-400 font-mono";
-                }
-            }
+            if (el) el.textContent = str;
         }
 
         function renderDashboard() {
@@ -513,6 +534,7 @@
                                 <button onclick="adjustScore(${index}, 'A', -1)" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition">-1</button>
                                 <button onclick="adjustScore(${index}, 'A', 1)" class="w-10 h-9 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-sm border border-emerald-500/40 transition">+1</button>
                                 <button onclick="adjustScore(${index}, 'A', 5)" class="w-10 h-9 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-bold text-sm border border-emerald-500/40 transition">+5</button>
+                                <button onclick="setQuickScore(${index}, 'A', 15)" class="w-11 h-9 rounded-lg bg-emerald-600/40 hover:bg-emerald-600/60 text-white font-bold text-xs border border-emerald-500 transition">15 Pkt</button>
                             </div>
 
                             <div class="flex items-center justify-center gap-3">
@@ -536,6 +558,7 @@
                                 <button onclick="adjustScore(${index}, 'B', -1)" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition">-1</button>
                                 <button onclick="adjustScore(${index}, 'B', 1)" class="w-10 h-9 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-bold text-sm border border-indigo-500/40 transition">+1</button>
                                 <button onclick="adjustScore(${index}, 'B', 5)" class="w-10 h-9 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-bold text-sm border border-indigo-500/40 transition">+5</button>
+                                <button onclick="setQuickScore(${index}, 'B', 15)" class="w-11 h-9 rounded-lg bg-indigo-600/40 hover:bg-indigo-600/60 text-white font-bold text-xs border border-indigo-500 transition">15 Pkt</button>
                             </div>
 
                             <div class="flex items-center justify-center gap-1.5 mb-3">
@@ -591,6 +614,30 @@
             renderDashboard();
         };
 
+        window.setQuickScore = function(matchIndex, team, pts) {
+            const match = state.activeMatches[matchIndex];
+            let newA = match.scoreA;
+            let newB = match.scoreB;
+
+            if (team === 'A') {
+                newA = Math.min(state.targetPoints, pts);
+                newB = state.targetPoints - newA;
+            } else {
+                newB = Math.min(state.targetPoints, pts);
+                newA = state.targetPoints - newB;
+            }
+
+            match.scoreA = newA;
+            match.scoreB = newB;
+
+            const inputA = document.getElementById(`score-a-${matchIndex}`);
+            const inputB = document.getElementById(`score-b-${matchIndex}`);
+            if (inputA) inputA.value = match.scoreA;
+            if (inputB) inputB.value = match.scoreB;
+
+            renderDashboard();
+        };
+
         window.updateScoreInput = function(matchIndex, team, val) {
             const parsed = parseInt(val);
             const match = state.activeMatches[matchIndex];
@@ -630,10 +677,10 @@
             const teamAWon = match.scoreA > match.scoreB;
 
             if (match.teamA.length === 2) {
-                recordPartner(match.teamA, match.teamA[1]);
+                recordPartner(match.teamA[0], match.teamA[1]);
             }
             if (match.teamB.length === 2) {
-                recordPartner(match.teamB, match.teamB[1]);
+                recordPartner(match.teamB[0], match.teamB[1]);
             }
 
             const pointsPerPlayerA = match.scoreA; 
@@ -676,6 +723,7 @@
 
             state.currentRound++;
             generateNextRound();
+            renderDashboard();
         };
 
         function recordPartner(id1, id2) {
@@ -759,21 +807,23 @@
                 return;
             }
 
-            const firstRoundMatch = state.matches[state.matches.length - 1]; // First played round is at the end of array
-            const firstPlayerId = firstRoundMatch.teamA[0];
-            const firstPlayerName = getPlayerName(firstPlayerId);
+            const firstRoundMatch = state.matches[state.matches.length - 1];
+            const restingFirstRound = firstRoundMatch.restingIds || [];
+            const restingFirstRoundNames = restingFirstRound.length > 0 
+                ? restingFirstRound.map(id => getPlayerName(id)).join(', ') 
+                : 'Keine (alle haben gespielt)';
 
             const record = {
                 date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
                 roundsCount: state.matches.length,
-                firstPlayerName: firstPlayerName
+                restingFirstRoundNames: restingFirstRoundNames
             };
 
             state.matchDayHistory.push(record);
             saveHistoryToStorage();
             checkLastDayDisplay();
 
-            showModal("Spieltag gespeichert! 💾", `Der Spieltag wurde erfolgreich gesichert. Der erste Spieler in Runde 1 war: ${firstPlayerName}.`);
+            showModal("Spieltag gespeichert! 💾", `Der Spieltag wurde erfolgreich gesichert. In Runde 1 hatten Pause: ${restingFirstRoundNames}.`);
         };
 
         window.resetTournamentModal = function() {
@@ -801,10 +851,13 @@
                 <button id="modal-confirm-btn" class="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-semibold transition">Bestätigen</button>
             `;
             document.getElementById('custom-modal').classList.remove('hidden');
-            document.getElementById('modal-confirm-btn').onclick = () => {
-                closeModal();
-                onConfirm();
-            };
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            if (confirmBtn) {
+                confirmBtn.onclick = () => {
+                    closeModal();
+                    onConfirm();
+                };
+            }
         }
 
         window.closeModal = function() {
